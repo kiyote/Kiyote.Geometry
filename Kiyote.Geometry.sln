@@ -1,0 +1,63 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32616.157
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kiyote.Geometry", "src\Geometry\Kiyote.Geometry\Kiyote.Geometry.csproj", "{64D08F30-3EF2-4E51-B94D-B4313E66CFA0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{4C4DAF84-3BAB-4940-B4AE-D6088DF1ACFD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{EE2FCC58-75CC-4E8F-AFEC-CC481E662896}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kiyote.Geometry.Tests", "test\Geometry\Kiyote.Geometry.Tests\Kiyote.Geometry.Tests.csproj", "{02535D84-0808-471D-8084-D18196D79BCE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1159F290-4D71-4C13-88F0-76235E927C2B}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+		LICENSE = LICENSE
+		nuget.config = nuget.config
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Geometry", "Geometry", "{D8A59D9B-83C9-4085-92FB-385089A1E9BA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Geometry", "Geometry", "{E0DE70F0-2E6C-4E6A-A710-DE8D73764AC5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kiyote.Geometry.Benchmarks", "test\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj", "{C16CDE71-1F2C-4B50-B891-E2FE367B358D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{64D08F30-3EF2-4E51-B94D-B4313E66CFA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64D08F30-3EF2-4E51-B94D-B4313E66CFA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64D08F30-3EF2-4E51-B94D-B4313E66CFA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64D08F30-3EF2-4E51-B94D-B4313E66CFA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02535D84-0808-471D-8084-D18196D79BCE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02535D84-0808-471D-8084-D18196D79BCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02535D84-0808-471D-8084-D18196D79BCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02535D84-0808-471D-8084-D18196D79BCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C16CDE71-1F2C-4B50-B891-E2FE367B358D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C16CDE71-1F2C-4B50-B891-E2FE367B358D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C16CDE71-1F2C-4B50-B891-E2FE367B358D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C16CDE71-1F2C-4B50-B891-E2FE367B358D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{64D08F30-3EF2-4E51-B94D-B4313E66CFA0} = {D8A59D9B-83C9-4085-92FB-385089A1E9BA}
+		{02535D84-0808-471D-8084-D18196D79BCE} = {E0DE70F0-2E6C-4E6A-A710-DE8D73764AC5}
+		{D8A59D9B-83C9-4085-92FB-385089A1E9BA} = {4C4DAF84-3BAB-4940-B4AE-D6088DF1ACFD}
+		{E0DE70F0-2E6C-4E6A-A710-DE8D73764AC5} = {EE2FCC58-75CC-4E8F-AFEC-CC481E662896}
+		{C16CDE71-1F2C-4B50-B891-E2FE367B358D} = {E0DE70F0-2E6C-4E6A-A710-DE8D73764AC5}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2BC3C0E9-3ECD-4276-B787-7089DC63C56F}
+	EndGlobalSection
+EndGlobal
