@@ -10,7 +10,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 	public const int K = 13;
 	public const int M = 5;
 	public const double Sqrt1_2 = 0.7071067811865476;
-	public const double Epsilon = 0.0000001f;
+	public const double Epsilon = 0.0000001;
 	private readonly IRandom _random;
 
 	public FastPoissonDiscPointFactory(

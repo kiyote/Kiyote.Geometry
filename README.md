@@ -2,35 +2,35 @@
 
 # FastRandom Benchmarks vs System.Random
 ```
-|                  Method |      Mean |     Error |    StdDev | Ratio | Allocated |
-|------------------------ |----------:|----------:|----------:|------:|----------:|
-|      FastRandom_NextInt |  1.652 ns | 0.0282 ns | 0.0250 ns |  0.69 |         - |
-|    SystemRandom_NextInt |  2.399 ns | 0.0095 ns | 0.0085 ns |  1.00 |         - |
-|                         |           |           |           |       |           |
-|    FastRandom_NextFloat |  1.876 ns | 0.0046 ns | 0.0039 ns |  0.67 |         - |
-|  SystemRandom_NextFloat |  2.823 ns | 0.0357 ns | 0.0334 ns |  1.00 |         - |
-|                         |           |           |           |       |           |
-|   FastRandom_NextDouble |  2.169 ns | 0.0054 ns | 0.0045 ns |  0.81 |         - |
-| SystemRandom_NextDouble |  2.662 ns | 0.0216 ns | 0.0202 ns |  1.00 |         - |
-|                         |           |           |           |       |           |
-|    FastRandom_NextBytes | 57.345 ns | 0.1519 ns | 0.1186 ns |  2.89 |         - |
-|  SystemRandom_NextBytes | 19.852 ns | 0.0755 ns | 0.0706 ns |  1.00 |         - |
+|                  Method |      Mean |     Error |    StdDev | Ratio | RatioSD | Allocated | Alloc Ratio |
+|------------------------ |----------:|----------:|----------:|------:|--------:|----------:|------------:|
+|    FastRandom_NextBytes | 56.185 ns | 0.3779 ns | 0.3535 ns |  3.11 |    0.02 |         - |          NA |
+|  SystemRandom_NextBytes | 18.065 ns | 0.1179 ns | 0.1103 ns |  1.00 |    0.00 |         - |          NA |
+|                         |           |           |           |       |         |           |             |
+|   FastRandom_NextDouble |  1.783 ns | 0.0075 ns | 0.0070 ns |  0.69 |    0.01 |         - |          NA |
+| SystemRandom_NextDouble |  2.586 ns | 0.0293 ns | 0.0274 ns |  1.00 |    0.00 |         - |          NA |
+|                         |           |           |           |       |         |           |             |
+|    FastRandom_NextFloat |  2.565 ns | 0.0256 ns | 0.0227 ns |  0.95 |    0.01 |         - |          NA |
+|  SystemRandom_NextFloat |  2.698 ns | 0.0204 ns | 0.0190 ns |  1.00 |    0.00 |         - |          NA |
+|                         |           |           |           |       |         |           |             |
+|      FastRandom_NextInt |  1.540 ns | 0.0182 ns | 0.0170 ns |  0.68 |    0.01 |         - |          NA |
+|    SystemRandom_NextInt |  2.268 ns | 0.0140 ns | 0.0131 ns |  1.00 |    0.00 |         - |          NA |
 ```
 
 # FastRandom Benchmarks
 ```
 |                                    Method |      Mean |     Error |    StdDev | Allocated |
 |------------------------------------------ |----------:|----------:|----------:|----------:|
-|                        FastRandom_NextInt |  1.632 ns | 0.0223 ns | 0.0209 ns |         - |
-|             FastRandom_NextInt_UpperBound |  2.683 ns | 0.0102 ns | 0.0095 ns |         - |
-|   FastRandom_NextInt_LowerBoundUpperBound |  3.113 ns | 0.0264 ns | 0.0234 ns |         - |
-|                       FastRandom_NextByte |  1.671 ns | 0.0076 ns | 0.0060 ns |         - |
-|                       FastRandom_NextBool |  1.745 ns | 0.0173 ns | 0.0153 ns |         - |
-|                       FastRandom_NextUInt |  1.848 ns | 0.0587 ns | 0.0603 ns |         - |
-|                     FastRandom_NextDouble |  2.150 ns | 0.0383 ns | 0.0340 ns |         - |
-|                      FastRandom_NextFloat |  2.078 ns | 0.0453 ns | 0.0424 ns |         - |
-| FastRandom_NextFloat_LowerBoundUpperBound |  3.329 ns | 0.0163 ns | 0.0145 ns |         - |
-|                      FastRandom_NextBytes | 61.452 ns | 0.6098 ns | 0.5406 ns |         - |
+|                        FastRandom_NextInt |  1.556 ns | 0.0188 ns | 0.0167 ns |         - |
+|             FastRandom_NextInt_UpperBound |  2.417 ns | 0.0191 ns | 0.0169 ns |         - |
+|   FastRandom_NextInt_LowerBoundUpperBound |  2.680 ns | 0.0086 ns | 0.0076 ns |         - |
+|                       FastRandom_NextByte |  1.615 ns | 0.0112 ns | 0.0100 ns |         - |
+|                       FastRandom_NextBool |  1.938 ns | 0.0076 ns | 0.0072 ns |         - |
+|                       FastRandom_NextUInt |  1.751 ns | 0.0099 ns | 0.0088 ns |         - |
+|                     FastRandom_NextDouble |  1.772 ns | 0.0104 ns | 0.0097 ns |         - |
+|                      FastRandom_NextFloat |  1.820 ns | 0.0174 ns | 0.0136 ns |         - |
+| FastRandom_NextFloat_LowerBoundUpperBound |  2.977 ns | 0.0304 ns | 0.0284 ns |         - |
+|                      FastRandom_NextBytes | 55.924 ns | 0.2913 ns | 0.2725 ns |         - |
 ```
 
 # PoissonDiscPointFactory Benchmarks

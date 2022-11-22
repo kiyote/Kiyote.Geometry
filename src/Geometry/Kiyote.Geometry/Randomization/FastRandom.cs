@@ -19,20 +19,20 @@ internal sealed class FastRandom : IRandom {
 	// Used by NextBool
 	// Buffer 32 bits in bitBuffer, return 1 at a time, keep track of how many have been returned
 	// with bitMask.
-	private static uint _bitBuffer;
-	private static uint _bitMask;
+	private uint _bitBuffer;
+	private uint _bitMask;
 
 	// Used by NextByte
 	// Buffer of random bytes. A single UInt32 is used to buffer 4 bytes.
 	// _byteBufferState tracks how bytes remain in the buffer, a value of 
 	// zero  indicates that the buffer is empty.
-	private static uint _byteBuffer;
-	private static byte _byteBufferState;
+	private uint _byteBuffer;
+	private byte _byteBufferState;
 
-	private static uint _x;
-	private static uint _y;
-	private static uint _z;
-	private static uint _w;
+	private uint _x;
+	private uint _y;
+	private uint _z;
+	private uint _w;
 
 	public FastRandom() {
 		( this as IRandom ).Reinitialise( _seedRng.NextInt() );
@@ -73,15 +73,11 @@ internal sealed class FastRandom : IRandom {
 		_bitMask = 1;
 	}
 
-	int IRandom.NextInt() {
-		uint t = _x ^ ( _x << 11 );
-		_x = _y; _y = _z; _z = _w;
-		return (int)( 0x7FFFFFFF & ( _w = _w ^ ( _w >> 19 ) ^ t ^ ( t >> 8 ) ) );
-	}
-
 	public uint NextUInt() {
 		uint t = _x ^ ( _x << 11 );
-		_x = _y; _y = _z; _z = _w;
+		_x = _y;
+		_y = _z;
+		_z = _w;
 		return _w = _w ^ ( _w >> 19 ) ^ t ^ ( t >> 8 );
 	}
 
@@ -94,7 +90,9 @@ internal sealed class FastRandom : IRandom {
 		if( 0 == _bitMask ) {
 			// Generate 32 more bits.
 			uint t = _x ^ ( _x << 11 );
-			_x = _y; _y = _z; _z = _w;
+			_x = _y;
+			_y = _z;
+			_z = _w;
 			_bitBuffer = _w = _w ^ ( _w >> 19 ) ^ t ^ ( t >> 8 );
 
 			// Reset the bitMask that tells us which bit to read next.
@@ -115,7 +113,9 @@ internal sealed class FastRandom : IRandom {
 		if( 0 == _byteBufferState ) {
 			// Generate 4 more bytes.
 			uint t = _x ^ ( _x << 11 );
-			_x = _y; _y = _z; _z = _w;
+			_x = _y;
+			_y = _z;
+			_z = _w;
 			_byteBuffer = _w = _w ^ ( _w >> 19 ) ^ t ^ ( t >> 8 );
 			_byteBufferState = 0x4;
 			return (byte)_byteBuffer;  // Note. Masking with 0xFF is unnecessary.
@@ -126,7 +126,9 @@ internal sealed class FastRandom : IRandom {
 
 	double IRandom.NextDouble() {
 		uint t = _x ^ ( _x << 11 );
-		_x = _y; _y = _z; _z = _w;
+		_x = _y;
+		_y = _z;
+		_z = _w;
 
 		// Here we can gain a 2x speed improvement by generating a value that can be cast to 
 		// an int instead of the more easily available uint. If we then explicitly cast to an 
@@ -142,7 +144,9 @@ internal sealed class FastRandom : IRandom {
 
 	float IRandom.NextFloat() {
 		uint t = _x ^ ( _x << 11 );
-		_x = _y; _y = _z; _z = _w;
+		_x = _y;
+		_y = _z;
+		_z = _w;
 
 		// Here we can gain a 2x speed improvement by generating a value that can be cast to 
 		// an int instead of the more easily available uint. If we then explicitly cast to an 
@@ -156,19 +160,60 @@ internal sealed class FastRandom : IRandom {
 		return SINGLE_UNIT_INT * (int)( 0x7FFFFFFF & ( _w = _w ^ ( _w >> 19 ) ^ t ^ ( t >> 8 ) ) );
 	}
 
-	int IRandom.NextInt(
-		int upperBound
+	float IRandom.NextFloat(
+		float lowerBound,
+		float upperBound
 	) {
-		if( upperBound < 0 ) {
+		if (upperBound < 0) {
 			throw new ArgumentOutOfRangeException(
 				nameof( upperBound ),
 				upperBound,
-				"upperBound must be >=0"
+				"upperBound must be > 0"
+			);
+		}
+
+		if( lowerBound > upperBound ) {
+			throw new ArgumentOutOfRangeException(
+				nameof( upperBound ),
+				upperBound,
+				"upperBound must be > lowerBound"
 			);
 		}
 
 		uint t = _x ^ ( _x << 11 );
+		_x = _y;
+		_y = _z;
+		_z = _w;
+
+		// The explicit int cast before the first multiplication gives better performance.
+		// See comments in NextDouble.
+		float range = upperBound - lowerBound;
+		// 31 bits of precision will suffice if range<=int.MaxValue. This allows us to cast to an int and gain
+		// a little more performance.
+		return lowerBound + ( SINGLE_UNIT_INT * (int)( 0x7FFFFFFF & ( _w = _w ^ ( _w >> 19 ) ^ t ^ ( t >> 8 ) ) ) * range );
+	}
+
+	int IRandom.NextInt() {
+		uint t = _x ^ ( _x << 11 );
 		_x = _y; _y = _z; _z = _w;
+		return (int)( 0x7FFFFFFF & ( _w = _w ^ ( _w >> 19 ) ^ t ^ ( t >> 8 ) ) );
+	}
+
+	int IRandom.NextInt(
+		int upperBound
+	) {
+		if( upperBound <= 0 ) {
+			throw new ArgumentOutOfRangeException(
+				nameof( upperBound ),
+				upperBound,
+				"upperBound must be > 0"
+			);
+		}
+
+		uint t = _x ^ ( _x << 11 );
+		_x = _y;
+		_y = _z;
+		_z = _w;
 
 		// ENHANCEMENT: Can we do this without converting to a double and back again?
 		// The explicit int cast before the first multiplication gives better performance.
@@ -180,25 +225,28 @@ internal sealed class FastRandom : IRandom {
 		int lowerBound,
 		int upperBound
 	) {
+		if( upperBound <= 0 ) {
+			throw new ArgumentOutOfRangeException(
+				nameof( upperBound ),
+				upperBound,
+				"upperBound must be > 0"
+			);
+		}
+
 		if( lowerBound > upperBound ) {
 			throw new ArgumentOutOfRangeException(
 				nameof( upperBound ),
 				upperBound,
-				"upperBound must be >=lowerBound"
+				"upperBound must be > lowerBound"
 			);
 		}
 
 		uint t = _x ^ ( _x << 11 );
-		_x = _y; _y = _z; _z = _w;
+		_x = _y;
+		_y = _z;
+		_z = _w;
 
-		// The explicit int cast before the first multiplication gives better performance.
-		// See comments in NextDouble.
 		int range = upperBound - lowerBound;
-		if( range < 0 ) {   // If range is <0 then an overflow has occured and must resort to using long integer arithmetic instead (slower).
-							// We also must use all 32 bits of precision, instead of the normal 31, which again is slower.  
-			return lowerBound + (int)( REAL_UNIT_UINT * ( _w = _w ^ ( _w >> 19 ) ^ t ^ ( t >> 8 ) ) * ( upperBound - lowerBound ) );
-		}
-
 		// 31 bits of precision will suffice if range<=int.MaxValue. This allows us to cast to an int and gain
 		// a little more performance.
 		return lowerBound + (int)( REAL_UNIT_INT * (int)( 0x7FFFFFFF & ( _w = _w ^ ( _w >> 19 ) ^ t ^ ( t >> 8 ) ) ) * range );
@@ -241,9 +289,6 @@ internal sealed class FastRandom : IRandom {
 				buffer[i++] = (byte)( w >> 8 );
 				if( i < buffer.Length ) {
 					buffer[i++] = (byte)( w >> 16 );
-					if( i < buffer.Length ) {
-						buffer[i] = (byte)( w >> 24 );
-					}
 				}
 			}
 		}
@@ -251,33 +296,5 @@ internal sealed class FastRandom : IRandom {
 		_y = y;
 		_z = z;
 		_w = w;
-	}
-
-	float IRandom.NextFloat(
-		float lowerBound,
-		float upperBound
-	) {
-		if( lowerBound > upperBound ) {
-			throw new ArgumentOutOfRangeException(
-				nameof( upperBound ),
-				upperBound,
-				"upperBound must be >=lowerBound"
-			);
-		}
-
-		uint t = _x ^ ( _x << 11 );
-		_x = _y; _y = _z; _z = _w;
-
-		// The explicit int cast before the first multiplication gives better performance.
-		// See comments in NextDouble.
-		float range = upperBound - lowerBound;
-		if( range < 0 ) {   // If range is <0 then an overflow has occured and must resort to using long integer arithmetic instead (slower).
-							// We also must use all 32 bits of precision, instead of the normal 31, which again is slower.  
-			return lowerBound + (int)( SINGLE_UNIT_UINT * ( _w = _w ^ ( _w >> 19 ) ^ t ^ ( t >> 8 ) ) * ( upperBound - lowerBound ) );
-		}
-
-		// 31 bits of precision will suffice if range<=int.MaxValue. This allows us to cast to an int and gain
-		// a little more performance.
-		return lowerBound + (int)( SINGLE_UNIT_INT * (int)( 0x7FFFFFFF & ( _w = _w ^ ( _w >> 19 ) ^ t ^ ( t >> 8 ) ) ) * range );
 	}
 }

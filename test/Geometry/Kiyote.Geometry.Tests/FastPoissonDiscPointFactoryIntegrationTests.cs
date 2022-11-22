@@ -1,12 +1,12 @@
 ﻿using Kiyote.Geometry.Randomization;
-using NUnit.Framework;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace Kiyote.Geometry.Tests;
 
 [TestFixture]
-public class PoissonDiscPointFactoryTests {
+public sealed class FastPoissonDiscPointFactoryIntegrationTests
+{
 	private IRandom _random;
 	private IPointFactory _pointFactory;
 
@@ -14,7 +14,7 @@ public class PoissonDiscPointFactoryTests {
 	public void SetUp() {
 		_random = new FastRandom();
 
-		_pointFactory = new PoissonDiscPointFactory(
+		_pointFactory = new FastPoissonDiscPointFactory(
 			_random
 		);
 	}
@@ -35,10 +35,10 @@ public class PoissonDiscPointFactoryTests {
 
 		L8 white = new L8( 255 );
 		using Image<L8> image = new Image<L8>( bounds.Width, bounds.Height );
-		foreach( IPoint p in points ) {
+		foreach (IPoint p in points) {
 			image[p.X, p.Y] = white;
 		}
-		image.SaveAsPng( Path.Combine( Path.GetTempPath(), "PoissonDiscPointFactoryTests.png" ) );
+		image.SaveAsPng( Path.Combine( Path.GetTempPath(), "FastPoissonDiscPointFactoryTests.png" ) );
 
 	}
 }
