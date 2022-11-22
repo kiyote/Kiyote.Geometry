@@ -3,8 +3,7 @@
 		<ProductVersion>0.1.0</ProductVersion>
 	</PropertyGroup>
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
-		<LangVersion>10.0</LangVersion>
+		<TargetFramework>net7.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>

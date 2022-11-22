@@ -25,11 +25,11 @@ public sealed record Delaunator(
 		double ex = cx - ax;
 		double ey = cy - ay;
 
-		double bl =  dx * dx  +  dy * dy ;
-		double cl =  ex * ex  +  ey * ey ;
-		double d = 0.5D / (  dx * ey  -  dy * ex  );
+		double bl =  (dx * dx)  +  (dy * dy) ;
+		double cl =  (ex * ex)  +  (ey * ey) ;
+		double d = 0.5D / (  (dx * ey)  -  (dy * ex)  );
 
-		x = ax +  (  ey * bl  -  dy * cl  ) * d ;
-		y = ay +  (  dx * cl  -  ex * bl  ) * d ;
+		x = ax +  ((  (ey * bl)  -  (dy * cl)  ) * d) ;
+		y = ay +  ((  (dx * cl)  -  (ex * bl)  ) * d) ;
 	}
 }

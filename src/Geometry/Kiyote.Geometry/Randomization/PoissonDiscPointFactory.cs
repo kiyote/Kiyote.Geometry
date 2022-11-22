@@ -44,7 +44,7 @@ internal sealed class PoissonDiscPointFactory : IPointFactory {
 			for( int i = 0; i < NumSamplesBeforeRejection; i++ ) {
 				double angle = _random.NextDouble() * Math.PI * 2;
 				Vector2 dir = new Vector2( (float)Math.Sin( angle ), (float)Math.Cos( angle ) );
-				Vector2 candidate = spawnCentre +  dir * _random.NextFloat( fDistanceApart, 2 * fDistanceApart ) ;
+				Vector2 candidate = spawnCentre +  (dir * _random.NextFloat( fDistanceApart, 2 * fDistanceApart )) ;
 				if( IsValid( candidate, sampleRegionSize, cellSize, fDistanceApart, points, grid ) ) {
 					points.Add( candidate );
 					spawnPoints.Add( candidate );
