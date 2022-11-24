@@ -22,13 +22,6 @@ internal sealed class FastRandom : IRandom {
 	private uint _bitBuffer;
 	private uint _bitMask;
 
-	// Used by NextByte
-	// Buffer of random bytes. A single UInt32 is used to buffer 4 bytes.
-	// _byteBufferState tracks how bytes remain in the buffer, a value of 
-	// zero  indicates that the buffer is empty.
-	private uint _byteBuffer;
-	private byte _byteBufferState;
-
 	private uint _x;
 	private uint _y;
 	private uint _z;
@@ -103,27 +96,6 @@ internal sealed class FastRandom : IRandom {
 		return ( _bitBuffer & ( _bitMask >>= 1 ) ) == 0;
 	}
 
-
-	/// <summary>
-	/// Generates a signle random byte with range [0,255].
-	/// This method's performance is improved by generating 4 bytes in one operation and storing them
-	/// ready for future calls.
-	/// </summary>
-	byte IRandom.NextByte() {
-		if( 0 == _byteBufferState ) {
-			// Generate 4 more bytes.
-			uint t = _x ^ ( _x << 11 );
-			_x = _y;
-			_y = _z;
-			_z = _w;
-			_byteBuffer = _w = _w ^ ( _w >> 19 ) ^ t ^ ( t >> 8 );
-			_byteBufferState = 0x4;
-			return (byte)_byteBuffer;  // Note. Masking with 0xFF is unnecessary.
-		}
-		_byteBufferState >>= 1;
-		return (byte)( _byteBuffer >>= 1 );
-	}
-
 	double IRandom.NextDouble() {
 		uint t = _x ^ ( _x << 11 );
 		_x = _y;
@@ -139,7 +111,7 @@ internal sealed class FastRandom : IRandom {
 		//
 		// Also note that the loss of one bit of precision is equivalent to what occurs within 
 		// System.Random.
-		return REAL_UNIT_INT * (int)( 0x7FFFFFFF & ( _w = _w ^ ( _w >> 19 ) ^ t ^ ( t >> 8 ) ) );
+		return REAL_UNIT_INT * (int)( ( 0x7FFFFFFE & ( _w =  _w ^ ( _w >> 19 )  ^  t ^ ( t >> 8 )  ) ) + 1U );
 	}
 
 	float IRandom.NextFloat() {

@@ -23,5 +23,12 @@ public static class Program {
 		);
 		poissonDiscPointFactory.Visualize();
 
+		// FastRandom
+		var fastRandom = new FastRandomVisualizer(
+			outputFolder,
+			bounds
+		);
+		fastRandom.Visualize();
+
 	}
 }

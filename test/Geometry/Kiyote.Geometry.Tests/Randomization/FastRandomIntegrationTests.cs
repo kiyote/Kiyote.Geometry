@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Kiyote.Geometry.Randomization;
-
-namespace Kiyote.Geometry.Tests;
+﻿namespace Kiyote.Geometry.Randomization.Tests;
 
 [TestFixture]
 public sealed class FastRandomIntegrationTests {
@@ -79,21 +72,6 @@ public sealed class FastRandomIntegrationTests {
 	}
 
 	[Test]
-	public void NextByte_FixedSeed_ValueMatches() {
-		byte value = _random.NextByte();
-
-		Assert.AreEqual( 26, value );
-	}
-
-	[Test]
-	public void NextByte_ExhaustByteBufferState_ValueMatches() {
-		_ = _random.NextByte();
-		byte value = _random.NextByte();
-
-		Assert.AreEqual( 13, value );
-	}
-
-	[Test]
 	public void NextDouble_FixedSeed_ValueMatches() {
 		double value = _random.NextDouble();
 
@@ -112,7 +90,7 @@ public sealed class FastRandomIntegrationTests {
 		// expected value 0.690712
 		float value = _random.NextFloat( 0.1f, 0.9f );
 
-		Assert.Less( value, 0.9f  );
+		Assert.Less( value, 0.9f );
 		Assert.Greater( value, 0.1f );
 	}
 

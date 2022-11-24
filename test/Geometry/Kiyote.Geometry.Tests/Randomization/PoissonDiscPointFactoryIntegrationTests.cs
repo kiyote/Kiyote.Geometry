@@ -1,6 +1,4 @@
-﻿using Kiyote.Geometry.Randomization;
-
-namespace Kiyote.Geometry.Tests;
+﻿namespace Kiyote.Geometry.Randomization.Tests;
 
 [TestFixture]
 public sealed class PoissonDiscPointFactoryIntegrationTests {

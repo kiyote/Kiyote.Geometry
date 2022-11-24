@@ -30,11 +30,6 @@ public class FastRandomBenchmarks {
 	}
 
 	[Benchmark]
-	public void FastRandom_NextByte() {
-		_fastRandom.NextByte();
-	}
-
-	[Benchmark]
 	public void FastRandom_NextBool() {
 		_fastRandom.NextBool();
 	}
