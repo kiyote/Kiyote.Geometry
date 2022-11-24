@@ -1,6 +1,6 @@
 ﻿using Kiyote.Geometry.Randomization;
 
-namespace Kiyote.Geometry.Benchmarks;
+namespace Kiyote.Geometry.Benchmarks.Randomization;
 
 [MemoryDiagnoser( false )]
 [GroupBenchmarksBy( BenchmarkLogicalGroupRule.ByCategory )]

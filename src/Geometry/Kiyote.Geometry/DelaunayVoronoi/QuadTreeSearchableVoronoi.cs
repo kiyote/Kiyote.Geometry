@@ -22,9 +22,13 @@ internal sealed class QuadTreeSearchableVoronoi : ISearchableVoronoi {
 	}
 
 	IReadOnlyList<Cell> IVoronoi.Cells => _voronoi.Cells;
+
 	IReadOnlyList<Cell> IVoronoi.OpenCells => _voronoi.OpenCells;
+
 	IReadOnlyList<Cell> IVoronoi.ClosedCells => _voronoi.ClosedCells;
+
 	IReadOnlyList<IEdge> IVoronoi.Edges => _voronoi.Edges;
+
 	IReadOnlyDictionary<Cell, IReadOnlyList<Cell>> IVoronoi.Neighbours => _voronoi.Neighbours;
 
 	IReadOnlyList<Cell> ISearchableVoronoi.Search(

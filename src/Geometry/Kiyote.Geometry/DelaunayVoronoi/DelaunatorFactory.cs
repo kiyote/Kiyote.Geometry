@@ -16,7 +16,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		for( int i = 0; i < distinctInput.Count; i++ ) {
 			IPoint point = distinctInput[i];
 			coords[2 * i] = point.X;
-			coords[ 2 * i  + 1] = point.Y;
+			coords[( 2 * i ) + 1] = point.Y;
 		}
 
 		if( coords.Length < 6 ) {
@@ -30,7 +30,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		int[] ids = new int[n];
 		double[] dists = new double[n];
 
-		int maximumTriangles =  2 * n  - 5;
+		int maximumTriangles = ( 2 * n ) - 5;
 
 		int triangleCapacity = maximumTriangles * 3;
 		int[] triangles = new int[triangleCapacity];
@@ -77,7 +77,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 
 		for( int i = 0; i < n; i++ ) {
 			double x = coords[2 * i];
-			double y = coords[ 2 * i  + 1];
+			double y = coords[( 2 * i ) + 1];
 			if( x < minX ) {
 				minX = x;
 			}
@@ -106,7 +106,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 
 		// pick a seed point close to the center
 		for( int i = 0; i < n; i++ ) {
-			double d = Dist( cx, cy, coords[2 * i], coords[ 2 * i  + 1] );
+			double d = Dist( cx, cy, coords[2 * i], coords[( 2 * i ) + 1] );
 			if( d < minDist ) {
 				i0 = i;
 				minDist = d;
@@ -114,7 +114,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		}
 
 		double i0x = coords[2 * i0];
-		double i0y = coords[ 2 * i0  + 1];
+		double i0y = coords[( 2 * i0 ) + 1];
 
 		minDist = double.PositiveInfinity;
 
@@ -124,7 +124,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 				continue;
 			}
 
-			double d = Dist( i0x, i0y, coords[2 * i], coords[ 2 * i  + 1] );
+			double d = Dist( i0x, i0y, coords[2 * i], coords[( 2 * i ) + 1] );
 			if( d < minDist
 				&& d > 0.0D
 			) {
@@ -134,7 +134,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		}
 
 		double i1x = coords[2 * i1];
-		double i1y = coords[ 2 * i1  + 1];
+		double i1y = coords[( 2 * i1 ) + 1];
 
 		double minRadius = double.PositiveInfinity;
 
@@ -146,7 +146,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 				continue;
 			}
 
-			double r = Circumradius( i0x, i0y, i1x, i1y, coords[2 * i], coords[ 2 * i  + 1] );
+			double r = Circumradius( i0x, i0y, i1x, i1y, coords[2 * i], coords[( 2 * i ) + 1] );
 			if( r < minRadius ) {
 				i2 = i;
 				minRadius = r;
@@ -154,7 +154,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		}
 
 		double i2x = coords[2 * i2];
-		double i2y = coords[ 2 * i2  + 1];
+		double i2y = coords[( 2 * i2 ) + 1];
 
 		if( minRadius == double.PositiveInfinity ) {
 			throw new InvalidOperationException( "No Delaunay triangulation exists for this input." );
@@ -176,7 +176,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		Circumcenter( i0x, i0y, i1x, i1y, i2x, i2y, out double circumcenterX, out double circumcenterY );
 
 		for( int i = 0; i < n; i++ ) {
-			dists[i] = Dist( coords[2 * i], coords[ 2 * i  + 1], circumcenterX, circumcenterY );
+			dists[i] = Dist( coords[2 * i], coords[( 2 * i ) + 1], circumcenterX, circumcenterY );
 		}
 
 		Quicksort( ids, dists, 0, n - 1 );
@@ -206,9 +206,10 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		for( int k = 0; k < ids.Length; k++ ) {
 			int i = ids[k];
 			double x = coords[2 * i];
-			double y = coords[ 2 * i  + 1];
+			double y = coords[( 2 * i ) + 1];
 
-			if( k > 0 && Math.Abs( x - xp ) <= Epsilon
+			if( k > 0
+				&& Math.Abs( x - xp ) <= Epsilon
 				&& Math.Abs( y - yp ) <= Epsilon
 			) {
 				// Because we use integer input, this is basically not an issue
@@ -241,7 +242,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 			start = hullPrev[start];
 			int e = start;
 			int q = hullNext[e];
-			while( Orient( x, y, coords[2 * e], coords[ 2 * e  + 1], coords[2 * q], coords[ 2 * q  + 1] ) >= 0.0D ) {
+			while( Orient( x, y, coords[2 * e], coords[( 2 * e ) + 1], coords[2 * q], coords[( 2 * q ) + 1] ) >= 0.0D ) {
 				e = q;
 				if( e == start ) {
 					e = -1;
@@ -265,7 +266,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 			// walk forward through the hull, adding more triangles and flipping recursively
 			int next = hullNext[e];
 			q = hullNext[next];
-			while( Orient( x, y, coords[2 * next], coords[ 2 * next  + 1], coords[2 * q], coords[ 2 * q  + 1] ) < 0.0D ) {
+			while( Orient( x, y, coords[2 * next], coords[( 2 * next ) + 1], coords[2 * q], coords[( 2 * q ) + 1] ) < 0.0D ) {
 				t = AddTriangle( next, i, q, hullTri[i], -1, hullTri[next], ref trianglesLen, triangles, halfEdges );
 				hullTri[i] = Legalize( t + 2, hullStart, halfEdges, edgeStack, triangles, coords, hullTri, hullPrev );
 				hullNext[next] = next; // mark as removed
@@ -278,7 +279,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 			// walk backward from the other side, adding more triangles and flippin
 			if( e == start ) {
 				q = hullPrev[e];
-				while( Orient( x, y, coords[2 * q], coords[ 2 * q  + 1], coords[2 * e], coords[ 2 * e  + 1] ) < 0.0D ) {
+				while( Orient( x, y, coords[2 * q], coords[( 2 * q ) + 1], coords[2 * e], coords[( 2 * e ) + 1] ) < 0.0D ) {
 					t = AddTriangle( q, i, e, -1, hullTri[e], hullTri[q], ref trianglesLen, triangles, halfEdges );
 					Legalize( t + 2, hullStart, halfEdges, edgeStack, triangles, coords, hullTri, hullPrev );
 					hullTri[q] = t;
@@ -297,7 +298,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 
 			// save the two new edges in the hash table
 			hullHash[HashKey( x, y, hashSize, circumcenterX, circumcenterY )] = i;
-			hullHash[HashKey( coords[2 * e], coords[ 2 * e  + 1], hashSize, circumcenterX, circumcenterY )] = e;
+			hullHash[HashKey( coords[2 * e], coords[( 2 * e ) + 1], hashSize, circumcenterX, circumcenterY )] = e;
 		}
 
 		int[] hull = new int[hullSize];
@@ -318,7 +319,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		int a,
 		int hullStart,
 		int[] halfEdges,
-		int[] edgeStack,
+		Span<int> edgeStack,
 		int[] triangles,
 		double[] coords,
 		int[] hullTri,
@@ -329,8 +330,8 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		while( true ) {
 			int b = halfEdges[a];
 
-			int a0 = a -  a % 3 ;
-			ar = a0 +  ( a + 2 ) % 3 ;
+			int a0 = a - ( a % 3 );
+			ar = a0 + ( ( a + 2 ) % 3 );
 
 			if( b == -1 ) {
 				if( i == 0 ) {
@@ -340,9 +341,9 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 				continue;
 			}
 
-			int b0 = b -  b % 3 ;
-			int a1 = a0 +  ( a + 1 ) % 3 ;
-			int b1 = b0 +  ( b + 2 ) % 3 ;
+			int b0 = b - ( b % 3 );
+			int a1 = a0 + ( ( a + 1 ) % 3 );
+			int b1 = b0 + ( ( b + 2 ) % 3 );
 
 			int p0 = triangles[ar];
 			int pr = triangles[a];
@@ -350,10 +351,11 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 			int p1 = triangles[b1];
 
 			bool illegal = InCircle(
-				coords[2 * p0], coords[ 2 * p0  + 1],
-				coords[2 * pr], coords[ 2 * pr  + 1],
-				coords[2 * pl], coords[ 2 * pl  + 1],
-				coords[2 * p1], coords[ 2 * p1  + 1] );
+				coords[2 * p0], coords[( 2 * p0 ) + 1],
+				coords[2 * pr], coords[( 2 * pr ) + 1],
+				coords[2 * pl], coords[( 2 * pl ) + 1],
+				coords[2 * p1], coords[( 2 * p1 ) + 1]
+			);
 
 			if( illegal ) {
 				triangles[a] = p1;
@@ -376,7 +378,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 				Link( b, halfEdges[ar], halfEdges );
 				Link( ar, b1, halfEdges );
 
-				int br = b0 +  ( b + 1 ) % 3 ;
+				int br = b0 + ( ( b + 1 ) % 3 );
 
 				// don't worry about hitting the cap: it can only happen on extremely degenerate input
 				if( i < edgeStack.Length ) {
@@ -448,7 +450,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		double cx,
 		double cy
 	) {
-		return  ( ay - cy ) * ( bx - cx )  -  ( ax - cx ) * ( by - cy ) ;
+		return ( ( ay - cy ) * ( bx - cx ) ) - ( ( ax - cx ) * ( by - cy ) );
 	}
 
 	private static double Dist(
@@ -459,7 +461,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 	) {
 		double dx = ax - bx;
 		double dy = ay - by;
-		return  dx * dx  +  dy * dy ;
+		return ( dx * dx ) + ( dy * dy );
 	}
 
 	private static double Circumradius(
@@ -475,14 +477,14 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		double ex = cx - ax;
 		double ey = cy - ay;
 
-		double bl =  dx * dx  +  dy * dy ;
-		double cl =  ex * ex  +  ey * ey ;
-		double d = 0.5 / (  dx * ey  -  dy * ex  );
+		double bl = ( dx * dx ) + ( dy * dy );
+		double cl = ( ex * ex ) + ( ey * ey );
+		double d = 0.5 / ( ( dx * ey ) - ( dy * ex ) );
 
-		double x = (  ey * bl  -  dy * cl  ) * d;
-		double y = (  dx * cl  -  ex * bl  ) * d;
+		double x = ( ( ey * bl ) - ( dy * cl ) ) * d;
+		double y = ( ( dx * cl ) - ( ex * bl ) ) * d;
 
-		return  x * x  +  y * y ;
+		return ( x * x ) + ( y * y );
 	}
 
 	internal static void Circumcenter(
@@ -500,12 +502,12 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		double ex = cx - ax;
 		double ey = cy - ay;
 
-		double bl =  dx * dx  +  dy * dy ;
-		double cl =  ex * ex  +  ey * ey ;
-		double d = 0.5D / (  dx * ey  -  dy * ex  );
+		double bl = ( dx * dx ) + ( dy * dy );
+		double cl = ( ex * ex ) + ( ey * ey );
+		double d = 0.5D / ( ( dx * ey ) - ( dy * ex ) );
 
-		x = ax +  (  ey * bl  -  dy * cl  ) * d ;
-		y = ay +  (  dx * cl  -  ex * bl  ) * d ;
+		x = ax + ( ( ( ey * bl ) - ( dy * cl ) ) * d );
+		y = ay + ( ( ( dx * cl ) - ( ex * bl ) ) * d );
 	}
 
 	private static double PseudoAngle(
@@ -533,16 +535,15 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		double fx = cx - px;
 		double fy = cy - py;
 
-		double ap =  dx * dx  +  dy * dy ;
-		double bp =  ex * ex  +  ey * ey ;
-		double cp =  fx * fx  +  fy * fy ;
+		double ap = ( dx * dx ) + ( dy * dy );
+		double bp = ( ex * ex ) + ( ey * ey );
+		double cp = ( fx * fx ) + ( fy * fy );
 
-		return  dx * (  ey * cp  -  bp * fy  )  -
-			    dy * (  ex * cp  -  bp * fx  )  +
-			    ap * (  ex * fy  -  ey * fx  )  < 0.0D;
+		return ( dx * ( ( ey * cp ) - ( bp * fy ) ) ) -
+				( dy * ( ( ex * cp ) - ( bp * fx ) ) ) +
+				( ap * ( ( ex * fy ) - ( ey * fx ) ) ) < 0.0D;
 	}
 
-	//quicksort(this._ids, this._dists, 0, n - 1);
 	private void Quicksort(
 		int[] ids,
 		double[] dists,
@@ -560,7 +561,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 				ids[j + 1] = temp;
 			}
 		} else {
-			int median =  left + right  >> 1;
+			int median = ( left + right ) >> 1;
 			int i = left + 1;
 			int j = right;
 			Swap( ids, median, i );
