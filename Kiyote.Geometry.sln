@@ -26,7 +26,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Geometry", "Geometry", "{D8
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Geometry", "Geometry", "{E0DE70F0-2E6C-4E6A-A710-DE8D73764AC5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kiyote.Geometry.Benchmarks", "test\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj", "{C16CDE71-1F2C-4B50-B891-E2FE367B358D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kiyote.Geometry.Benchmarks", "test\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj", "{C16CDE71-1F2C-4B50-B891-E2FE367B358D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kiyote.Geometry.Visualizer", "test\Geometry\Kiyote.Geometry.Visualizer\Kiyote.Geometry.Visualizer.csproj", "{4162602C-B52A-420B-B7C9-F8E27AD3291C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,6 +48,10 @@ Global
 		{C16CDE71-1F2C-4B50-B891-E2FE367B358D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C16CDE71-1F2C-4B50-B891-E2FE367B358D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C16CDE71-1F2C-4B50-B891-E2FE367B358D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4162602C-B52A-420B-B7C9-F8E27AD3291C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4162602C-B52A-420B-B7C9-F8E27AD3291C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4162602C-B52A-420B-B7C9-F8E27AD3291C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4162602C-B52A-420B-B7C9-F8E27AD3291C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -56,6 +62,7 @@ Global
 		{D8A59D9B-83C9-4085-92FB-385089A1E9BA} = {4C4DAF84-3BAB-4940-B4AE-D6088DF1ACFD}
 		{E0DE70F0-2E6C-4E6A-A710-DE8D73764AC5} = {EE2FCC58-75CC-4E8F-AFEC-CC481E662896}
 		{C16CDE71-1F2C-4B50-B891-E2FE367B358D} = {E0DE70F0-2E6C-4E6A-A710-DE8D73764AC5}
+		{4162602C-B52A-420B-B7C9-F8E27AD3291C} = {E0DE70F0-2E6C-4E6A-A710-DE8D73764AC5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2BC3C0E9-3ECD-4276-B787-7089DC63C56F}

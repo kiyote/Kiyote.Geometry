@@ -1,6 +1,4 @@
 ﻿using Kiyote.Geometry.Randomization;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace Kiyote.Geometry.Tests;
 
@@ -25,20 +23,5 @@ public sealed class FastPoissonDiscPointFactoryIntegrationTests
 		IReadOnlyList<IPoint> points = _pointFactory.Fill( bounds, 5 );
 
 		Assert.IsNotEmpty( points );
-	}
-
-	[Test]
-	[Ignore("Used to visualize output for inspection.")]
-	public void Visualize() {
-		Bounds bounds = new Bounds( 500, 500 );
-		IReadOnlyList<IPoint> points = _pointFactory.Fill( bounds, 5 );
-
-		L8 white = new L8( 255 );
-		using Image<L8> image = new Image<L8>( bounds.Width, bounds.Height );
-		foreach (IPoint p in points) {
-			image[p.X, p.Y] = white;
-		}
-		image.SaveAsPng( Path.Combine( Path.GetTempPath(), "FastPoissonDiscPointFactoryTests.png" ) );
-
 	}
 }
