@@ -1,4 +1,7 @@
-﻿namespace Kiyote.Geometry.Visualizer;
+﻿using Kiyote.Geometry.Visualizer.Randomization;
+using Kiyote.Geometry.Visualizer.DelaunayVoronoi;
+
+namespace Kiyote.Geometry.Visualizer;
 
 public static class Program {
 
@@ -29,6 +32,13 @@ public static class Program {
 			bounds
 		);
 		fastRandom.Visualize();
+
+		// DelaunatorFactory
+		var delaunatorFactory = new DelaunatorFactoryVisualizer(
+			outputFolder,
+			bounds
+		);
+		delaunatorFactory.Visualize();
 
 	}
 }

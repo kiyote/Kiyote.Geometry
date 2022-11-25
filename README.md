@@ -1,7 +1,6 @@
 # Geometry
 
 # FastRandom Benchmarks vs System.Random
-```
 |                  Method |      Mean |     Error |    StdDev | Ratio | RatioSD | Allocated | Alloc Ratio |
 |------------------------ |----------:|----------:|----------:|------:|--------:|----------:|------------:|
 |    FastRandom_NextBytes | 56.185 ns | 0.3779 ns | 0.3535 ns |  3.11 |    0.02 |         - |          NA |
@@ -15,10 +14,8 @@
 |                         |           |           |           |       |         |           |             |
 |      FastRandom_NextInt |  1.540 ns | 0.0182 ns | 0.0170 ns |  0.68 |    0.01 |         - |          NA |
 |    SystemRandom_NextInt |  2.268 ns | 0.0140 ns | 0.0131 ns |  1.00 |    0.00 |         - |          NA |
-```
 
 # FastRandom Benchmarks
-```
 |                                    Method |      Mean |     Error |    StdDev | Allocated |
 |------------------------------------------ |----------:|----------:|----------:|----------:|
 |                        FastRandom_NextInt |  1.556 ns | 0.0188 ns | 0.0167 ns |         - |
@@ -31,10 +28,8 @@
 |                      FastRandom_NextFloat |  1.820 ns | 0.0174 ns | 0.0136 ns |         - |
 | FastRandom_NextFloat_LowerBoundUpperBound |  2.977 ns | 0.0304 ns | 0.0284 ns |         - |
 |                      FastRandom_NextBytes | 55.924 ns | 0.2913 ns | 0.2725 ns |         - |
-```
 
 # PoissonDiscPointFactory Benchmarks
-```
 |              Method |          Mean |       Error |      StdDev |  Ratio | RatioSD | Allocated |
 |-------------------- |--------------:|------------:|------------:|-------:|--------:|----------:|
 |        Fill_100x100 |    868.108 us |  10.5752 us |   9.3747 us | 224.06 |    2.82 |     22 KB |
@@ -45,7 +40,7 @@
 |                     |               |             |             |        |         |           |
 |      Fill_1000x1000 | 87,430.211 us | 665.7273 us | 590.1499 us | 169.09 |    1.62 |  1,649 KB |
 | Fill_1000x1000_Base |    516.773 us |   4.8951 us |   4.0877 us |   1.00 |    0.00 |  1,105 KB |
-```
+
 <sub>The `_Base` versions allocate an approximate number of random points in order to be able to judge roughly
 how much of the cost of the routine came simply from randominzing points and constructing a list of them.<sub>
 
@@ -63,10 +58,10 @@ how much of the cost of the routine came simply from randominzing points and con
 
 
 # DelaunatorFactory Benchmarks
-|           Method |         Mean |     Error |    StdDev |      Gen0 |      Gen1 |      Gen2 |  Allocated |
-|----------------- |-------------:|----------:|----------:|----------:|----------:|----------:|-----------:|
-|   Create_100x100 |     66.88 us |  0.280 us |  0.234 us |    9.7656 |    0.4883 |         - |   59.85 KB |
-|                  |              |           |           |           |           |           |            |
-|   Create_500x500 |  2,935.69 us | 28.963 us | 27.092 us |  296.8750 |  296.8750 |  296.8750 | 1344.21 KB |
-|                  |              |           |           |           |           |           |            |
-| Create_1000x1000 | 12,052.44 us | 56.603 us | 47.266 us | 1031.2500 | 1000.0000 | 1000.0000 | 5462.55 KB |
+|           Method |         Mean |      Error |     StdDev |      Gen0 |      Gen1 |      Gen2 |  Allocated |
+|----------------- |-------------:|-----------:|-----------:|----------:|----------:|----------:|-----------:|
+|   Create_100x100 |     72.37 us |   1.435 us |   2.318 us |    9.8877 |    0.4883 |         - |   60.94 KB |
+|                  |              |            |            |           |           |           |            |
+|   Create_500x500 |  3,090.47 us |  50.931 us |  47.641 us |  292.9688 |  292.9688 |  292.9688 | 1341.86 KB |
+|                  |              |            |            |           |           |           |            |
+| Create_1000x1000 | 12,686.70 us | 217.847 us | 203.774 us | 1031.2500 | 1015.6250 | 1000.0000 | 5462.05 KB |

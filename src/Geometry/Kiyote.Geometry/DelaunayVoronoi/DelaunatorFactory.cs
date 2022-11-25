@@ -4,13 +4,9 @@
 
 internal sealed class DelaunatorFactory : IDelaunatorFactory {
 
-	private readonly double Epsilon = Math.Pow( 2, -52 );
-
 	Delaunator IDelaunatorFactory.Create(
 		IEnumerable<IPoint> input
 	) {
-		int[] edgeStack = new int[512];
-
 		List<IPoint> distinctInput = input.Distinct().ToList();
 		double[] coords = new double[distinctInput.Count * 2];
 		for( int i = 0; i < distinctInput.Count; i++ ) {
@@ -22,6 +18,8 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		if( coords.Length < 6 ) {
 			throw new ArgumentException( "Must provide at least 3 distinct points.", nameof( input ) );
 		}
+
+		int[] edgeStack = new int[512];
 
 		int n = coords.Length / 2;
 		int[] hullPrev = new int[n];
@@ -208,13 +206,6 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 			double x = coords[2 * i];
 			double y = coords[( 2 * i ) + 1];
 
-			if( k > 0
-				&& Math.Abs( x - xp ) <= Epsilon
-				&& Math.Abs( y - yp ) <= Epsilon
-			) {
-				// Because we use integer input, this is basically not an issue
-				continue;
-			}
 			xp = x;
 			yp = y;
 
@@ -251,6 +242,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 				q = hullNext[e];
 			}
 
+			// likely a near-duplicate point; skip it
 			if( e == -1 ) {
 				continue;
 			}
@@ -276,7 +268,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 				q = hullNext[next];
 			}
 
-			// walk backward from the other side, adding more triangles and flippin
+			// walk backward from the other side, adding more triangles and flipping
 			if( e == start ) {
 				q = hullPrev[e];
 				while( Orient( x, y, coords[2 * q], coords[( 2 * q ) + 1], coords[2 * e], coords[( 2 * e ) + 1] ) < 0.0D ) {
@@ -319,7 +311,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		int a,
 		int hullStart,
 		int[] halfEdges,
-		Span<int> edgeStack,
+		int[] edgeStack,
 		int[] triangles,
 		double[] coords,
 		int[] hullTri,
@@ -330,6 +322,21 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		while( true ) {
 			int b = halfEdges[a];
 
+			/* if the pair of triangles doesn't satisfy the Delaunay condition
+			 * (p1 is inside the circumcircle of [p0, pl, pr]), flip them,
+			 * then do the same check/flip recursively for the new pair of triangles
+			 *
+			 *           pl                    pl
+			 *          /||\                  /  \
+			 *       al/ || \bl            al/    \a
+			 *        /  ||  \              /      \
+			 *       /  a||b  \    flip    /___ar___\
+			 *     p0\   ||   /p1   =>   p0\---bl---/p1
+			 *        \  ||  /              \      /
+			 *       ar\ || /br             b\    /br
+			 *          \||/                  \  /
+			 *           pr                    pr
+			 */
 			int a0 = a - ( a % 3 );
 			ar = a0 + ( ( a + 2 ) % 3 );
 

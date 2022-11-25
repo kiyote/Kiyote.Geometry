@@ -2,7 +2,7 @@
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace Kiyote.Geometry.Visualizer;
+namespace Kiyote.Geometry.Visualizer.Randomization;
 public sealed class FastRandomVisualizer {
 
 	private readonly string _outputFolder;
