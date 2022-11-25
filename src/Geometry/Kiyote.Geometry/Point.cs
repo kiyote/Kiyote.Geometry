@@ -3,10 +3,10 @@
 /// <summary>
 /// Provides an interface for a integer-based coordinate point
 /// </summary>
-public sealed record Point( int X, int Y ) : IPoint {
-	int IPoint.X => X;
-
-	int IPoint.Y => Y;
+public sealed record Point(
+	int X,
+	int Y
+) : IPoint {
 
 	bool IEquatable<IPoint>.Equals(
 		IPoint? other
@@ -15,6 +15,6 @@ public sealed record Point( int X, int Y ) : IPoint {
 			return false;
 		}
 
-		return Equals( other as IPoint );
+		return Equals( other );
 	}
 }
