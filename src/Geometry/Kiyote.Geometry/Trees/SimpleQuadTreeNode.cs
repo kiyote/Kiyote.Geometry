@@ -6,34 +6,40 @@ public class QuadTreeNode<T> where T : IRect {
 	/// </summary>
 	/// <param name="area"></param>
 	public QuadTreeNode( IRect bounds ) {
-		m_bounds = bounds;
+		_bounds = bounds;
 	}
 
 	/// <summary>
 	/// The area of this node
 	/// </summary>
-	private readonly IRect m_bounds;
+	private readonly IRect _bounds;
 
 	/// <summary>
 	/// The contents of this node.
 	/// Note that the contents have no limit: this is not the standard way to impement a QuadTree
 	/// </summary>
-	private readonly List<T> m_contents = new List<T>();
+	private readonly List<T> _contents = new List<T>();
 
 	/// <summary>
 	/// The child nodes of the QuadTree
 	/// </summary>
-	private readonly List<QuadTreeNode<T>> m_nodes = new List<QuadTreeNode<T>>( 4 );
+	private readonly List<QuadTreeNode<T>> _nodes = new List<QuadTreeNode<T>>( 4 );
 
 	/// <summary>
 	/// Is the node empty
 	/// </summary>
-	public bool IsEmpty { get { return m_bounds.Width == 0 || m_bounds.Height == 0 || m_nodes.Count == 0; } }
+	public bool IsEmpty {
+		get {
+			return _bounds.Width == 0
+				|| _bounds.Height == 0
+				|| _nodes.Count == 0;
+		}
+	}
 
 	/// <summary>
 	/// Area of the quadtree node
 	/// </summary>
-	public IRect Bounds { get { return m_bounds; } }
+	public IRect Bounds => _bounds;
 
 	/// <summary>
 	/// Total number of nodes in the this node and all SubNodes
@@ -42,7 +48,7 @@ public class QuadTreeNode<T> where T : IRect {
 		get {
 			int count = 0;
 
-			foreach( QuadTreeNode<T> node in m_nodes ) {
+			foreach( QuadTreeNode<T> node in _nodes ) {
 				count += node.Count;
 			}
 
@@ -59,7 +65,7 @@ public class QuadTreeNode<T> where T : IRect {
 		get {
 			List<T> results = new List<T>();
 
-			foreach( QuadTreeNode<T> node in m_nodes ) {
+			foreach( QuadTreeNode<T> node in _nodes ) {
 				results.AddRange( node.SubTreeContents );
 			}
 
@@ -68,7 +74,7 @@ public class QuadTreeNode<T> where T : IRect {
 		}
 	}
 
-	public IReadOnlyList<T> Contents => m_contents;
+	public IReadOnlyList<T> Contents => _contents;
 
 	/// <summary>
 	/// Query the QuadTree for items that are in the given area
@@ -88,7 +94,7 @@ public class QuadTreeNode<T> where T : IRect {
 			}
 		}
 
-		foreach( QuadTreeNode<T> node in m_nodes ) {
+		foreach( QuadTreeNode<T> node in _nodes ) {
 			if( node.IsEmpty ) {
 				continue;
 			}
@@ -129,7 +135,7 @@ public class QuadTreeNode<T> where T : IRect {
 	/// <param name="item"></param>
 	public void Insert( T item ) {
 		// if the item is not contained in this quad, there's a problem
-		if( !m_bounds.Contains( item ) ) {
+		if( !_bounds.Contains( item ) ) {
 			//throw new InvalidOperationException( "feature is out of the bounds of this quadtree node" );
 			//Trace.TraceWarning( "feature is out of the bounds of this quadtree node" );
 			return;
@@ -137,14 +143,14 @@ public class QuadTreeNode<T> where T : IRect {
 
 		// if the subnodes are null create them. may not be sucessfull: see below
 		// we may be at the smallest allowed size in which case the subnodes will not be created
-		if( m_nodes.Count == 0 ) {
+		if( _nodes.Count == 0 ) {
 			CreateSubNodes();
 		}
 
 		// for each subnode:
 		// if the node contains the item, add the item to that node and return
 		// this recurses into the node that is just large enough to fit this item
-		foreach( QuadTreeNode<T> node in m_nodes ) {
+		foreach( QuadTreeNode<T> node in _nodes ) {
 			if( node.Bounds.Contains( item ) ) {
 				node.Insert( item );
 				return;
@@ -155,36 +161,24 @@ public class QuadTreeNode<T> where T : IRect {
 		// 1) none of the subnodes completely contained the item. or
 		// 2) we're at the smallest subnode size allowed 
 		// add the item to this node's contents.
-		m_contents.Add( item );
+		_contents.Add( item );
 	}
-
-	/*
-
-	public void ForEach( Action<QuadTreeNode<T>> action ) {
-		action( this );
-
-		// draw the child quads
-		foreach( QuadTreeNode<T> node in this.m_nodes ) {
-			node.ForEach( action );
-		}
-	}
-	*/
 
 	/// <summary>
 	/// Internal method to create the subnodes (partitions space)
 	/// </summary>
 	private void CreateSubNodes() {
 		// the smallest subnode has an area 
-		if( ( m_bounds.Height * m_bounds.Width ) <= 10 ) {
+		if( ( _bounds.Height * _bounds.Width ) <= 10 ) {
 			return;
 		}
 
-		int halfWidth = ( m_bounds.Width / 2 );
-		int halfHeight = ( m_bounds.Height / 2 );
+		int halfWidth = ( _bounds.Width / 2 );
+		int halfHeight = ( _bounds.Height / 2 );
 
-		m_nodes.Add( new QuadTreeNode<T>( new Rect( m_bounds.TopLeft.X, m_bounds.TopLeft.Y, m_bounds.TopLeft.X + halfWidth, m_bounds.TopLeft.Y + halfHeight ) ) );
-		m_nodes.Add( new QuadTreeNode<T>( new Rect( m_bounds.TopLeft.X, m_bounds.TopLeft.Y + halfHeight, m_bounds.TopLeft.X + halfWidth, m_bounds.TopLeft.Y + halfHeight + halfHeight ) ) );
-		m_nodes.Add( new QuadTreeNode<T>( new Rect( m_bounds.TopLeft.X + halfWidth, m_bounds.TopLeft.Y, m_bounds.TopLeft.X + halfWidth + halfWidth, m_bounds.TopLeft.Y + halfHeight ) ) );
-		m_nodes.Add( new QuadTreeNode<T>( new Rect( m_bounds.TopLeft.X + halfWidth, m_bounds.TopLeft.Y + halfHeight, m_bounds.TopLeft.X + halfWidth + halfWidth, m_bounds.TopLeft.Y + halfHeight + halfHeight ) ) );
+		_nodes.Add( new QuadTreeNode<T>( new Rect( _bounds.TopLeft.X, _bounds.TopLeft.Y, _bounds.TopLeft.X + halfWidth, _bounds.TopLeft.Y + halfHeight ) ) );
+		_nodes.Add( new QuadTreeNode<T>( new Rect( _bounds.TopLeft.X, _bounds.TopLeft.Y + halfHeight, _bounds.TopLeft.X + halfWidth, _bounds.TopLeft.Y + halfHeight + halfHeight ) ) );
+		_nodes.Add( new QuadTreeNode<T>( new Rect( _bounds.TopLeft.X + halfWidth, _bounds.TopLeft.Y, _bounds.TopLeft.X + halfWidth + halfWidth, _bounds.TopLeft.Y + halfHeight ) ) );
+		_nodes.Add( new QuadTreeNode<T>( new Rect( _bounds.TopLeft.X + halfWidth, _bounds.TopLeft.Y + halfHeight, _bounds.TopLeft.X + halfWidth + halfWidth, _bounds.TopLeft.Y + halfHeight + halfHeight ) ) );
 	}
 }

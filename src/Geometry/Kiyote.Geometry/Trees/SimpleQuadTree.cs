@@ -4,33 +4,33 @@ internal sealed class SimpleQuadTree<T> : IQuadTree<T> where T : IRect {
 	/// <summary>
 	/// The root QuadTreeNode
 	/// </summary>
-	private readonly QuadTreeNode<T> m_root;
+	private readonly QuadTreeNode<T> _root;
 
 	/// <summary>
 	/// The bounds of this QuadTree
 	/// </summary>
-	private readonly IRect m_rectangle;
+	private readonly IRect _rectangle;
 
 	/// <summary>
 	/// 
 	/// </summary>
 	/// <param name="rectangle"></param>
 	public SimpleQuadTree( IRect rectangle ) {
-		m_rectangle = rectangle;
-		m_root = new QuadTreeNode<T>( m_rectangle );
+		_rectangle = rectangle;
+		_root = new QuadTreeNode<T>( _rectangle );
 	}
 
 	/// <summary>
 	/// Get the count of items in the QuadTree
 	/// </summary>
-	public int Count => m_root.Count;
+	public int Count => _root.Count;
 
 	/// <summary>
 	/// Insert the feature into the QuadTree
 	/// </summary>
 	/// <param name="item"></param>
 	public void Insert( T item ) {
-		m_root.Insert( item );
+		_root.Insert( item );
 	}
 
 	/// <summary>
@@ -39,13 +39,6 @@ internal sealed class SimpleQuadTree<T> : IQuadTree<T> where T : IRect {
 	/// <param name="area"></param>
 	/// <returns></returns>
 	public IReadOnlyList<T> Query( IRect area ) {
-		return m_root.Query( area );
+		return _root.Query( area );
 	}
-
-	/*
-	public void ForEach( Action<QuadTreeNode<T>> action ) {
-		m_root.ForEach( action );
-	}
-	*/
-
 }
