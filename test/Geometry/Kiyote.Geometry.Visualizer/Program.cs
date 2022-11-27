@@ -40,5 +40,11 @@ public static class Program {
 		);
 		delaunatorFactory.Visualize();
 
+		// DelaunayFactory
+		var delaunayFactory = new DelaunayFactoryVisualizer(
+			outputFolder,
+			bounds
+		);
+		delaunayFactory.Visualize();
 	}
 }
