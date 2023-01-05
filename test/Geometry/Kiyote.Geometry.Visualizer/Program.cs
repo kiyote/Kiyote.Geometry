@@ -46,5 +46,12 @@ public static class Program {
 			bounds
 		);
 		delaunayFactory.Visualize();
+
+		// VoronoiFactory
+		var voronoiFactory = new VoronoiFactoryVisualizer(
+			outputFolder,
+			bounds
+		);
+		voronoiFactory.Visualize();
 	}
 }
