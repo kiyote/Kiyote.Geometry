@@ -49,7 +49,6 @@ how much of the cost of the routine came simply from randominzing points and con
 |      Fill_1000x1000 | 33,153.867 us | 661.5251 us | 1,086.9047 us | 56.04 |    2.41 | 1852.21 KB |        1.68 |
 | Fill_1000x1000_Base |    592.301 us |  11.7908 us |    18.7014 us |  1.00 |    0.00 | 1105.36 KB |        1.00 |
 
-
 # DelaunatorFactory Benchmarks
 |           Method |         Mean |      Error |     StdDev |      Gen0 |      Gen1 |      Gen2 |  Allocated |
 |----------------- |-------------:|-----------:|-----------:|----------:|----------:|----------:|-----------:|
@@ -63,3 +62,25 @@ how much of the cost of the routine came simply from randominzing points and con
 |   Create_100x100 |     38.97 us |   0.777 us |   1.949 us |   15.8691 |    2.3804 |        - |   97.59 KB |
 |   Create_500x500 |  5,544.64 us | 109.261 us | 185.533 us |  421.8750 |  359.3750 | 132.8125 |  2315.2 KB |
 | Create_1000x1000 | 24,462.18 us | 485.447 us | 811.072 us | 1687.5000 | 1281.2500 | 718.7500 | 9253.15 KB |
+
+# VoronoiFactory Benchmarks
+|           Method |        Mean |       Error |      StdDev |      Gen0 |      Gen1 |      Gen2 |   Allocated |
+|----------------- |------------:|------------:|------------:|----------:|----------:|----------:|------------:|
+|   Create_100x100 |    288.0 us |     2.39 us |     2.12 us |   44.4336 |   11.7188 |         - |   273.41 KB |
+|   Create_500x500 | 18,602.1 us |   440.59 us | 1,299.09 us | 1187.5000 |  906.2500 |  343.7500 |   6812.2 KB |
+| Create_1000x1000 | 86,408.3 us | 1,723.77 us | 2,180.01 us | 4500.0000 | 3000.0000 | 1333.3333 | 27077.96 KB |
+
+# Voronoi Benchmarks
+|                      Method |         Mean |       Error |      StdDev |   Gen0 | Allocated |
+|---------------------------- |-------------:|------------:|------------:|-------:|----------:|
+|        IterateCells_100x100 |     887.4 ns |     3.87 ns |     3.43 ns | 0.0048 |      32 B |
+|        IterateEdges_100x100 |   6,031.1 ns |    35.21 ns |    31.22 ns |      - |      40 B |
+|   IterateNeighbours_100x100 | 295,500.9 ns | 1,424.60 ns | 1,262.87 ns |      - |      56 B |
+|                             |              |             |             |        |           |
+|        IterateCells_500x500 |  22,626.4 ns |    48.29 ns |    45.17 ns |      - |      32 B |
+|        IterateEdges_500x500 | 162,847.8 ns |   277.65 ns |   231.85 ns |      - |      40 B |
+|   IterateNeighbours_500x500 | 294,434.5 ns |   962.55 ns |   803.77 ns |      - |      56 B |
+|                             |              |             |             |        |           |
+|      IterateCells_1000x1000 |  90,101.8 ns |   711.96 ns |   631.13 ns |      - |      32 B |
+|      IterateEdges_1000x1000 | 646,625.6 ns | 2,252.80 ns | 2,107.27 ns |      - |      40 B |
+| IterateNeighbours_1000x1000 | 294,802.2 ns | 1,434.12 ns | 1,271.31 ns |      - |      56 B |

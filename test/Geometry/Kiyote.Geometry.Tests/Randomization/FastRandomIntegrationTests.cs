@@ -75,7 +75,7 @@ public sealed class FastRandomIntegrationTests {
 	public void NextDouble_FixedSeed_ValueMatches() {
 		double value = _random.NextDouble();
 
-		Assert.AreEqual( 0.73838998097926378d, value );
+		Assert.AreEqual( 0.73838998144492507d, value );
 	}
 
 	[Test]

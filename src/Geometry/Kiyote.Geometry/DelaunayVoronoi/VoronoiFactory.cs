@@ -1,4 +1,6 @@
-﻿namespace Kiyote.Geometry.DelaunayVoronoi;
+﻿using System.Collections.Immutable;
+
+namespace Kiyote.Geometry.DelaunayVoronoi;
 
 // Logic ported from https://github.com/d3/d3-delaunay
 
@@ -56,7 +58,7 @@ internal sealed class VoronoiFactory : IVoronoiFactory {
 		int height
 	) {
 		Cell[] cells = new Cell[points.Length];
-		List<Point> boundary = new List<Point>( 20 );
+		List<Point> boundary = new List<Point>( 20 ); // Anything larger than this is...unexpected
 		for( int i = 0; i < points.Length; i++ ) {
 
 			// Find all the edges of this cell

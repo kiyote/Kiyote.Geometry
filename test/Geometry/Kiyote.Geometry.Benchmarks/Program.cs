@@ -6,6 +6,6 @@ using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
 
 
-BenchmarkRunner.Run<DelaunayFactoryBenchmarks>();
+BenchmarkRunner.Run<VoronoiBenchmarks>();
 
 
