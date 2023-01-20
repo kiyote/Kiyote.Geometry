@@ -51,14 +51,6 @@ public sealed class VoronoiFactoryVisualizer {
 			}
 		} );
 
-		foreach (Cell cell in voronoi.OpenCells) {
-			image[cell.Center.X + 100, cell.Center.Y + 100] = Color.Red;
-		}
-
-		foreach( Cell cell in voronoi.ClosedCells ) {
-			image[cell.Center.X + 100, cell.Center.Y + 100] = Color.Green;
-		}
-
 		image.Mutate( ( context ) => {
 			PointF[] lines = new PointF[5];
 			lines[0].X = 100;
@@ -73,6 +65,14 @@ public sealed class VoronoiFactoryVisualizer {
 			lines[4].Y = 100;
 			context.DrawLines( Color.Yellow, 1.0f, lines );
 		} );
+
+		foreach( Cell cell in voronoi.OpenCells) {
+			image[cell.Center.X + 100, cell.Center.Y + 100] = Color.Red;
+		}
+
+		foreach( Cell cell in voronoi.ClosedCells ) {
+			image[cell.Center.X + 100, cell.Center.Y + 100] = Color.Green;
+		}
 
 		image.SaveAsPng( Path.Combine( _outputFolder, "VoronoiFactory.png" ) );
 	}

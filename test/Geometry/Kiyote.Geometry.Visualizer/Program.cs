@@ -12,6 +12,13 @@ public static class Program {
 		}
 		Bounds bounds = new Bounds( 1000, 1000 );
 
+		// IEdge.Intersect
+		var edgeIntersectVisualizer = new EdgeIntersectVisualizer(
+			outputFolder,
+			bounds
+		);
+		edgeIntersectVisualizer.Visualize();
+
 		// FastPoissonDiscPointFactory
 		var fastPoissonDiscPointFactory = new FastPoissonDiscPointFactoryVisualizer(
 			outputFolder,
