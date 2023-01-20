@@ -32,6 +32,7 @@ public sealed class DelaunayFactoryVisualizer {
 	}
 
 	public void Visualize() {
+		Console.WriteLine( "DelaunayFactory.Create" );
 		Delaunay delaunay = _delaunayFactory.Create( _delaunator );
 
 		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );

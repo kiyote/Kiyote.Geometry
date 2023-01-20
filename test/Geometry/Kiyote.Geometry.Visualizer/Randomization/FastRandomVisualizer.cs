@@ -32,6 +32,7 @@ public sealed class FastRandomVisualizer {
 	}
 
 	private void NextInt() {
+		Console.WriteLine( "FastRandom.NextInt" );
 		L8 white = new L8( 255 );
 		using Image<L8> image = new Image<L8>( _bounds.Width, _bounds.Height );
 		for( int i = 0; i < _count; i++ ) {
@@ -43,6 +44,7 @@ public sealed class FastRandomVisualizer {
 	}
 
 	private void NextIntUpperBound() {
+		Console.WriteLine( "FastRandom.NextIntUpperBound" );
 		L8 white = new L8( 255 );
 		using Image<L8> image = new Image<L8>( _bounds.Width, _bounds.Height );
 		for( int i = 0; i < _count; i++ ) {
@@ -54,6 +56,7 @@ public sealed class FastRandomVisualizer {
 	}
 
 	private void NextIntLowerBoundUpperBound() {
+		Console.WriteLine( "FastRandom.NextIntLowerBoundUpperBound" );
 		L8 white = new L8( 255 );
 		using Image<L8> image = new Image<L8>( _bounds.Width, _bounds.Height );
 		for( int i = 0; i < _count; i++ ) {
@@ -65,6 +68,7 @@ public sealed class FastRandomVisualizer {
 	}
 
 	private void NextUInt() {
+		Console.WriteLine( "FastRandom.NextUInt" );
 		L8 white = new L8( 255 );
 		using Image<L8> image = new Image<L8>( _bounds.Width, _bounds.Height );
 		for( int i = 0; i < _count; i++ ) {
@@ -76,6 +80,7 @@ public sealed class FastRandomVisualizer {
 	}
 
 	private void NextDouble() {
+		Console.WriteLine( "FastRandom.NextDouble" );
 		L8 white = new L8( 255 );
 		using Image<L8> image = new Image<L8>( _bounds.Width, _bounds.Height );
 		for( int i = 0; i < _count; i++ ) {
@@ -89,6 +94,7 @@ public sealed class FastRandomVisualizer {
 	}
 
 	private void NextFloat() {
+		Console.WriteLine( "FastRandom.NextFloat" );
 		L8 white = new L8( 255 );
 		using Image<L8> image = new Image<L8>( _bounds.Width, _bounds.Height );
 		for( int i = 0; i < _count; i++ ) {
@@ -102,6 +108,7 @@ public sealed class FastRandomVisualizer {
 	}
 
 	private void NextFloatLowerBoundUpperBound() {
+		Console.WriteLine( "FastRandom.nextFloatLowerBoundUpperBound" );
 		L8 white = new L8( 255 );
 		using Image<L8> image = new Image<L8>( _bounds.Width, _bounds.Height );
 		for( int i = 0; i < _count; i++ ) {
@@ -115,6 +122,7 @@ public sealed class FastRandomVisualizer {
 	}
 
 	private void NextBytes() {
+		Console.WriteLine( "FastRandom.NextBytes" );
 		byte[] bytes = new byte[_count * 2];
 		_random.NextBytes( bytes );
 		L8 white = new L8( 255 );

@@ -29,6 +29,7 @@ public sealed class DelaunatorFactoryVisualizer {
 	}
 
 	public void Visualize() {
+		Console.WriteLine( "Delaunator.Create" );
 		Delaunator delaunator = _delaunatorFactory.Create( _points );
 
 		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );

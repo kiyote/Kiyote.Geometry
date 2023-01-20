@@ -42,7 +42,7 @@
 | Fill_1000x1000_Base |    516.773 us |   4.8951 us |   4.0877 us |   1.00 |    0.00 |  1,105 KB |
 
 <sub>The `_Base` versions allocate an approximate number of random points in order to be able to judge roughly
-how much of the cost of the routine came simply from randominzing points and constructing a list of them.<sub>
+how much of the cost of the routine came simply from randomizing points and constructing a list of them.<sub>
 
 # FastPoissonDiscPointFactory Benchmarks
 |              Method |          Mean |       Error |        StdDev | Ratio | RatioSD |  Allocated | Alloc Ratio |

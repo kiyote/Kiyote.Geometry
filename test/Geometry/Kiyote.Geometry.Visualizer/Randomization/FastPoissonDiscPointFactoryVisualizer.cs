@@ -21,6 +21,7 @@ public sealed class FastPoissonDiscPointFactoryVisualizer {
 	}
 
 	public void Visualize() {
+		Console.WriteLine( "IPointFactory.Fill" );
 		IReadOnlyList<IPoint> points = _pointFactory.Fill( _bounds, 5 );
 
 		L8 white = new L8( 255 );

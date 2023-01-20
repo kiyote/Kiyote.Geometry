@@ -21,6 +21,7 @@ public sealed class PoissonDiscPointFactoryVisualizer {
 	}
 
 	public void Visualize() {
+		Console.WriteLine( "PoissonDiscPointFactory.Fill" );
 		IReadOnlyList<IPoint> points = _pointFactory.Fill( _bounds, 5 );
 
 		L8 white = new L8( 255 );
@@ -29,6 +30,5 @@ public sealed class PoissonDiscPointFactoryVisualizer {
 			image[p.X, p.Y] = white;
 		}
 		image.SaveAsPng( Path.Combine( _outputFolder, "PoissonDiscPointFactory.png" ) );
-
 	}
 }

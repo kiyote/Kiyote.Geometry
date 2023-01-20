@@ -32,6 +32,7 @@ public sealed class VoronoiFactoryVisualizer {
 	}
 
 	public void Visualize() {
+		Console.WriteLine( "VoronoiFactory.Create" );
 		IVoronoi voronoi = _voronoiFactory.Create( _delaunator, _bounds.Width - 200, _bounds.Height - 200 );
 
 		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
