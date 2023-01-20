@@ -14,7 +14,7 @@ public class EdgeBenchmarks {
 
 	[Benchmark]
 	public void Intersect() {
-		IPoint? p = _edge1.Intersect( _edge2 );
+		_edge1.Intersect( _edge2 );
 	}
 }
 

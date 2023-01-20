@@ -1,9 +1,14 @@
 # Geometry
 
+|           Method |           Mean |        Error |       StdDev | Allocated |
+|----------------- |---------------:|-------------:|-------------:|----------:|
+|           Inside |       128.2 ns |      0.47 ns |      0.37 ns |         - |
+| Inside_1000x1000 | 2,441,669.8 ns | 23,906.16 ns | 22,361.83 ns |       2 B |
+
 # Edge
 |    Method |     Mean |    Error |   StdDev | Allocated |
 |---------- |---------:|---------:|---------:|----------:|
-| Intersect | 28.02 ns | 0.253 ns | 0.224 ns |         - |
+| Intersect | 77.78 ns | 1.038 ns | 0.971 ns |      24 B |
 
 # FastRandom Benchmarks vs System.Random
 |                  Method |      Mean |     Error |    StdDev | Ratio | RatioSD | Allocated | Alloc Ratio |
