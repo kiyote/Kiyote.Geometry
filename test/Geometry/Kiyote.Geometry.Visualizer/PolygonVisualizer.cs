@@ -23,36 +23,78 @@ public sealed class PolygonVisualizer {
 
 	public void Visualize() {
 		VisualizeContains();
+		VisualizeIntersections();
+	}
+
+	private void VisualizeIntersections() {
+		Console.WriteLine( "Polygon.Intersections" );
+		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
+
+		IPolygon polygon1 = new Polygon( new List<IPoint>() {
+			new Point( 200, 200 ),
+			new Point( _bounds.Width - 200, 200 ),
+			new Point( _bounds.Width - 200, _bounds.Height - 200 ),
+			new Point( 200, _bounds.Height - 200 )
+		} );
+
+		IPolygon polygon2 = new Polygon( new List<IPoint>() {
+			new Point( 250, 250 ),
+			new Point( _bounds.Width - 250, 350 ),
+			new Point( _bounds.Width - 350, _bounds.Height - 150 ),
+			new Point( 150, _bounds.Height - 300 )
+		} );
+
+		image.Mutate( ( context ) => {
+			PointF[] lines = new PointF[polygon1.Points.Count + 1];
+			for( int i = 0; i < polygon1.Points.Count + 1; i++ ) {
+				lines[i].X = polygon1.Points[i % polygon1.Points.Count].X;
+				lines[i].Y = polygon1.Points[i % polygon1.Points.Count].Y;
+			}
+
+			context.DrawLines( Color.Yellow, 1.0f, lines );
+		} );
+
+		image.Mutate( ( context ) => {
+			PointF[] lines = new PointF[polygon2.Points.Count + 1];
+			for( int i = 0; i < polygon2.Points.Count + 1; i++ ) {
+				lines[i].X = polygon2.Points[i % polygon2.Points.Count].X;
+				lines[i].Y = polygon2.Points[i % polygon2.Points.Count].Y;
+			}
+
+			context.DrawLines( Color.White, 1.0f, lines );
+		} );
+
+		IReadOnlyList<IPoint> intersections = polygon1.Intersections( polygon2.Points );
+		foreach (IPoint p in intersections) {
+			image[p.X, p.Y] = Color.Red;
+		}
+
+		image.SaveAsPng( Path.Combine( _outputFolder, "PolygonIntersections.png" ) );
 	}
 
 	private void VisualizeContains() {
 		Console.WriteLine( "Polygon.Contains" );
 		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
 
-		IReadOnlyList<IPoint> polygon = new List<IPoint>() {
+		IPolygon polygon = new Polygon(
+			new List<IPoint>() {
 			new Point( 200, 200 ),
 			new Point( _bounds.Width - 200, 200 ),
 			new Point( _bounds.Width - 200, _bounds.Height - 200 ),
 			new Point( 200, _bounds.Height - 200 )
-		};
+		} );
 
 		image.Mutate( ( context ) => {
-			PointF[] lines = new PointF[5];
-			lines[0].X = 200;
-			lines[0].Y = 200;
-			lines[1].X = _bounds.Width - 200;
-			lines[1].Y = 200;
-			lines[2].X = _bounds.Width - 200;
-			lines[2].Y = _bounds.Height - 200;
-			lines[3].X = 200;
-			lines[3].Y = _bounds.Height - 200;
-			lines[4].X = 200;
-			lines[4].Y = 200;
+			PointF[] lines = new PointF[polygon.Points.Count + 1];
+			for( int i = 0; i < polygon.Points.Count + 1; i++ ) {
+				lines[i].X = polygon.Points[i % polygon.Points.Count].X;
+				lines[i].Y = polygon.Points[i % polygon.Points.Count].Y;
+			}
 
 			context.DrawLines( Color.Yellow, 1.0f, lines );
 		} );
 
-		for (int i = 0; i < 5000; i++) {
+		for( int i = 0; i < 5000; i++ ) {
 			int x = _random.NextInt( _bounds.Width );
 			int y = _random.NextInt( _bounds.Height );
 			IPoint p = new Point( x, y );

@@ -100,7 +100,7 @@ internal sealed class VoronoiFactory : IVoronoiFactory {
 			cells[i] =
 				new Cell(
 					points[i],
-					boundaryPoints,
+					new Polygon( boundaryPoints ),
 					isOpen || ( boundaryPoints.Count <= 2 ),
 					new Rect( minX, minY, maxX, maxY )
 				); ;

@@ -2,7 +2,7 @@
 
 public sealed record Cell(
 	IPoint Center,
-	IReadOnlyList<Point> Points,
+	IPolygon Polygon,
 	bool IsOpen,
 	IRect BoundingBox
 );

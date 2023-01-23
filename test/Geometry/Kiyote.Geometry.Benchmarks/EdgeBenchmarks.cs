@@ -13,8 +13,8 @@ public class EdgeBenchmarks {
 	}
 
 	[Benchmark]
-	public void Intersect() {
-		_edge1.Intersect( _edge2 );
+	public void Intersection() {
+		_edge1.Intersection( _edge2 );
 	}
 }
 

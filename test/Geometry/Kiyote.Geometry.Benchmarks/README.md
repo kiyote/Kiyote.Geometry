@@ -1,14 +1,15 @@
-# Geometry
-
-|           Method |           Mean |        Error |       StdDev | Allocated |
-|----------------- |---------------:|-------------:|-------------:|----------:|
-|           Inside |       128.2 ns |      0.47 ns |      0.37 ns |         - |
-| Inside_1000x1000 | 2,441,669.8 ns | 23,906.16 ns | 22,361.83 ns |       2 B |
 
 # Edge
-|    Method |     Mean |    Error |   StdDev | Allocated |
-|---------- |---------:|---------:|---------:|----------:|
-| Intersect | 77.78 ns | 1.038 ns | 0.971 ns |      24 B |
+|       Method |     Mean |    Error |   StdDev | Allocated |
+|------------- |---------:|---------:|---------:|----------:|
+| Intersection | 31.69 ns | 0.571 ns | 0.506 ns |      24 B |
+
+# Polygon
+|             Method |           Mean |        Error |       StdDev | Allocated |
+|------------------- |---------------:|-------------:|-------------:|----------:|
+|           Contains |       152.2 ns |      1.31 ns |      1.17 ns |         - |
+| Contains_1000x1000 | 2,921,189.9 ns | 45,272.33 ns | 42,347.76 ns |       2 B |
+|      Intersections |       529.8 ns |      8.14 ns |      7.62 ns |     184 B |
 
 # FastRandom Benchmarks vs System.Random
 |                  Method |      Mean |     Error |    StdDev | Ratio | RatioSD | Allocated | Alloc Ratio |
@@ -74,11 +75,11 @@ how much of the cost of the routine came simply from randomizing points and cons
 | Create_1000x1000 | 16,926.01 us | 334.606 us | 446.690 us | 1281.2500 | 1031.2500 | 375.0000 |  7707.8 KB |
 
 # VoronoiFactory Benchmarks
-|           Method |        Mean |       Error |      StdDev |      Gen0 |      Gen1 |     Gen2 |   Allocated |
-|----------------- |------------:|------------:|------------:|----------:|----------:|---------:|------------:|
-|   Create_100x100 |    306.5 us |     5.95 us |     7.53 us |   42.4805 |    8.7891 |        - |    261.8 KB |
-|   Create_500x500 | 16,982.7 us |   338.75 us |   610.84 us | 1093.7500 |  875.0000 | 281.2500 |  6438.68 KB |
-| Create_1000x1000 | 81,389.1 us | 1,609.43 us | 3,251.13 us | 3857.1429 | 2428.5714 | 857.1429 | 25329.26 KB |
+|           Method |        Mean |       Error |      StdDev |      Gen0 |      Gen1 |      Gen2 |   Allocated |
+|----------------- |------------:|------------:|------------:|----------:|----------:|----------:|------------:|
+|   Create_100x100 |    310.8 us |     2.34 us |     2.19 us |   43.4570 |    9.7656 |         - |   268.96 KB |
+|   Create_500x500 | 20,135.8 us |   390.04 us |   383.08 us | 1156.2500 |  875.0000 |  312.5000 |  6575.67 KB |
+| Create_1000x1000 | 86,006.6 us | 1,701.96 us | 2,547.41 us | 4166.6667 | 2500.0000 | 1000.0000 | 26003.08 KB |
 
 # Voronoi Benchmarks
 |                      Method |         Mean |       Error |      StdDev |   Gen0 | Allocated |

@@ -39,15 +39,15 @@ public sealed class VoronoiFactoryVisualizer {
 
 		image.Mutate( ( context ) => {
 			foreach (Cell cell in voronoi.Cells) {
-				PointF[] lines = new PointF[cell.Points.Count+1];
+				PointF[] lines = new PointF[cell.Polygon.Points.Count+1];
 				int index = 0;
-				foreach( Point point in cell.Points) {
+				foreach( Point point in cell.Polygon.Points ) {
 					lines[index].X = point.X + 100;
 					lines[index].Y = point.Y + 100;
 					index++;
 				}
-				lines[index].X = cell.Points[0].X + 100;
-				lines[index].Y = cell.Points[0].Y + 100;
+				lines[index].X = cell.Polygon.Points[0].X + 100;
+				lines[index].Y = cell.Polygon.Points[0].Y + 100;
 				context.DrawLines( Color.DarkGray, 1.0f, lines );
 			}
 		} );

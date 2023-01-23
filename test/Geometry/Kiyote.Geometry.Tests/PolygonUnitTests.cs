@@ -3,7 +3,7 @@
 [TestFixture]
 public sealed class PolygonUnitTests {
 
-	private IReadOnlyList<IPoint> _polygon;
+	private IPolygon _polygon;
 
 	[SetUp]
 	public void SetUp() {
@@ -24,18 +24,32 @@ public sealed class PolygonUnitTests {
 		Assert.IsFalse( _polygon.Contains( point ) );
 	}
 
-	private static IReadOnlyList<IPoint> CreatePolygon() {
+	[Test]
+	public void Intersections_Overlapping_ReturnsPoints() {
+		IPolygon other = new Polygon(
+			new List<IPoint>() {
+				new Point( 5, 5 ),
+				new Point( 10, 10 ),
+				new Point( 5, 15 ),
+				new Point( -5, 10 )
+			} );
+
+		IReadOnlyList<IPoint> intersections = _polygon.Intersections( other.Points );
+		Assert.IsNotNull( intersections );
+		Assert.AreEqual( 0, intersections[0].X );
+		Assert.AreEqual( 12, intersections[0].Y );
+		Assert.AreEqual( 0, intersections[1].X );
+		Assert.AreEqual( 8, intersections[1].Y );
+	}
+
+	private static IPolygon CreatePolygon() {
 		IReadOnlyList<IPoint> polygon = new List<IPoint>() {
 			new Point( 0, 0 ),
 			new Point( 20, 0 ),
-			new Point( 20, 0 ),
 			new Point( 20, 20 ),
-			new Point( 20, 20 ),
-			new Point( 0, 20 ),
-			new Point( 0, 20 ),
-			new Point( 0, 0 )
+			new Point( 0, 20 )
 		};
 
-		return polygon;
+		return new Polygon( polygon );
 	}
 }

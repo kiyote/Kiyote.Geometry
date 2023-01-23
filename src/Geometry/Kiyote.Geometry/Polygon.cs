@@ -1,11 +1,38 @@
 ﻿namespace Kiyote.Geometry;
 
-internal sealed record Polygon( IReadOnlyList<IPoint> Points ) : IPolygon {
+internal sealed record Polygon(
+	IReadOnlyList<IPoint> Points
+) : IPolygon {
 
 	IReadOnlyList<IPoint> IPolygon.Intersections(
 		IReadOnlyList<IPoint> polygon
 	) {
-		throw new InvalidOperationException();
+		List<IPoint> intersections = new List<IPoint>();
+		for( int i = 0; i < Points.Count; i++ ) {
+			IPoint p1 = Points[i];
+			IPoint p2 = Points[( i + 1 ) % Points.Count];
+
+			for( int j = 0; j < polygon.Count; j++ ) {
+				IPoint p3 = polygon[j];
+				IPoint p4 = polygon[( j + 1 ) % polygon.Count];
+
+				IPoint? intersection = Edge.Intersect(
+					p1.X,
+					p1.Y,
+					p2.X,
+					p2.Y,
+					p3.X,
+					p3.Y,
+					p4.X,
+					p4.Y
+				);
+				if( intersection is not null ) {
+					intersections.Add( intersection );
+				}
+			}
+		}
+
+		return intersections;
 	}
 
 	bool IPolygon.Contains(

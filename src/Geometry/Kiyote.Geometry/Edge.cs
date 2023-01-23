@@ -24,46 +24,77 @@ public sealed class Edge : IEdge {
 
 	public IPoint B { get; }
 
-	public IPoint? Intersect(
+	public IPoint? Intersection(
+		IEdge other
+	) {
+		return Intersect(
+			A.X,
+			A.Y,
+			B.X,
+			B.Y,
+			other.A.X,
+			other.A.Y,
+			other.B.X,
+			other.B.Y
+		);
+	}
+
+	public IPoint? Intersection(
 		IPoint a,
 		IPoint b
 	) {
+		return Intersect(
+			A.X,
+			A.Y,
+			B.X,
+			B.Y,
+			a.X,
+			a.Y,
+			b.X,
+			b.Y
+		);
+	}
+
+	public static IPoint? Intersect(
+		int aX1,
+		int aY1,
+		int bX1,
+		int bY1,
+		int aX2,
+		int aY2,
+		int bX2,
+		int bY2
+	) {
 		// Make sure none of the lines are zero length
-		if( ( A.X == B.X && A.Y == B.Y )
-			|| ( a.X == b.X && a.Y == b.Y )
+		if( ( aX1 == bX1 && aY1 == bY1 )
+			|| ( aX2 == bX2 && aY2 == bY2 )
 		) {
 			return null;
 		}
 
-		double denominator = ( ( ( b.Y - a.Y ) * ( B.X - A.X ) )
-			- ( ( b.X - a.X ) * ( B.Y - A.Y ) ) );
+		double denominator = ( ( ( bY2 - aY2 ) * ( bX1 - aX1 ) )
+			- ( ( bX2 - aX2 ) * ( bY1 - aY1 ) ) );
 
 		// If this is zero then the lines are parallel
 		if( denominator == 0.0 ) {
 			return null;
 		}
 
-		double ua = ( ( ( b.X - a.X ) * ( A.Y - a.Y ) )
-			- ( ( b.Y - a.Y ) * ( A.X - a.X ) ) ) / denominator;
+		double ua = ( ( ( bX2 - aX2 ) * ( aY1 - aY2 ) )
+			- ( ( bY2 - aY2 ) * ( aX1 - aX2 ) ) ) / denominator;
 
-		double ub = ( ( ( B.X - A.X ) * ( A.Y - a.Y ) )
-			- ( ( B.Y - A.Y ) * ( A.X - a.X ) ) ) / denominator;
+		double ub = ( ( ( bX1 - aX1 ) * ( aY1 - aY2 ) )
+			- ( ( bY1 - aY1 ) * ( aX1 - aX2 ) ) ) / denominator;
 
 		// Is the intersection somewhere along actual line segments?
 		if( ua < 0 || ua > 1 || ub < 0 || ub > 1 ) {
 			return null;
 		}
 
-		double x = A.X + ( ua * ( B.X - A.X ) );
-		double y = A.Y + ( ua * ( B.Y - A.Y ) );
+		double x = aX1 + ( ua * ( bX1 - aX1 ) );
+		double y = aY1 + ( ua * ( bY1 - aY1 ) );
 
 		return new Point( (int)Math.Round( x ), (int)Math.Round( y ) );
-	}
-
-	public IPoint? Intersect(
-		IEdge other
-	) {
-		return Intersect( other.A, other.B );
 	}
 
 	public bool Equals(
