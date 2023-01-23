@@ -11,6 +11,8 @@ public interface IRect: IEquatable<IRect> {
 
 	public bool Contains( int x, int y );
 
+	public bool Contains( IPoint point );
+
 	public bool Intersects( IRect rect );
 
 	public bool Contains( IRect rect );

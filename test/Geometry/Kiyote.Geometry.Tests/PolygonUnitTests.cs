@@ -1,7 +1,7 @@
 ﻿namespace Kiyote.Geometry.Tests;
 
 [TestFixture]
-public sealed class PointUnitTests {
+public sealed class PolygonUnitTests {
 
 	private IReadOnlyList<IPoint> _polygon;
 
@@ -11,17 +11,17 @@ public sealed class PointUnitTests {
 	}
 
 	[Test]
-	public void Inside_PointInside_ReturnsTrue() {
+	public void Contains_PointInside_ReturnsTrue() {
 		IPoint point = new Point( 10, 10 );
 
-		Assert.IsTrue( point.Inside( _polygon ) );
+		Assert.IsTrue( _polygon.Contains( point ) );
 	}
 
 	[Test]
-	public void Inside_PointOutside_ReturnsFalse() {
+	public void Contains_PointOutside_ReturnsFalse() {
 		IPoint point = new Point( 30, 30 );
 
-		Assert.IsFalse( point.Inside( _polygon ) );
+		Assert.IsFalse( _polygon.Contains( point ) );
 	}
 
 	private static IReadOnlyList<IPoint> CreatePolygon() {

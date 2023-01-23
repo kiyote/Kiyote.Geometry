@@ -13,7 +13,7 @@ public static class Program {
 		Bounds bounds = new Bounds( 1000, 1000 );
 
 		// Edge
-		var pointVisualizer = new PointVisualizer(
+		var pointVisualizer = new PolygonVisualizer(
 			outputFolder,
 			bounds
 		);

@@ -60,6 +60,12 @@ public sealed class Rect : IRect {
 	}
 
 	public bool Contains(
+		IPoint point
+	) {
+		return Contains( point.X, point.Y );
+	}
+
+	public bool Contains(
 		int x,
 		int y
 	) {

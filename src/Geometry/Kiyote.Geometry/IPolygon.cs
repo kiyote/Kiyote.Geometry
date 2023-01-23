@@ -6,4 +6,5 @@ public interface IPolygon {
 
 	IReadOnlyList<IPoint> Intersections( IReadOnlyList<IPoint> polygon );
 
+	bool Contains( IPoint target );
 }

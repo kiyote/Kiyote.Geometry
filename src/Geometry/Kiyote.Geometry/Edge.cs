@@ -11,13 +11,13 @@ public sealed class Edge : IEdge {
 	}
 
 	public Edge(
-		int x1,
-		int y1,
-		int x2,
-		int y2
+		int aX,
+		int aY,
+		int bX,
+		int bY
 	) {
-		A = new Point( x1, y1 );
-		B = new Point( x2, y2 );
+		A = new Point( aX, aY );
+		B = new Point( bX, bY );
 	}
 
 	public IPoint A { get; }
@@ -25,28 +25,29 @@ public sealed class Edge : IEdge {
 	public IPoint B { get; }
 
 	public IPoint? Intersect(
-		IEdge other
+		IPoint a,
+		IPoint b
 	) {
 		// Make sure none of the lines are zero length
 		if( ( A.X == B.X && A.Y == B.Y )
-			|| ( other.A.X == other.B.X && other.A.Y == other.B.Y )
+			|| ( a.X == b.X && a.Y == b.Y )
 		) {
 			return null;
 		}
 
-		double denominator = ( ( ( other.B.Y - other.A.Y ) * ( B.X - A.X ) )
-			- ( ( other.B.X - other.A.X ) * ( B.Y - A.Y ) ) );
+		double denominator = ( ( ( b.Y - a.Y ) * ( B.X - A.X ) )
+			- ( ( b.X - a.X ) * ( B.Y - A.Y ) ) );
 
 		// If this is zero then the lines are parallel
 		if( denominator == 0.0 ) {
 			return null;
 		}
 
-		double ua = ( ( ( other.B.X - other.A.X ) * ( A.Y - other.A.Y ) )
-			- ( ( other.B.Y - other.A.Y ) * ( A.X - other.A.X ) ) ) / denominator;
+		double ua = ( ( ( b.X - a.X ) * ( A.Y - a.Y ) )
+			- ( ( b.Y - a.Y ) * ( A.X - a.X ) ) ) / denominator;
 
-		double ub = ( ( ( B.X - A.X ) * ( A.Y - other.A.Y ) )
-			- ( ( B.Y - A.Y ) * ( A.X - other.A.X ) ) ) / denominator;
+		double ub = ( ( ( B.X - A.X ) * ( A.Y - a.Y ) )
+			- ( ( B.Y - A.Y ) * ( A.X - a.X ) ) ) / denominator;
 
 		// Is the intersection somewhere along actual line segments?
 		if( ua < 0 || ua > 1 || ub < 0 || ub > 1 ) {
@@ -57,6 +58,12 @@ public sealed class Edge : IEdge {
 		double y = A.Y + ( ua * ( B.Y - A.Y ) );
 
 		return new Point( (int)Math.Round( x ), (int)Math.Round( y ) );
+	}
+
+	public IPoint? Intersect(
+		IEdge other
+	) {
+		return Intersect( other.A, other.B );
 	}
 
 	public bool Equals(

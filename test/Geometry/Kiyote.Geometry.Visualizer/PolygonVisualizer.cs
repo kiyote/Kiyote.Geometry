@@ -1,23 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SixLabors.ImageSharp.PixelFormats;
+﻿using Kiyote.Geometry.Randomization;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Drawing.Processing;
-using Kiyote.Geometry.Randomization;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace Kiyote.Geometry.Visualizer;
 
-public sealed class PointVisualizer {
+public sealed class PolygonVisualizer {
 
 	private readonly Bounds _bounds;
 	private readonly string _outputFolder;
 	private readonly IRandom _random;
 
-	public PointVisualizer(
+	public PolygonVisualizer(
 		string outputFolder,
 		Bounds bounds
 	) {
@@ -27,11 +22,11 @@ public sealed class PointVisualizer {
 	}
 
 	public void Visualize() {
-		VisualizeInside();
+		VisualizeContains();
 	}
 
-	private void VisualizeInside() {
-		Console.WriteLine( "Point.Inside" );
+	private void VisualizeContains() {
+		Console.WriteLine( "Polygon.Contains" );
 		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
 
 		IReadOnlyList<IPoint> polygon = new List<IPoint>() {
@@ -62,11 +57,11 @@ public sealed class PointVisualizer {
 			int y = _random.NextInt( _bounds.Height );
 			IPoint p = new Point( x, y );
 
-			image[x, y] = p.Inside( polygon ) ? Color.Green : Color.Red;
+			image[x, y] = polygon.Contains( p ) ? Color.Green : Color.Red;
 		}
 
 
 
-		image.SaveAsPng( Path.Combine( _outputFolder, "PointInside.png" ) );
+		image.SaveAsPng( Path.Combine( _outputFolder, "PolygonContains.png" ) );
 	}
 }

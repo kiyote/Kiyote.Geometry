@@ -3,12 +3,12 @@
 namespace Kiyote.Geometry.Benchmarks;
 
 [MemoryDiagnoser( false )]
-public class PointBenchmarks {
+public class PolygonBenchmarks {
 
 	private readonly IReadOnlyList<IPoint> _points;
 	private readonly IReadOnlyList<IPoint> _polygon;
 
-	public PointBenchmarks() {
+	public PolygonBenchmarks() {
 		Bounds bounds = new Bounds( 1000, 1000 );
 		IPointFactory pointFactory = new FastPoissonDiscPointFactory(
 			new FastRandom()
@@ -25,14 +25,14 @@ public class PointBenchmarks {
 	}
 
 	[Benchmark]
-	public void Inside() {
-		_points[0].Inside( _polygon );
+	public void Contains() {
+		_polygon.Contains( _points[0] );
 	}
 
 	[Benchmark]
-	public void Inside_1000x1000() {
+	public void Contains_1000x1000() {
 		for (int i = 0; i < _points.Count; i++) {
-			_points[i].Inside( _polygon );
+			_polygon.Contains( _points[i] );
 		}
 	}
 }
