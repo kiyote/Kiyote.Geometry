@@ -8,8 +8,8 @@ internal sealed class DelaunayFactory : IDelaunayFactory {
 		Delaunator delaunator
 	) {
 		// Turn the raw coordinates in to points
-		List<Point> points = new List<Point>();
 		int n = delaunator.Coords.Count / 2;
+		List<Point> points = new List<Point>( n );
 		for( int i = 0; i < n; i++ ) {
 			points.Add(
 				new Point(
@@ -20,8 +20,8 @@ internal sealed class DelaunayFactory : IDelaunayFactory {
 		}
 
 		// Map the triangles to their associated points
-		List<Triangle> triangles = new List<Triangle>();
 		n = delaunator.Triangles.Count / 3;
+		List<Triangle> triangles = new List<Triangle>( n );
 		for( int i = 0; i < n; i++ ) {
 			triangles.Add(
 				new Triangle(
@@ -33,7 +33,7 @@ internal sealed class DelaunayFactory : IDelaunayFactory {
 		}
 
 		// Construct the point pairs that make up the edges of the triangles
-		List<Edge> edges = new List<Edge>();
+		List<Edge> edges = new List<Edge>( delaunator.Triangles.Count );
 		for( int i = 0; i < delaunator.Triangles.Count; i++ ) {
 			if( i > delaunator.HalfEdges[i] ) {
 				Point p = points[delaunator.Triangles[i]];

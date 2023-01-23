@@ -33,7 +33,7 @@ internal sealed class PoissonDiscPointFactory : IPointFactory {
 
 		int[,] grid = new int[(int)Math.Ceiling( sampleRegionSize.X / cellSize ), (int)Math.Ceiling( sampleRegionSize.Y / cellSize )];
 		List<Vector2> points = new List<Vector2>();
-		List<Vector2> spawnPoints = new List<Vector2> {
+		List<Vector2> spawnPoints = new List<Vector2>( 10 ) {
 			sampleRegionSize / 2
 		};
 		while( spawnPoints.Count > 0 ) {

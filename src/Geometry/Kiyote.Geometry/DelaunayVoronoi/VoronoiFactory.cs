@@ -147,7 +147,7 @@ internal sealed class VoronoiFactory : IVoronoiFactory {
 		Delaunator delaunator,
 		Point[] circumcenters
 	) {
-		List<Edge> edges = new List<Edge>();
+		List<Edge> edges = new List<Edge>( delaunator.Triangles.Count );
 		for( int i = 0; i < delaunator.Triangles.Count; i++ ) {
 			if( i < delaunator.HalfEdges[i] ) {
 				int t1 = i / 3;
@@ -169,7 +169,7 @@ internal sealed class VoronoiFactory : IVoronoiFactory {
 		int[] inedges,
 		Cell[] cells
 	) {
-		Dictionary<Cell, IReadOnlyList<Cell>> cellNeighbours = new Dictionary<Cell, IReadOnlyList<Cell>>();
+		Dictionary<Cell, IReadOnlyList<Cell>> cellNeighbours = new Dictionary<Cell, IReadOnlyList<Cell>>( points.Length );
 
 		int[] hullIndex = new int[points.Length];
 		Array.Fill( hullIndex, -1 );

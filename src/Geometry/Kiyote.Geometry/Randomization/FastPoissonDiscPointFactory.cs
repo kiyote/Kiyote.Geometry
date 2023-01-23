@@ -30,7 +30,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		int gridWidth = (int)Math.Ceiling( bounds.Width / cellSize );
 		int gridHeight = (int)Math.Ceiling( bounds.Height / cellSize );
 		Point?[] grid = new Point[gridWidth * gridHeight];
-		List<Point> candidates = new List<Point>();
+		List<Point> candidates = new List<Point>( 10 );
 		double rotx = Math.Cos( 2 * Math.PI * M / K );
 		double roty = Math.Sin( 2 * Math.PI * M / K );
 

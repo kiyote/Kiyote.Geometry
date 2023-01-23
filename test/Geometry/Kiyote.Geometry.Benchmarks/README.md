@@ -37,27 +37,27 @@
 |                      FastRandom_NextBytes | 55.924 ns | 0.2913 ns | 0.2725 ns |         - |
 
 # PoissonDiscPointFactory Benchmarks
-|              Method |          Mean |       Error |      StdDev |  Ratio | RatioSD | Allocated |
-|-------------------- |--------------:|------------:|------------:|-------:|--------:|----------:|
-|        Fill_100x100 |    868.108 us |  10.5752 us |   9.3747 us | 224.06 |    2.82 |     22 KB |
-|   Fill_100x100_Base |      3.875 us |   0.0337 us |   0.0299 us |   1.00 |    0.00 |     15 KB |
-|        Fill_500x500 | 21,688.316 us | 224.1246 us | 209.6463 us | 247.16 |    3.29 |    422 KB |
-|   Fill_500x500_Base |     87.626 us |   1.0238 us |   0.9075 us |   1.00 |    0.00 |    277 KB |
-|      Fill_1000x1000 | 87,430.211 us | 665.7273 us | 590.1499 us | 169.09 |    1.62 |  1,649 KB |
-| Fill_1000x1000_Base |    516.773 us |   4.8951 us |   4.0877 us |   1.00 |    0.00 |  1,105 KB |
+|              Method |          Mean |       Error |      StdDev |  Ratio | RatioSD |  Allocated | Alloc Ratio |
+|-------------------- |--------------:|------------:|------------:|-------:|--------:|-----------:|------------:|
+|        Fill_100x100 |    776.223 us |   6.9070 us |   6.1229 us | 200.95 |    4.55 |   22.14 KB |        1.52 |
+|   Fill_100x100_Base |      3.848 us |   0.0612 us |   0.0704 us |   1.00 |    0.00 |   14.54 KB |        1.00 |
+|        Fill_500x500 | 19,185.253 us |  90.9911 us |  75.9817 us | 221.28 |    1.91 |  424.93 KB |        1.53 |
+|   Fill_500x500_Base |     86.649 us |   0.7026 us |   0.6572 us |   1.00 |    0.00 |  277.13 KB |        1.00 |
+|      Fill_1000x1000 | 78,901.840 us | 896.6513 us | 700.0463 us | 140.30 |    2.33 | 1650.45 KB |        1.49 |
+| Fill_1000x1000_Base |    562.109 us |   5.8548 us |   5.4766 us |   1.00 |    0.00 | 1105.36 KB |        1.00 |
 
 <sub>The `_Base` versions allocate an approximate number of random points in order to be able to judge roughly
 how much of the cost of the routine came simply from randomizing points and constructing a list of them.<sub>
 
 # FastPoissonDiscPointFactory Benchmarks
-|              Method |          Mean |       Error |        StdDev | Ratio | RatioSD |  Allocated | Alloc Ratio |
-|-------------------- |--------------:|------------:|--------------:|------:|--------:|-----------:|------------:|
-|        Fill_100x100 |    317.517 us |   6.1552 us |     7.5592 us | 75.21 |    3.25 |   24.07 KB |        1.66 |
-|   Fill_100x100_Base |      4.213 us |   0.0828 us |     0.1556 us |  1.00 |    0.00 |   14.54 KB |        1.00 |
-|        Fill_500x500 |  8,404.661 us | 162.7798 us |   238.6005 us | 95.17 |    3.95 |  473.44 KB |        1.71 |
-|   Fill_500x500_Base |     88.403 us |   1.7088 us |     2.0985 us |  1.00 |    0.00 |  277.13 KB |        1.00 |
-|      Fill_1000x1000 | 33,153.867 us | 661.5251 us | 1,086.9047 us | 56.04 |    2.41 | 1852.21 KB |        1.68 |
-| Fill_1000x1000_Base |    592.301 us |  11.7908 us |    18.7014 us |  1.00 |    0.00 | 1105.36 KB |        1.00 |
+|              Method |          Mean |       Error |      StdDev | Ratio | RatioSD |  Allocated | Alloc Ratio |
+|-------------------- |--------------:|------------:|------------:|------:|--------:|-----------:|------------:|
+|        Fill_100x100 |    323.778 us |   3.4292 us |   3.2077 us | 77.37 |    1.69 |   24.44 KB |        1.68 |
+|   Fill_100x100_Base |      4.189 us |   0.0799 us |   0.0708 us |  1.00 |    0.00 |   14.54 KB |        1.00 |
+|        Fill_500x500 |  8,561.601 us | 129.0620 us | 120.7246 us | 90.89 |    2.03 |  469.03 KB |        1.69 |
+|   Fill_500x500_Base |     94.172 us |   1.5462 us |   1.5186 us |  1.00 |    0.00 |  277.13 KB |        1.00 |
+|      Fill_1000x1000 | 33,922.275 us | 667.1607 us | 843.7447 us | 55.70 |    1.64 | 1850.32 KB |        1.67 |
+| Fill_1000x1000_Base |    608.733 us |  11.5738 us |  10.8261 us |  1.00 |    0.00 | 1105.36 KB |        1.00 |
 
 # DelaunatorFactory Benchmarks
 |           Method |         Mean |      Error |     StdDev |      Gen0 |      Gen1 |      Gen2 |  Allocated |
@@ -69,16 +69,16 @@ how much of the cost of the routine came simply from randomizing points and cons
 # DelaunayFactory Benchmarks
 |           Method |         Mean |      Error |     StdDev |      Gen0 |      Gen1 |     Gen2 |  Allocated |
 |----------------- |-------------:|-----------:|-----------:|----------:|----------:|---------:|-----------:|
-|   Create_100x100 |     38.97 us |   0.777 us |   1.949 us |   15.8691 |    2.3804 |        - |   97.59 KB |
-|   Create_500x500 |  5,544.64 us | 109.261 us | 185.533 us |  421.8750 |  359.3750 | 132.8125 |  2315.2 KB |
-| Create_1000x1000 | 24,462.18 us | 485.447 us | 811.072 us | 1687.5000 | 1281.2500 | 718.7500 | 9253.15 KB |
+|   Create_100x100 |     35.66 us |   0.706 us |   0.989 us |   12.7563 |    1.9531 |        - |   78.28 KB |
+|   Create_500x500 |  4,141.50 us |  80.913 us | 110.755 us |  343.7500 |  320.3125 | 109.3750 | 1930.36 KB |
+| Create_1000x1000 | 16,926.01 us | 334.606 us | 446.690 us | 1281.2500 | 1031.2500 | 375.0000 |  7707.8 KB |
 
 # VoronoiFactory Benchmarks
-|           Method |        Mean |       Error |      StdDev |      Gen0 |      Gen1 |      Gen2 |   Allocated |
-|----------------- |------------:|------------:|------------:|----------:|----------:|----------:|------------:|
-|   Create_100x100 |    288.0 us |     2.39 us |     2.12 us |   44.4336 |   11.7188 |         - |   273.41 KB |
-|   Create_500x500 | 18,602.1 us |   440.59 us | 1,299.09 us | 1187.5000 |  906.2500 |  343.7500 |   6812.2 KB |
-| Create_1000x1000 | 86,408.3 us | 1,723.77 us | 2,180.01 us | 4500.0000 | 3000.0000 | 1333.3333 | 27077.96 KB |
+|           Method |        Mean |       Error |      StdDev |      Gen0 |      Gen1 |     Gen2 |   Allocated |
+|----------------- |------------:|------------:|------------:|----------:|----------:|---------:|------------:|
+|   Create_100x100 |    306.5 us |     5.95 us |     7.53 us |   42.4805 |    8.7891 |        - |    261.8 KB |
+|   Create_500x500 | 16,982.7 us |   338.75 us |   610.84 us | 1093.7500 |  875.0000 | 281.2500 |  6438.68 KB |
+| Create_1000x1000 | 81,389.1 us | 1,609.43 us | 3,251.13 us | 3857.1429 | 2428.5714 | 857.1429 | 25329.26 KB |
 
 # Voronoi Benchmarks
 |                      Method |         Mean |       Error |      StdDev |   Gen0 | Allocated |
