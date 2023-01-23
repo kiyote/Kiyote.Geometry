@@ -37,6 +37,11 @@ public class PolygonBenchmarks {
 	}
 
 	[Benchmark]
+	public void Clip() {
+		_ = _polygon.Clip( _other );
+	}
+
+	[Benchmark]
 	public void Contains() {
 		_polygon.Contains( _points[0] );
 	}

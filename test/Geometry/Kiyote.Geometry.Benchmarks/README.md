@@ -7,9 +7,10 @@
 # Polygon
 |             Method |           Mean |        Error |       StdDev | Allocated |
 |------------------- |---------------:|-------------:|-------------:|----------:|
-|           Contains |       152.2 ns |      1.31 ns |      1.17 ns |         - |
-| Contains_1000x1000 | 2,921,189.9 ns | 45,272.33 ns | 42,347.76 ns |       2 B |
-|      Intersections |       529.8 ns |      8.14 ns |      7.62 ns |     184 B |
+|               Clip |     2,369.0 ns |     25.15 ns |     22.29 ns |    1808 B |
+|           Contains |       148.1 ns |      1.57 ns |      1.40 ns |         - |
+| Contains_1000x1000 | 3,055,203.8 ns | 39,404.41 ns | 32,904.46 ns |       2 B |
+|      Intersections |       522.4 ns |     10.47 ns |     11.21 ns |     184 B |
 
 # FastRandom Benchmarks vs System.Random
 |                  Method |      Mean |     Error |    StdDev | Ratio | RatioSD | Allocated | Alloc Ratio |

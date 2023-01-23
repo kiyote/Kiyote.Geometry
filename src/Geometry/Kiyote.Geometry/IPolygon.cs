@@ -7,4 +7,6 @@ public interface IPolygon {
 	IReadOnlyList<IPoint> Intersections( IReadOnlyList<IPoint> polygon );
 
 	bool Contains( IPoint target );
+
+	IPolygon Clip( IPolygon polygon );
 }

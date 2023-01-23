@@ -25,6 +25,40 @@ public sealed class PolygonUnitTests {
 	}
 
 	[Test]
+	public void Clip_Overlapping_ReturnsClippedShape() {
+		IPolygon p1 = new Polygon(
+			new List<IPoint>() {
+				new Point( 200, 200 ),
+				new Point( 800, 200 ),
+				new Point( 800, 800 ),
+				new Point( 200, 800 )
+			} );
+
+		IPolygon p2 = new Polygon(
+			new List<IPoint>() {
+				new Point( 250, 250 ),
+				new Point( 750, 350 ),
+				new Point( 650, 850 ),
+				new Point( 150, 700 )
+			} );
+
+		IPolygon clipped = p1.Clip( p2 );
+		Assert.AreEqual( 6, clipped.Points.Count );
+		Assert.AreEqual( 660, clipped.Points[0].X );
+		Assert.AreEqual( 800, clipped.Points[0].Y );
+		Assert.AreEqual( 483, clipped.Points[1].X );
+		Assert.AreEqual( 800, clipped.Points[1].Y );
+		Assert.AreEqual( 200, clipped.Points[2].X );
+		Assert.AreEqual( 715, clipped.Points[2].Y );
+		Assert.AreEqual( 200, clipped.Points[3].X );
+		Assert.AreEqual( 475, clipped.Points[3].Y );
+		Assert.AreEqual( 250, clipped.Points[4].X );
+		Assert.AreEqual( 250, clipped.Points[4].Y );
+		Assert.AreEqual( 750, clipped.Points[5].X );
+		Assert.AreEqual( 350, clipped.Points[5].Y );
+	}
+
+	[Test]
 	public void Intersections_Overlapping_ReturnsPoints() {
 		IPolygon other = new Polygon(
 			new List<IPoint>() {

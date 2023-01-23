@@ -74,6 +74,29 @@ internal sealed record Polygon(
 		}
 
 		return inside;
+	}
 
+	IPolygon IPolygon.Clip(
+		IPolygon polygon
+	) {
+		// https://gorillasun.de/blog/an-algorithm-for-polygon-intersections
+		IReadOnlyList<IPoint> intersections = ( this as IPolygon ).Intersections( polygon.Points );
+		IEnumerable<IPoint> otherPointsWithinThis = polygon.Points.Where( p => ( this as IPolygon ).Contains( p ) );
+		IEnumerable<IPoint> thisPointsWithinOther = Points.Where( p => polygon.Contains( p ) );
+
+		// This may need a .Distinct() just before .ToList()?
+		List<IPoint> allPoints = intersections.Union( otherPointsWithinThis ).Union( thisPointsWithinOther ).ToList();
+
+		int centerX = allPoints[0].X;
+		int centerY = allPoints[0].Y;
+		for( int i = 1; i < allPoints.Count; i++ ) {
+			centerX += allPoints[i].X;
+			centerY += allPoints[i].Y;
+		}
+		centerX /= allPoints.Count;
+		centerY /= allPoints.Count;
+
+		var sortedPoints = allPoints.OrderBy( p => Math.Atan2( centerY - p.Y, centerX - p.X ) ).ToList();
+		return new Polygon( sortedPoints );
 	}
 }
