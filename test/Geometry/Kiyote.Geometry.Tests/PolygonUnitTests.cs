@@ -25,7 +25,7 @@ public sealed class PolygonUnitTests {
 	}
 
 	[Test]
-	public void Clip_Overlapping_ReturnsClippedShape() {
+	public void TryFindIntersection_Overlapping_ReturnsClippedShape() {
 		IPolygon p1 = new Polygon(
 			new List<IPoint>() {
 				new Point( 200, 200 ),
@@ -42,7 +42,8 @@ public sealed class PolygonUnitTests {
 				new Point( 150, 700 )
 			} );
 
-		IPolygon clipped = p1.Clip( p2 );
+		bool result = p1.TryFindIntersection( p2, out IPolygon clipped );
+		Assert.IsTrue( result );
 		Assert.AreEqual( 6, clipped.Points.Count );
 		Assert.AreEqual( 660, clipped.Points[0].X );
 		Assert.AreEqual( 800, clipped.Points[0].Y );

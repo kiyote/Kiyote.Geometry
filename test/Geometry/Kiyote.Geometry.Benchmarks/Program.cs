@@ -7,6 +7,6 @@ using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
 
 
-BenchmarkRunner.Run<FastPoissonDiscPointFactoryBenchmarks>();
+BenchmarkRunner.Run<PolygonBenchmarks>();
 
 

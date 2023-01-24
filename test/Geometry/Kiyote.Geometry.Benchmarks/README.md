@@ -5,12 +5,12 @@
 | Intersection | 30.01 ns | 0.209 ns | 0.185 ns |      24 B |
 
 # Polygon
-|             Method |           Mean |        Error |       StdDev | Allocated |
-|------------------- |---------------:|-------------:|-------------:|----------:|
-|               Clip |     2,369.0 ns |     25.15 ns |     22.29 ns |    1808 B |
-|           Contains |       148.1 ns |      1.57 ns |      1.40 ns |         - |
-| Contains_1000x1000 | 3,055,203.8 ns | 39,404.41 ns | 32,904.46 ns |       2 B |
-|      Intersections |       522.4 ns |     10.47 ns |     11.21 ns |     184 B |
+|              Method |           Mean |        Error |       StdDev | Allocated |
+|-------------------- |---------------:|-------------:|-------------:|----------:|
+| TryFindIntersection |     2,273.1 ns |      8.01 ns |      7.10 ns |    1808 B |
+|            Contains |       144.4 ns |      1.17 ns |      1.04 ns |         - |
+|  Contains_1000x1000 | 2,750,871.9 ns | 11,812.98 ns | 10,471.90 ns |       2 B |
+|       Intersections |       498.2 ns |      2.71 ns |      2.53 ns |     184 B |
 
 # FastRandom Benchmarks vs System.Random
 |                  Method |      Mean |     Error |    StdDev | Ratio | RatioSD | Allocated | Alloc Ratio |

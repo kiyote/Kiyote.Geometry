@@ -37,8 +37,8 @@ public class PolygonBenchmarks {
 	}
 
 	[Benchmark]
-	public void Clip() {
-		_ = _polygon.Clip( _other );
+	public void TryFindIntersection() {
+		_ = _polygon.TryFindIntersection( _other, out IPolygon _ );
 	}
 
 	[Benchmark]

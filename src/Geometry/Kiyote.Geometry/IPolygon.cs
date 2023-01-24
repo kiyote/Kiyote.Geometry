@@ -8,5 +8,5 @@ public interface IPolygon {
 
 	bool Contains( IPoint target );
 
-	IPolygon Clip( IPolygon polygon );
+	bool TryFindIntersection( IPolygon polygon, out IPolygon clipped );
 }

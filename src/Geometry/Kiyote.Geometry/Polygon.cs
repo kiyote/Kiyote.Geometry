@@ -4,6 +4,8 @@ internal sealed record Polygon(
 	IReadOnlyList<IPoint> Points
 ) : IPolygon {
 
+	public static readonly Polygon None = new Polygon( Array.Empty<Point>() );
+
 	IReadOnlyList<IPoint> IPolygon.Intersections(
 		IReadOnlyList<IPoint> polygon
 	) {
@@ -76,11 +78,16 @@ internal sealed record Polygon(
 		return inside;
 	}
 
-	IPolygon IPolygon.Clip(
-		IPolygon polygon
+	bool IPolygon.TryFindIntersection(
+		IPolygon polygon,
+		out IPolygon clipped
 	) {
 		// https://gorillasun.de/blog/an-algorithm-for-polygon-intersections
 		IReadOnlyList<IPoint> intersections = ( this as IPolygon ).Intersections( polygon.Points );
+		if (!intersections.Any()) {
+			clipped = None;
+			return false;
+		}
 		IEnumerable<IPoint> otherPointsWithinThis = polygon.Points.Where( p => ( this as IPolygon ).Contains( p ) );
 		IEnumerable<IPoint> thisPointsWithinOther = Points.Where( p => polygon.Contains( p ) );
 
@@ -97,6 +104,7 @@ internal sealed record Polygon(
 		centerY /= allPoints.Count;
 
 		var sortedPoints = allPoints.OrderBy( p => Math.Atan2( centerY - p.Y, centerX - p.X ) ).ToList();
-		return new Polygon( sortedPoints );
+		clipped = new Polygon( sortedPoints );
+		return true;
 	}
 }

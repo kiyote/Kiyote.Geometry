@@ -65,7 +65,7 @@ public sealed class PolygonVisualizer {
 			context.DrawLines( Color.Orange, 1.0f, lines );
 		} );
 
-		IPolygon polygon3 = polygon1.Clip( polygon2 );
+		_ = polygon1.TryFindIntersection( polygon2, out IPolygon polygon3 );
 		image.Mutate( ( context ) => {
 			PointF[] lines = new PointF[polygon3.Points.Count + 1];
 			for( int i = 0; i < polygon3.Points.Count + 1; i++ ) {
