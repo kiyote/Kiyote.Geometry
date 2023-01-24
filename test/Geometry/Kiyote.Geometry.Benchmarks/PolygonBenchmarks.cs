@@ -5,7 +5,7 @@ namespace Kiyote.Geometry.Benchmarks;
 [MemoryDiagnoser( false )]
 public class PolygonBenchmarks {
 
-	private readonly IReadOnlyList<IPoint> _points;
+	private readonly IReadOnlyList<Point> _points;
 	private readonly IPolygon _polygon;
 	private readonly IPolygon _other;
 
@@ -18,7 +18,7 @@ public class PolygonBenchmarks {
 
 
 		_polygon = new Polygon(
-			new List<IPoint>() {
+			new List<Point>() {
 				new Point( 200, 200 ),
 				new Point( bounds.Width - 200, 200 ),
 				new Point( bounds.Width - 200, bounds.Height - 200 ),
@@ -27,7 +27,7 @@ public class PolygonBenchmarks {
 		);
 
 		_other = new Polygon(
-			new List<IPoint>() {
+			new List<Point>() {
 				new Point( 250, 250 ),
 				new Point( bounds.Width - 250, 350 ),
 				new Point( bounds.Width - 350, bounds.Height - 150 ),

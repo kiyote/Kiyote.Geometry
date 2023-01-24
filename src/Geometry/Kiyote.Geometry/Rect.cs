@@ -3,8 +3,8 @@
 public sealed class Rect : IRect {
 
 	public Rect(
-		IPoint topLeft,
-		IPoint bottomRight
+		Point topLeft,
+		Point bottomRight
 	) {
 		TopLeft = topLeft;
 		BottomRight = bottomRight;
@@ -20,17 +20,17 @@ public sealed class Rect : IRect {
 	) : this( new Point( topX, topY ), new Point( bottomX, bottomY ) ) {
 	}
 
-	public IPoint TopLeft { get; }
+	public Point TopLeft { get; }
 
-	public IPoint BottomRight { get; }
+	public Point BottomRight { get; }
 
 	public int Width { get; }
 
 	public int Height { get; }
 
 	public bool Equals(
-		IPoint topLeft,
-		IPoint bottomRight
+		Point topLeft,
+		Point bottomRight
 	) {
 		return TopLeft == topLeft && BottomRight == bottomRight;
 	}
@@ -60,7 +60,7 @@ public sealed class Rect : IRect {
 	}
 
 	public bool Contains(
-		IPoint point
+		Point point
 	) {
 		return Contains( point.X, point.Y );
 	}

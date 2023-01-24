@@ -12,14 +12,14 @@ public sealed class PolygonUnitTests {
 
 	[Test]
 	public void Contains_PointInside_ReturnsTrue() {
-		IPoint point = new Point( 10, 10 );
+		Point point = new Point( 10, 10 );
 
 		Assert.IsTrue( _polygon.Contains( point ) );
 	}
 
 	[Test]
 	public void Contains_PointOutside_ReturnsFalse() {
-		IPoint point = new Point( 30, 30 );
+		Point point = new Point( 30, 30 );
 
 		Assert.IsFalse( _polygon.Contains( point ) );
 	}
@@ -27,7 +27,7 @@ public sealed class PolygonUnitTests {
 	[Test]
 	public void TryFindIntersection_Overlapping_ReturnsClippedShape() {
 		IPolygon p1 = new Polygon(
-			new List<IPoint>() {
+			new List<Point>() {
 				new Point( 200, 200 ),
 				new Point( 800, 200 ),
 				new Point( 800, 800 ),
@@ -35,7 +35,7 @@ public sealed class PolygonUnitTests {
 			} );
 
 		IPolygon p2 = new Polygon(
-			new List<IPoint>() {
+			new List<Point>() {
 				new Point( 250, 250 ),
 				new Point( 750, 350 ),
 				new Point( 650, 850 ),
@@ -62,14 +62,14 @@ public sealed class PolygonUnitTests {
 	[Test]
 	public void Intersections_Overlapping_ReturnsPoints() {
 		IPolygon other = new Polygon(
-			new List<IPoint>() {
+			new List<Point>() {
 				new Point( 5, 5 ),
 				new Point( 10, 10 ),
 				new Point( 5, 15 ),
 				new Point( -5, 10 )
 			} );
 
-		IReadOnlyList<IPoint> intersections = _polygon.Intersections( other.Points );
+		IReadOnlyList<Point> intersections = _polygon.Intersections( other.Points );
 		Assert.IsNotNull( intersections );
 		Assert.AreEqual( 0, intersections[0].X );
 		Assert.AreEqual( 12, intersections[0].Y );
@@ -78,7 +78,7 @@ public sealed class PolygonUnitTests {
 	}
 
 	private static IPolygon CreatePolygon() {
-		IReadOnlyList<IPoint> polygon = new List<IPoint>() {
+		IReadOnlyList<Point> polygon = new List<Point>() {
 			new Point( 0, 0 ),
 			new Point( 20, 0 ),
 			new Point( 20, 20 ),

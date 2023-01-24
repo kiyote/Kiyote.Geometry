@@ -1,5 +1,5 @@
 ﻿namespace Kiyote.Geometry.DelaunayVoronoi;
 
 public interface IDelaunatorFactory {
-	Delaunator Create( IEnumerable<IPoint> points );
+	Delaunator Create( IEnumerable<Point> points );
 }

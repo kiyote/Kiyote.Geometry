@@ -8,9 +8,9 @@ namespace Kiyote.Geometry.Benchmarks.DelaunayVoronoi;
 public class DelaunatorFactoryBenchmarks {
 
 	private readonly IDelaunatorFactory _delaunatorFactory;
-	private readonly IReadOnlyList<IPoint> _100points;
-	private readonly IReadOnlyList<IPoint> _500points;
-	private readonly IReadOnlyList<IPoint> _1000points;
+	private readonly IReadOnlyList<Point> _100points;
+	private readonly IReadOnlyList<Point> _500points;
+	private readonly IReadOnlyList<Point> _1000points;
 
 	public DelaunatorFactoryBenchmarks() {
 		_delaunatorFactory = new DelaunatorFactory();

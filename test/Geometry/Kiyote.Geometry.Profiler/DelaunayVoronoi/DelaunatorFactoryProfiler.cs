@@ -7,7 +7,7 @@ public sealed class DelaunatorFactoryProfiler {
 	public const int Iterations = 100;
 	public const int Separation = 5;
 	private readonly IDelaunatorFactory _delaunatorFactory;
-	private readonly IReadOnlyList<IPoint> _points;	
+	private readonly IReadOnlyList<Point> _points;	
 
 	public DelaunatorFactoryProfiler() {
 		Bounds bounds = new Bounds( 1000, 1000 );

@@ -22,11 +22,11 @@ public sealed class FastPoissonDiscPointFactoryVisualizer {
 
 	public void Visualize() {
 		Console.WriteLine( "IPointFactory.Fill" );
-		IReadOnlyList<IPoint> points = _pointFactory.Fill( _bounds, 5 );
+		IReadOnlyList<Point> points = _pointFactory.Fill( _bounds, 5 );
 
 		L8 white = new L8( 255 );
 		using Image<L8> image = new Image<L8>( _bounds.Width, _bounds.Height );
-		foreach( IPoint p in points ) {
+		foreach( Point p in points ) {
 			image[p.X, p.Y] = white;
 		}
 		image.SaveAsPng( Path.Combine( _outputFolder, "FastPoissonDiscPointFactory.png" ) );

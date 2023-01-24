@@ -12,7 +12,7 @@ public sealed class DelaunatorFactoryVisualizer {
 	private readonly string _outputFolder;
 	private readonly Bounds _bounds;
 	private readonly IDelaunatorFactory _delaunatorFactory;
-	private readonly IReadOnlyList<IPoint> _points;
+	private readonly IReadOnlyList<Point> _points;
 
 	public DelaunatorFactoryVisualizer(
 		string outputFolder,
@@ -73,7 +73,7 @@ public sealed class DelaunatorFactoryVisualizer {
 		} );
 
 		// Render the coords
-		foreach( IPoint p in _points ) {
+		foreach( Point p in _points ) {
 			image[p.X + 100, p.Y + 100] = Color.Magenta;
 		}
 

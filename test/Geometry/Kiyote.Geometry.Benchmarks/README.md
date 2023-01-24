@@ -1,16 +1,16 @@
 
 # Edge
-|       Method |     Mean |    Error |   StdDev | Allocated |
-|------------- |---------:|---------:|---------:|----------:|
-| Intersection | 30.01 ns | 0.209 ns | 0.185 ns |      24 B |
+|              Method |     Mean |    Error |   StdDev | Allocated |
+|-------------------- |---------:|---------:|---------:|----------:|
+| TryFindIntersection | 13.10 ns | 0.174 ns | 0.154 ns |         - |
 
 # Polygon
-|              Method |           Mean |        Error |       StdDev | Allocated |
-|-------------------- |---------------:|-------------:|-------------:|----------:|
-| TryFindIntersection |     2,273.1 ns |      8.01 ns |      7.10 ns |    1808 B |
-|            Contains |       144.4 ns |      1.17 ns |      1.04 ns |         - |
-|  Contains_1000x1000 | 2,750,871.9 ns | 11,812.98 ns | 10,471.90 ns |       2 B |
-|       Intersections |       498.2 ns |      2.71 ns |      2.53 ns |     184 B |
+|              Method |            Mean |         Error |        StdDev | Allocated |
+|-------------------- |----------------:|--------------:|--------------:|----------:|
+| TryFindIntersection |     1,262.87 ns |     12.174 ns |     10.792 ns |    1712 B |
+|            Contains |        65.77 ns |      0.507 ns |      0.474 ns |         - |
+|  Contains_1000x1000 | 1,316,233.67 ns | 22,574.115 ns | 21,115.842 ns |       1 B |
+|       Intersections |       274.34 ns |      1.005 ns |      0.891 ns |      88 B |
 
 # FastRandom Benchmarks vs System.Random
 |                  Method |      Mean |     Error |    StdDev | Ratio | RatioSD | Allocated | Alloc Ratio |
@@ -38,35 +38,25 @@
 | FastRandom_NextFloat_LowerBoundUpperBound |  2.977 ns | 0.0304 ns | 0.0284 ns |         - |
 |                      FastRandom_NextBytes | 55.924 ns | 0.2913 ns | 0.2725 ns |         - |
 
-# PoissonDiscPointFactory Benchmarks
-|              Method |          Mean |       Error |      StdDev |  Ratio | RatioSD |  Allocated | Alloc Ratio |
-|-------------------- |--------------:|------------:|------------:|-------:|--------:|-----------:|------------:|
-|        Fill_100x100 |    776.223 us |   6.9070 us |   6.1229 us | 200.95 |    4.55 |   22.14 KB |        1.52 |
-|   Fill_100x100_Base |      3.848 us |   0.0612 us |   0.0704 us |   1.00 |    0.00 |   14.54 KB |        1.00 |
-|        Fill_500x500 | 19,185.253 us |  90.9911 us |  75.9817 us | 221.28 |    1.91 |  424.93 KB |        1.53 |
-|   Fill_500x500_Base |     86.649 us |   0.7026 us |   0.6572 us |   1.00 |    0.00 |  277.13 KB |        1.00 |
-|      Fill_1000x1000 | 78,901.840 us | 896.6513 us | 700.0463 us | 140.30 |    2.33 | 1650.45 KB |        1.49 |
-| Fill_1000x1000_Base |    562.109 us |   5.8548 us |   5.4766 us |   1.00 |    0.00 | 1105.36 KB |        1.00 |
-
 <sub>The `_Base` versions allocate an approximate number of random points in order to be able to judge roughly
 how much of the cost of the routine came simply from randomizing points and constructing a list of them.<sub>
 
 # FastPoissonDiscPointFactory Benchmarks
-|              Method |          Mean |       Error |      StdDev | Ratio | RatioSD |  Allocated | Alloc Ratio |
-|-------------------- |--------------:|------------:|------------:|------:|--------:|-----------:|------------:|
-|        Fill_100x100 |    331.869 us |   2.9328 us |   2.5998 us | 87.48 |    2.02 |   24.45 KB |        1.68 |
-|   Fill_100x100_Base |      3.800 us |   0.0743 us |   0.0763 us |  1.00 |    0.00 |   14.54 KB |        1.00 |
-|        Fill_500x500 |  8,407.836 us |  29.9755 us |  26.5725 us | 99.25 |    0.50 |  468.88 KB |        1.69 |
-|   Fill_500x500_Base |     84.697 us |   0.3079 us |   0.2880 us |  1.00 |    0.00 |  277.13 KB |        1.00 |
-|      Fill_1000x1000 | 34,495.952 us | 143.7413 us | 134.4557 us | 61.57 |    0.56 | 1848.48 KB |        1.67 |
-| Fill_1000x1000_Base |    560.051 us |   5.4613 us |   4.5604 us |  1.00 |    0.00 | 1105.36 KB |        1.00 |
+|              Method |          Mean |       Error |      StdDev |  Ratio | RatioSD |  Allocated | Alloc Ratio |
+|-------------------- |--------------:|------------:|------------:|-------:|--------:|-----------:|------------:|
+|        Fill_100x100 |    350.470 us |   6.3764 us |   5.6525 us | 138.94 |    2.30 |   17.32 KB |        2.11 |
+|   Fill_100x100_Base |      2.523 us |   0.0141 us |   0.0125 us |   1.00 |    0.00 |    8.21 KB |        1.00 |
+|        Fill_500x500 |  8,954.803 us | 133.0624 us | 117.9564 us | 168.09 |    3.02 |  296.94 KB |        2.31 |
+|   Fill_500x500_Base |     53.297 us |   0.5328 us |   0.4450 us |   1.00 |    0.00 |   128.3 KB |        1.00 |
+|      Fill_1000x1000 | 36,259.484 us | 486.2374 us | 454.8268 us | 112.76 |    2.09 | 1164.06 KB |        2.27 |
+| Fill_1000x1000_Base |    321.969 us |   4.3793 us |   3.8821 us |   1.00 |    0.00 |  512.39 KB |        1.00 |
 
 # DelaunatorFactory Benchmarks
-|           Method |         Mean |      Error |     StdDev |      Gen0 |      Gen1 |      Gen2 |  Allocated |
-|----------------- |-------------:|-----------:|-----------:|----------:|----------:|----------:|-----------:|
-|   Create_100x100 |     68.63 us |   1.352 us |   2.258 us |    9.7656 |    0.3662 |         - |   60.13 KB |
-|   Create_500x500 |  3,075.05 us |  57.286 us |  53.586 us |  292.9688 |  292.9688 |  292.9688 | 1343.25 KB |
-| Create_1000x1000 | 12,486.23 us | 223.543 us | 209.102 us | 1031.2500 | 1000.0000 | 1000.0000 | 5448.11 KB |
+|           Method |         Mean |     Error |    StdDev |      Gen0 |      Gen1 |      Gen2 |  Allocated |
+|----------------- |-------------:|----------:|----------:|----------:|----------:|----------:|-----------:|
+|   Create_100x100 |     57.59 us |  0.362 us |  0.338 us |    8.4229 |    0.3662 |         - |   51.75 KB |
+|   Create_500x500 |  2,528.08 us | 11.218 us |  9.945 us |  296.8750 |  296.8750 |  296.8750 | 1194.92 KB |
+| Create_1000x1000 | 11,121.16 us | 40.819 us | 34.086 us | 1000.0000 | 1000.0000 | 1000.0000 | 4675.92 KB |
 
 # DelaunayFactory Benchmarks
 |           Method |         Mean |      Error |     StdDev |      Gen0 |      Gen1 |     Gen2 |  Allocated |
@@ -75,24 +65,30 @@ how much of the cost of the routine came simply from randomizing points and cons
 |   Create_500x500 |  4,141.50 us |  80.913 us | 110.755 us |  343.7500 |  320.3125 | 109.3750 | 1930.36 KB |
 | Create_1000x1000 | 16,926.01 us | 334.606 us | 446.690 us | 1281.2500 | 1031.2500 | 375.0000 |  7707.8 KB |
 
+           Method |         Mean |      Error |     StdDev |      Gen0 |     Gen1 |     Gen2 |  Allocated |
+|----------------- |-------------:|-----------:|-----------:|----------:|---------:|---------:|-----------:|
+|   Create_100x100 |     30.20 us |   0.587 us |   0.520 us |   11.4136 |   1.6174 |        - |   69.98 KB |
+|   Create_500x500 |  2,596.86 us |  51.847 us | 134.758 us |  328.1250 | 320.3125 | 117.1875 | 1752.01 KB |
+| Create_1000x1000 | 11,598.71 us | 229.628 us | 336.586 us | 1140.6250 | 828.1250 | 328.1250 | 7018.55 KB |
+
 # VoronoiFactory Benchmarks
 |           Method |        Mean |       Error |      StdDev |      Gen0 |      Gen1 |      Gen2 |   Allocated |
 |----------------- |------------:|------------:|------------:|----------:|----------:|----------:|------------:|
-|   Create_100x100 |    310.8 us |     2.34 us |     2.19 us |   43.4570 |    9.7656 |         - |   268.96 KB |
-|   Create_500x500 | 20,135.8 us |   390.04 us |   383.08 us | 1156.2500 |  875.0000 |  312.5000 |  6575.67 KB |
-| Create_1000x1000 | 86,006.6 us | 1,701.96 us | 2,547.41 us | 4166.6667 | 2500.0000 | 1000.0000 | 26003.08 KB |
+|   Create_100x100 |    251.1 us |     1.20 us |     1.00 us |   37.1094 |    8.3008 |         - |   229.54 KB |
+|   Create_500x500 | 12,251.6 us |   139.61 us |   116.58 us | 1031.2500 |  906.2500 |  312.5000 |   5720.5 KB |
+| Create_1000x1000 | 57,237.1 us | 1,371.34 us | 4,043.43 us | 3666.6667 | 2555.5556 | 1000.0000 | 22577.02 KB |
 
 # Voronoi Benchmarks
 |                      Method |         Mean |       Error |      StdDev |   Gen0 | Allocated |
 |---------------------------- |-------------:|------------:|------------:|-------:|----------:|
-|        IterateCells_100x100 |     887.4 ns |     3.87 ns |     3.43 ns | 0.0048 |      32 B |
-|        IterateEdges_100x100 |   6,031.1 ns |    35.21 ns |    31.22 ns |      - |      40 B |
-|   IterateNeighbours_100x100 | 295,500.9 ns | 1,424.60 ns | 1,262.87 ns |      - |      56 B |
+|        IterateCells_100x100 |     900.4 ns |     4.44 ns |     3.94 ns | 0.0048 |      32 B |
+|        IterateEdges_100x100 |   6,074.2 ns |    61.64 ns |    54.64 ns |      - |      40 B |
+|   IterateNeighbours_100x100 | 287,751.3 ns | 1,841.92 ns | 1,538.08 ns |      - |      56 B |
 |                             |              |             |             |        |           |
-|        IterateCells_500x500 |  22,626.4 ns |    48.29 ns |    45.17 ns |      - |      32 B |
-|        IterateEdges_500x500 | 162,847.8 ns |   277.65 ns |   231.85 ns |      - |      40 B |
-|   IterateNeighbours_500x500 | 294,434.5 ns |   962.55 ns |   803.77 ns |      - |      56 B |
+|        IterateCells_500x500 |  22,824.7 ns |    57.34 ns |    50.83 ns |      - |      32 B |
+|        IterateEdges_500x500 | 154,475.6 ns |   274.84 ns |   229.51 ns |      - |      40 B |
+|   IterateNeighbours_500x500 | 297,752.9 ns |   624.15 ns |   521.19 ns |      - |      56 B |
 |                             |              |             |             |        |           |
-|      IterateCells_1000x1000 |  90,101.8 ns |   711.96 ns |   631.13 ns |      - |      32 B |
-|      IterateEdges_1000x1000 | 646,625.6 ns | 2,252.80 ns | 2,107.27 ns |      - |      40 B |
-| IterateNeighbours_1000x1000 | 294,802.2 ns | 1,434.12 ns | 1,271.31 ns |      - |      56 B |
+|      IterateCells_1000x1000 |  91,453.6 ns |   772.08 ns |   722.20 ns |      - |      32 B |
+|      IterateEdges_1000x1000 | 635,916.6 ns | 1,681.00 ns | 1,403.71 ns |      - |      40 B |
+| IterateNeighbours_1000x1000 | 298,522.3 ns |   589.47 ns |   492.24 ns |      - |      56 B |

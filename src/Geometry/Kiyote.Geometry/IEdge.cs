@@ -1,14 +1,14 @@
 ﻿namespace Kiyote.Geometry {
 
 	public interface IEdge: IEquatable<IEdge> {
-		IPoint A { get; }
+		Point A { get; }
 
-		IPoint B { get; }
+		Point B { get; }
 
-		bool Equals( IPoint a, IPoint b );
+		bool Equals( Point a, Point b );
 
-		bool TryFindIntersection( IEdge other, out IPoint intersection );
+		bool TryFindIntersection( IEdge other, out Point intersection );
 
-		bool TryFindIntersection( IPoint a, IPoint b, out IPoint intersection );
+		bool TryFindIntersection( Point a, Point b, out Point intersection );
 	}
 }

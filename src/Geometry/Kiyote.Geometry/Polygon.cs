@@ -1,22 +1,22 @@
 ﻿namespace Kiyote.Geometry;
 
 internal sealed record Polygon(
-	IReadOnlyList<IPoint> Points
+	IReadOnlyList<Point> Points
 ) : IPolygon {
 
 	public static readonly Polygon None = new Polygon( Array.Empty<Point>() );
 
-	IReadOnlyList<IPoint> IPolygon.Intersections(
-		IReadOnlyList<IPoint> polygon
+	IReadOnlyList<Point> IPolygon.Intersections(
+		IReadOnlyList<Point> polygon
 	) {
-		List<IPoint> intersections = new List<IPoint>();
+		List<Point> intersections = new List<Point>();
 		for( int i = 0; i < Points.Count; i++ ) {
-			IPoint p1 = Points[i];
-			IPoint p2 = Points[( i + 1 ) % Points.Count];
+			Point p1 = Points[i];
+			Point p2 = Points[( i + 1 ) % Points.Count];
 
 			for( int j = 0; j < polygon.Count; j++ ) {
-				IPoint p3 = polygon[j];
-				IPoint p4 = polygon[( j + 1 ) % polygon.Count];
+				Point p3 = polygon[j];
+				Point p4 = polygon[( j + 1 ) % polygon.Count];
 
 				if (Edge.TryFindIntersection(
 					p1.X,
@@ -27,7 +27,7 @@ internal sealed record Polygon(
 					p3.Y,
 					p4.X,
 					p4.Y,
-					out IPoint intersection
+					out Point intersection
 				) ) {
 					intersections.Add( intersection );
 				}
@@ -38,14 +38,14 @@ internal sealed record Polygon(
 	}
 
 	bool IPolygon.Contains(
-		IPoint target
+		Point target
 	) {
 		int minX = int.MaxValue;
 		int minY = int.MaxValue;
 		int maxX = int.MinValue;
 		int maxY = int.MinValue;
 		for( int i = 0; i < Points.Count; i++ ) {
-			IPoint point = Points[i];
+			Point point = Points[i];
 			if( point.X < minX ) {
 				minX = point.X;
 			}
@@ -83,16 +83,16 @@ internal sealed record Polygon(
 		out IPolygon clipped
 	) {
 		// https://gorillasun.de/blog/an-algorithm-for-polygon-intersections
-		IReadOnlyList<IPoint> intersections = ( this as IPolygon ).Intersections( polygon.Points );
+		IReadOnlyList<Point> intersections = ( this as IPolygon ).Intersections( polygon.Points );
 		if (!intersections.Any()) {
 			clipped = None;
 			return false;
 		}
-		IEnumerable<IPoint> otherPointsWithinThis = polygon.Points.Where( p => ( this as IPolygon ).Contains( p ) );
-		IEnumerable<IPoint> thisPointsWithinOther = Points.Where( p => polygon.Contains( p ) );
+		IEnumerable<Point> otherPointsWithinThis = polygon.Points.Where( p => ( this as IPolygon ).Contains( p ) );
+		IEnumerable<Point> thisPointsWithinOther = Points.Where( p => polygon.Contains( p ) );
 
 		// This may need a .Distinct() just before .ToList()?
-		List<IPoint> allPoints = intersections.Union( otherPointsWithinThis ).Union( thisPointsWithinOther ).ToList();
+		List<Point> allPoints = intersections.Union( otherPointsWithinThis ).Union( thisPointsWithinOther ).ToList();
 
 		int centerX = allPoints[0].X;
 		int centerY = allPoints[0].Y;

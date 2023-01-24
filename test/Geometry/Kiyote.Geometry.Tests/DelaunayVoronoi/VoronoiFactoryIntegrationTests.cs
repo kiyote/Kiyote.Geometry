@@ -18,7 +18,7 @@ public sealed class VoronoiFactoryIntegrationTests {
 	[Test]
 	public void Create_HappyPath_DelaunayCreated() {
 		Bounds bounds = new Bounds( 1000, 1000 );
-		IReadOnlyList<IPoint> points = _pointFactory.Fill( bounds, 25 );
+		IReadOnlyList<Point> points = _pointFactory.Fill( bounds, 25 );
 		IDelaunatorFactory delaunatorFactory = new DelaunatorFactory();
 		Delaunator delaunator = delaunatorFactory.Create( points );
 		IVoronoi voronoi = _voronoiFactory.Create( delaunator, bounds.Width, bounds.Height );

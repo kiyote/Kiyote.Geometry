@@ -1,9 +1,9 @@
 ﻿namespace Kiyote.Geometry;
 
 public interface IRect: IEquatable<IRect> {
-	public IPoint TopLeft { get; }
+	public Point TopLeft { get; }
 
-	public IPoint BottomRight { get; }
+	public Point BottomRight { get; }
 
 	public int Width { get; }
 
@@ -11,7 +11,7 @@ public interface IRect: IEquatable<IRect> {
 
 	public bool Contains( int x, int y );
 
-	public bool Contains( IPoint point );
+	public bool Contains( Point point );
 
 	public bool Contains( IRect rect );
 

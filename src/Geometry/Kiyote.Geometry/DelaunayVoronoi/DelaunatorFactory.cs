@@ -5,12 +5,12 @@
 internal sealed class DelaunatorFactory : IDelaunatorFactory {
 
 	Delaunator IDelaunatorFactory.Create(
-		IEnumerable<IPoint> input
+		IEnumerable<Point> input
 	) {
-		List<IPoint> distinctInput = input.Distinct().ToList();
+		List<Point> distinctInput = input.Distinct().ToList();
 		double[] coords = new double[distinctInput.Count * 2];
 		for( int i = 0; i < distinctInput.Count; i++ ) {
-			IPoint point = distinctInput[i];
+			Point point = distinctInput[i];
 			coords[2 * i] = point.X;
 			coords[( 2 * i ) + 1] = point.Y;
 		}

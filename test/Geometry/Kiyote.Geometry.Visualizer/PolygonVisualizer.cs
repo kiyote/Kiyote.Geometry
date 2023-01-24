@@ -31,14 +31,14 @@ public sealed class PolygonVisualizer {
 		Console.WriteLine( "Polygon.Clip" );
 		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
 
-		IPolygon polygon1 = new Polygon( new List<IPoint>() {
+		IPolygon polygon1 = new Polygon( new List<Point>() {
 			new Point( 200, 200 ),
 			new Point( _bounds.Width - 200, 200 ),
 			new Point( _bounds.Width - 200, _bounds.Height - 200 ),
 			new Point( 200, _bounds.Height - 200 )
 		} );
 
-		IPolygon polygon2 = new Polygon( new List<IPoint>() {
+		IPolygon polygon2 = new Polygon( new List<Point>() {
 			new Point( 250, 250 ),
 			new Point( _bounds.Width - 250, 350 ),
 			new Point( _bounds.Width - 350, _bounds.Height - 150 ),
@@ -83,14 +83,14 @@ public sealed class PolygonVisualizer {
 		Console.WriteLine( "Polygon.Intersections" );
 		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
 
-		IPolygon polygon1 = new Polygon( new List<IPoint>() {
+		IPolygon polygon1 = new Polygon( new List<Point>() {
 			new Point( 200, 200 ),
 			new Point( _bounds.Width - 200, 200 ),
 			new Point( _bounds.Width - 200, _bounds.Height - 200 ),
 			new Point( 200, _bounds.Height - 200 )
 		} );
 
-		IPolygon polygon2 = new Polygon( new List<IPoint>() {
+		IPolygon polygon2 = new Polygon( new List<Point>() {
 			new Point( 250, 250 ),
 			new Point( _bounds.Width - 250, 350 ),
 			new Point( _bounds.Width - 350, _bounds.Height - 150 ),
@@ -117,8 +117,8 @@ public sealed class PolygonVisualizer {
 			context.DrawLines( Color.White, 1.0f, lines );
 		} );
 
-		IReadOnlyList<IPoint> intersections = polygon1.Intersections( polygon2.Points );
-		foreach (IPoint p in intersections) {
+		IReadOnlyList<Point> intersections = polygon1.Intersections( polygon2.Points );
+		foreach (Point p in intersections) {
 			image[p.X, p.Y] = Color.Red;
 		}
 
@@ -130,7 +130,7 @@ public sealed class PolygonVisualizer {
 		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
 
 		IPolygon polygon = new Polygon(
-			new List<IPoint>() {
+			new List<Point>() {
 			new Point( 200, 200 ),
 			new Point( _bounds.Width - 200, 200 ),
 			new Point( _bounds.Width - 200, _bounds.Height - 200 ),
@@ -150,7 +150,7 @@ public sealed class PolygonVisualizer {
 		for( int i = 0; i < 5000; i++ ) {
 			int x = _random.NextInt( _bounds.Width );
 			int y = _random.NextInt( _bounds.Height );
-			IPoint p = new Point( x, y );
+			Point p = new Point( x, y );
 
 			image[x, y] = polygon.Contains( p ) ? Color.Green : Color.Red;
 		}

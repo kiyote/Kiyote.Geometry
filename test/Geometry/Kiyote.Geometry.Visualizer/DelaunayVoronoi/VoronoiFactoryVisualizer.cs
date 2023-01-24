@@ -12,7 +12,7 @@ public sealed class VoronoiFactoryVisualizer {
 	private readonly string _outputFolder;
 	private readonly Bounds _bounds;
 	private readonly IVoronoiFactory _voronoiFactory;
-	private readonly IReadOnlyList<IPoint> _points;
+	private readonly IReadOnlyList<Point> _points;
 	private readonly Delaunator _delaunator;
 
 	public VoronoiFactoryVisualizer(

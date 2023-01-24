@@ -2,11 +2,11 @@
 
 public interface IPolygon {
 
-	IReadOnlyList<IPoint> Points { get; }
+	IReadOnlyList<Point> Points { get; }
 
-	IReadOnlyList<IPoint> Intersections( IReadOnlyList<IPoint> polygon );
+	IReadOnlyList<Point> Intersections( IReadOnlyList<Point> polygon );
 
-	bool Contains( IPoint target );
+	bool Contains( Point target );
 
 	bool TryFindIntersection( IPolygon polygon, out IPolygon clipped );
 }

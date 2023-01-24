@@ -44,7 +44,7 @@ public sealed class EdgeVisualizer {
 			int y4 = _random.NextInt( 0, _bounds.Height );
 			IEdge e2 = new Edge( new Point( x3, y3 ), new Point( x4, y4 ) );
 
-			if( e1.TryFindIntersection( e2, out IPoint p ) ) {
+			if( e1.TryFindIntersection( e2, out Point p ) ) {
 				image.Mutate( ( context ) => {
 					PointF[] lines = new PointF[2];
 					lines[0].X = x1;

@@ -33,13 +33,6 @@ public static class Program {
 		);
 		fastPoissonDiscPointFactory.Visualize();
 
-		// PoissonDiscPointFactory
-		var poissonDiscPointFactory = new PoissonDiscPointFactoryVisualizer(
-			outputFolder,
-			bounds
-		);
-		poissonDiscPointFactory.Visualize();
-
 		// FastRandom
 		var fastRandom = new FastRandomVisualizer(
 			outputFolder,

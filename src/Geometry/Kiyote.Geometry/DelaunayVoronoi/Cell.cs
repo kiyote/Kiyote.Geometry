@@ -1,7 +1,7 @@
 ﻿namespace Kiyote.Geometry.DelaunayVoronoi;
 
 public sealed record Cell(
-	IPoint Center,
+	Point Center,
 	IPolygon Polygon,
 	bool IsOpen,
 	IRect BoundingBox

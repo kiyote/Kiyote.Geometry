@@ -3,8 +3,8 @@
 public sealed class Edge : IEdge {
 
 	public Edge(
-		IPoint a,
-		IPoint b
+		Point a,
+		Point b
 	) {
 		A = a;
 		B = b;
@@ -20,13 +20,13 @@ public sealed class Edge : IEdge {
 		B = new Point( bX, bY );
 	}
 
-	public IPoint A { get; }
+	public Point A { get; }
 
-	public IPoint B { get; }
+	public Point B { get; }
 
 	public bool TryFindIntersection(
 		IEdge other,
-		out IPoint intersection
+		out Point intersection
 	) {
 		return TryFindIntersection(
 			A.X,
@@ -42,9 +42,9 @@ public sealed class Edge : IEdge {
 	}
 
 	public bool TryFindIntersection(
-		IPoint a,
-		IPoint b,
-		out IPoint intersection
+		Point a,
+		Point b,
+		out Point intersection
 	) {
 		return TryFindIntersection(
 			A.X,
@@ -68,7 +68,7 @@ public sealed class Edge : IEdge {
 		int aY2,
 		int bX2,
 		int bY2,
-		out IPoint intersection
+		out Point intersection
 	) {
 		// Make sure none of the lines are zero length
 		if( ( aX1 == bX1 && aY1 == bY1 )
@@ -107,8 +107,8 @@ public sealed class Edge : IEdge {
 	}
 
 	public bool Equals(
-		IPoint a,
-		IPoint b
+		Point a,
+		Point b
 	) {
 		return ( A.Equals( a ) && B.Equals( b ) )
 			|| ( A.Equals( b ) && B.Equals( a ) );

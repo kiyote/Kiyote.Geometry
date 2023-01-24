@@ -2,6 +2,6 @@
 
 public interface IPointFactory {
 
-	IReadOnlyList<IPoint> Fill( IBounds bounds, int distanceApart );
+	IReadOnlyList<Point> Fill( IBounds bounds, int distanceApart );
 
 }
