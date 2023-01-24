@@ -7,4 +7,4 @@ using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
 
 
-BenchmarkRunner.Run<PolygonBenchmarks>();
+BenchmarkRunner.Run<VoronoiFactoryBenchmarks>();

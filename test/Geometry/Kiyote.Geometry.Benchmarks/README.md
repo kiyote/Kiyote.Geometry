@@ -74,9 +74,9 @@ how much of the cost of the routine came simply from randomizing points and cons
 # VoronoiFactory Benchmarks
 |           Method |        Mean |       Error |      StdDev |      Gen0 |      Gen1 |      Gen2 |   Allocated |
 |----------------- |------------:|------------:|------------:|----------:|----------:|----------:|------------:|
-|   Create_100x100 |    251.1 us |     1.20 us |     1.00 us |   37.1094 |    8.3008 |         - |   229.54 KB |
-|   Create_500x500 | 12,251.6 us |   139.61 us |   116.58 us | 1031.2500 |  906.2500 |  312.5000 |   5720.5 KB |
-| Create_1000x1000 | 57,237.1 us | 1,371.34 us | 4,043.43 us | 3666.6667 | 2555.5556 | 1000.0000 | 22577.02 KB |
+|   Create_100x100 |    472.1 us |     8.24 us |     7.71 us |   57.1289 |   14.1602 |         - |   350.22 KB |
+|   Create_500x500 | 15,222.2 us |   147.43 us |   130.69 us | 1218.7500 | 1156.2500 |  437.5000 |     6805 KB |
+| Create_1000x1000 | 68,526.1 us | 1,319.98 us | 1,850.43 us | 3666.6667 | 2555.5556 | 1000.0000 | 25685.65 KB |
 
 # Voronoi Benchmarks
 |                      Method |         Mean |       Error |      StdDev |   Gen0 | Allocated |

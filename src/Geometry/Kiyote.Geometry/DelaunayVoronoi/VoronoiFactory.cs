@@ -57,6 +57,14 @@ internal sealed class VoronoiFactory : IVoronoiFactory {
 		int width,
 		int height
 	) {
+		Polygon border = new Polygon(
+			new List<Point>() {
+				new Point( 0, 0 ),
+				new Point( width, 0 ),
+				new Point( width, height ),
+				new Point( 0, height )
+			}
+		);
 		Cell[] cells = new Cell[points.Length];
 		List<Point> boundary = new List<Point>( 20 ); // Anything larger than this is...unexpected
 		for( int i = 0; i < points.Length; i++ ) {
@@ -91,19 +99,31 @@ internal sealed class VoronoiFactory : IVoronoiFactory {
 
 			} while( e != e0 && e != -1 );
 
-			//TODO: Eventually figure out a way to return these in counterclockwise order
-			List<Point> boundaryPoints = boundary.ToList();
-			int minX = boundaryPoints.Min( p => p.X );
-			int maxX = boundaryPoints.Max( p => p.X );
-			int minY = boundaryPoints.Min( p => p.Y );
-			int maxY = boundaryPoints.Max( p => p.Y );
+			Polygon boundaryPolygon = new Polygon( boundary.ToList() );
+			// Clip the poly to the border
+			if( boundaryPolygon.TryFindIntersection( border, out Polygon clipped ) ) {
+				boundaryPolygon = clipped;
+				int centerX = boundaryPolygon.Points[0].X;
+				int centerY = boundaryPolygon.Points[1].Y;
+				for (int c = 1; c < boundaryPolygon.Points.Count; c++) {
+					centerX += boundaryPolygon.Points[c].X;
+					centerY += boundaryPolygon.Points[c].Y;
+				}
+				centerX /= boundaryPolygon.Points.Count;
+				centerY /= boundaryPolygon.Points.Count;
+				points[i] = new Point( centerX, centerY );
+			}
+			int minX = boundaryPolygon.Points.Min( p => p.X );
+			int maxX = boundaryPolygon.Points.Max( p => p.X );
+			int minY = boundaryPolygon.Points.Min( p => p.Y );
+			int maxY = boundaryPolygon.Points.Max( p => p.Y );
 			cells[i] =
 				new Cell(
 					points[i],
-					new Polygon( boundaryPoints ),
-					isOpen || ( boundaryPoints.Count <= 2 ),
+					boundaryPolygon,
+					isOpen || ( boundaryPolygon.Points.Count <= 2 ),
 					new Rect( minX, minY, maxX, maxY )
-				); ;
+				);
 			boundary.Clear();
 		}
 
