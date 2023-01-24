@@ -114,7 +114,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		for( int j = j0; j < j1; j++ ) {
 			int o = j * gridWidth;
 			for( int i = i0; i < i1; i++ ) {
-				Point s = grid[o + i];
+				ref readonly Point s = ref grid[o + i];
 				if( !s.Equals( Point.None ) ) {
 					int dx = s.X - x;
 					int dy = s.Y - y;

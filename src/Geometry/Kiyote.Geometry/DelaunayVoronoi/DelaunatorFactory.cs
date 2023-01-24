@@ -197,17 +197,12 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		hullHash[HashKey( i2x, i2y, hashSize, circumcenterX, circumcenterY )] = i2;
 
 		int trianglesLen = 0;
-		AddTriangle( i0, i1, i2, -1, -1, -1, ref trianglesLen, triangles, halfEdges );
+		_ = AddTriangle( i0, i1, i2, -1, -1, -1, ref trianglesLen, triangles, halfEdges );
 
-		double xp = 0;
-		double yp = 0;
 		for( int k = 0; k < ids.Length; k++ ) {
 			int i = ids[k];
 			double x = coords[2 * i];
 			double y = coords[( 2 * i ) + 1];
-
-			xp = x;
-			yp = y;
 
 			// skip seed triangle points
 			if( i == i0
@@ -273,7 +268,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 				q = hullPrev[e];
 				while( Orient( x, y, coords[2 * q], coords[( 2 * q ) + 1], coords[2 * e], coords[( 2 * e ) + 1] ) < 0.0D ) {
 					t = AddTriangle( q, i, e, -1, hullTri[e], hullTri[q], ref trianglesLen, triangles, halfEdges );
-					Legalize( t + 2, hullStart, halfEdges, edgeStack, triangles, coords, hullTri, hullPrev );
+					_ = Legalize( t + 2, hullStart, halfEdges, edgeStack, triangles, coords, hullTri, hullPrev );
 					hullTri[q] = t;
 					hullNext[e] = e; // mark as removed
 					hullSize--;
