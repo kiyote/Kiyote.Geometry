@@ -22,11 +22,11 @@ public sealed class EdgeVisualizer {
 	}
 
 	public void Visualize() {
-		VisualizeIntersect();
+		VisualizeTryFindIntersection();
 	}
 
-	private void VisualizeIntersect() {
-		Console.WriteLine( "Edge.Intersect" );
+	private void VisualizeTryFindIntersection() {
+		Console.WriteLine( "Edge.TryFindIntersection" );
 		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
 
 		bool intersection = false;
@@ -44,8 +44,7 @@ public sealed class EdgeVisualizer {
 			int y4 = _random.NextInt( 0, _bounds.Height );
 			IEdge e2 = new Edge( new Point( x3, y3 ), new Point( x4, y4 ) );
 
-			IPoint? p = e1.Intersection( e2 );
-			if( p is not null ) {
+			if( e1.TryFindIntersection( e2, out IPoint p ) ) {
 				image.Mutate( ( context ) => {
 					PointF[] lines = new PointF[2];
 					lines[0].X = x1;

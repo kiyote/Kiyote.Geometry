@@ -8,9 +8,9 @@ internal class EdgeUnitTests {
 		IEdge edge = new Edge( new Point( 0, 0 ), new Point( 10, 10 ) );
 		IEdge other = new Edge( new Point( 10, 0 ), new Point( 0, 10 ) );
 
-		IPoint intersection = edge.Intersection( other );
+		bool result = edge.TryFindIntersection( other, out IPoint intersection );
 
-		Assert.IsNotNull( intersection );
+		Assert.IsTrue( result );
 		Assert.AreEqual( 5, intersection.X );
 		Assert.AreEqual( 5, intersection.Y );
 	}
@@ -20,9 +20,9 @@ internal class EdgeUnitTests {
 		IEdge edge = new Edge( new Point( 0, 0 ), new Point( 10, 0 ) );
 		IEdge other = new Edge( new Point( 0, 10 ), new Point( 10, 10 ) );
 
-		IPoint intersection = edge.Intersection( other );
+		bool result = edge.TryFindIntersection( other, out IPoint _ );
 
-		Assert.IsNull( intersection );
+		Assert.IsFalse( result );
 	}
 
 	[Test]
@@ -30,9 +30,9 @@ internal class EdgeUnitTests {
 		IEdge edge = new Edge( new Point( 0, 0 ), new Point( 10, 0 ) );
 		IEdge other = new Edge( new Point( 0, 10 ), new Point( 100, 0 ) );
 
-		IPoint intersection = edge.Intersection( other );
+		bool result = edge.TryFindIntersection( other, out IPoint _ );
 
-		Assert.IsNull( intersection );
+		Assert.IsFalse( result );
 	}
 
 	[Test]
@@ -40,8 +40,8 @@ internal class EdgeUnitTests {
 		IEdge edge = new Edge( new Point( 0, 0 ), new Point( 10, 0 ) );
 		IEdge other = new Edge( new Point( 0, 0 ), new Point( 0, 0 ) );
 
-		IPoint intersection = edge.Intersection( other );
+		bool result = edge.TryFindIntersection( other, out IPoint _ );
 
-		Assert.IsNull( intersection );
+		Assert.IsFalse( result );
 	}
 }

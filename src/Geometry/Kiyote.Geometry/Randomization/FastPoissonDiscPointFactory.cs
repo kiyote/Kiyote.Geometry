@@ -29,7 +29,8 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		double cellSize = distanceApart * Sqrt1_2;
 		int gridWidth = (int)Math.Ceiling( bounds.Width / cellSize );
 		int gridHeight = (int)Math.Ceiling( bounds.Height / cellSize );
-		Point?[] grid = new Point[gridWidth * gridHeight];
+		Point[] grid = new Point[gridWidth * gridHeight];
+		Array.Fill( grid, Point.None );
 		List<Point> candidates = new List<Point>( 10 );
 		double rotx = Math.Cos( 2 * Math.PI * M / K );
 		double roty = Math.Sin( 2 * Math.PI * M / K );
@@ -102,7 +103,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		double cellSize,
 		int gridWidth,
 		int gridHeight,
-		Point?[] grid
+		Point[] grid
 	) {
 		int di = (int)( x / cellSize );
 		int dj = (int)( y / cellSize );
@@ -113,8 +114,8 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		for( int j = j0; j < j1; j++ ) {
 			int o = j * gridWidth;
 			for( int i = i0; i < i1; i++ ) {
-				Point? s = grid[o + i];
-				if( s is not null ) {
+				Point s = grid[o + i];
+				if( !s.Equals( Point.None ) ) {
 					int dx = s.X - x;
 					int dy = s.Y - y;
 					if( ( dx * dx ) + ( dy * dy ) < radius2 ) {
@@ -138,7 +139,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		int y,
 		int gridWidth,
 		double cellSize,
-		Point?[] grid,
+		Point[] grid,
 		List<Point> candidates
 	) {
 		Point s = new Point( x, y );

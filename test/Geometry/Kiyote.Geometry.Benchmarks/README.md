@@ -2,7 +2,7 @@
 # Edge
 |       Method |     Mean |    Error |   StdDev | Allocated |
 |------------- |---------:|---------:|---------:|----------:|
-| Intersection | 31.69 ns | 0.571 ns | 0.506 ns |      24 B |
+| Intersection | 30.01 ns | 0.209 ns | 0.185 ns |      24 B |
 
 # Polygon
 |             Method |           Mean |        Error |       StdDev | Allocated |
@@ -54,12 +54,12 @@ how much of the cost of the routine came simply from randomizing points and cons
 # FastPoissonDiscPointFactory Benchmarks
 |              Method |          Mean |       Error |      StdDev | Ratio | RatioSD |  Allocated | Alloc Ratio |
 |-------------------- |--------------:|------------:|------------:|------:|--------:|-----------:|------------:|
-|        Fill_100x100 |    323.778 us |   3.4292 us |   3.2077 us | 77.37 |    1.69 |   24.44 KB |        1.68 |
-|   Fill_100x100_Base |      4.189 us |   0.0799 us |   0.0708 us |  1.00 |    0.00 |   14.54 KB |        1.00 |
-|        Fill_500x500 |  8,561.601 us | 129.0620 us | 120.7246 us | 90.89 |    2.03 |  469.03 KB |        1.69 |
-|   Fill_500x500_Base |     94.172 us |   1.5462 us |   1.5186 us |  1.00 |    0.00 |  277.13 KB |        1.00 |
-|      Fill_1000x1000 | 33,922.275 us | 667.1607 us | 843.7447 us | 55.70 |    1.64 | 1850.32 KB |        1.67 |
-| Fill_1000x1000_Base |    608.733 us |  11.5738 us |  10.8261 us |  1.00 |    0.00 | 1105.36 KB |        1.00 |
+|        Fill_100x100 |    331.869 us |   2.9328 us |   2.5998 us | 87.48 |    2.02 |   24.45 KB |        1.68 |
+|   Fill_100x100_Base |      3.800 us |   0.0743 us |   0.0763 us |  1.00 |    0.00 |   14.54 KB |        1.00 |
+|        Fill_500x500 |  8,407.836 us |  29.9755 us |  26.5725 us | 99.25 |    0.50 |  468.88 KB |        1.69 |
+|   Fill_500x500_Base |     84.697 us |   0.3079 us |   0.2880 us |  1.00 |    0.00 |  277.13 KB |        1.00 |
+|      Fill_1000x1000 | 34,495.952 us | 143.7413 us | 134.4557 us | 61.57 |    0.56 | 1848.48 KB |        1.67 |
+| Fill_1000x1000_Base |    560.051 us |   5.4613 us |   4.5604 us |  1.00 |    0.00 | 1105.36 KB |        1.00 |
 
 # DelaunatorFactory Benchmarks
 |           Method |         Mean |      Error |     StdDev |      Gen0 |      Gen1 |      Gen2 |  Allocated |

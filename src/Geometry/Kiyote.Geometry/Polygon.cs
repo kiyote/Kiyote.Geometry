@@ -16,7 +16,7 @@ internal sealed record Polygon(
 				IPoint p3 = polygon[j];
 				IPoint p4 = polygon[( j + 1 ) % polygon.Count];
 
-				IPoint? intersection = Edge.Intersect(
+				if (Edge.TryFindIntersection(
 					p1.X,
 					p1.Y,
 					p2.X,
@@ -24,9 +24,9 @@ internal sealed record Polygon(
 					p3.X,
 					p3.Y,
 					p4.X,
-					p4.Y
-				);
-				if( intersection is not null ) {
+					p4.Y,
+					out IPoint intersection
+				) ) {
 					intersections.Add( intersection );
 				}
 			}

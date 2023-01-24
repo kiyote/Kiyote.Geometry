@@ -2,12 +2,13 @@
 
 	public interface IEdge: IEquatable<IEdge> {
 		IPoint A { get; }
+
 		IPoint B { get; }
 
 		bool Equals( IPoint a, IPoint b );
 
-		IPoint? Intersection( IEdge other );
+		bool TryFindIntersection( IEdge other, out IPoint intersection );
 
-		IPoint? Intersection( IPoint a, IPoint b );
+		bool TryFindIntersection( IPoint a, IPoint b, out IPoint intersection );
 	}
 }
