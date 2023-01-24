@@ -6,8 +6,8 @@ namespace Kiyote.Geometry.Benchmarks;
 public class PolygonBenchmarks {
 
 	private readonly IReadOnlyList<Point> _points;
-	private readonly IPolygon _polygon;
-	private readonly IPolygon _other;
+	private readonly Polygon _polygon;
+	private readonly Polygon _other;
 
 	public PolygonBenchmarks() {
 		Bounds bounds = new Bounds( 1000, 1000 );
@@ -38,7 +38,7 @@ public class PolygonBenchmarks {
 
 	[Benchmark]
 	public void TryFindIntersection() {
-		_ = _polygon.TryFindIntersection( _other, out IPolygon _ );
+		_ = _polygon.TryFindIntersection( _other, out Polygon _ );
 	}
 
 	[Benchmark]

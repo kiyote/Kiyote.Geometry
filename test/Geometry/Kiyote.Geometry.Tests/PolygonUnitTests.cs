@@ -3,7 +3,7 @@
 [TestFixture]
 public sealed class PolygonUnitTests {
 
-	private IPolygon _polygon;
+	private Polygon _polygon;
 
 	[SetUp]
 	public void SetUp() {
@@ -26,7 +26,7 @@ public sealed class PolygonUnitTests {
 
 	[Test]
 	public void TryFindIntersection_Overlapping_ReturnsClippedShape() {
-		IPolygon p1 = new Polygon(
+		Polygon p1 = new Polygon(
 			new List<Point>() {
 				new Point( 200, 200 ),
 				new Point( 800, 200 ),
@@ -34,7 +34,7 @@ public sealed class PolygonUnitTests {
 				new Point( 200, 800 )
 			} );
 
-		IPolygon p2 = new Polygon(
+		Polygon p2 = new Polygon(
 			new List<Point>() {
 				new Point( 250, 250 ),
 				new Point( 750, 350 ),
@@ -42,7 +42,7 @@ public sealed class PolygonUnitTests {
 				new Point( 150, 700 )
 			} );
 
-		bool result = p1.TryFindIntersection( p2, out IPolygon clipped );
+		bool result = p1.TryFindIntersection( p2, out Polygon clipped );
 		Assert.IsTrue( result );
 		Assert.AreEqual( 6, clipped.Points.Count );
 		Assert.AreEqual( 660, clipped.Points[0].X );
@@ -61,7 +61,7 @@ public sealed class PolygonUnitTests {
 
 	[Test]
 	public void Intersections_Overlapping_ReturnsPoints() {
-		IPolygon other = new Polygon(
+		Polygon other = new Polygon(
 			new List<Point>() {
 				new Point( 5, 5 ),
 				new Point( 10, 10 ),
@@ -77,7 +77,7 @@ public sealed class PolygonUnitTests {
 		Assert.AreEqual( 8, intersections[1].Y );
 	}
 
-	private static IPolygon CreatePolygon() {
+	private static Polygon CreatePolygon() {
 		IReadOnlyList<Point> polygon = new List<Point>() {
 			new Point( 0, 0 ),
 			new Point( 20, 0 ),

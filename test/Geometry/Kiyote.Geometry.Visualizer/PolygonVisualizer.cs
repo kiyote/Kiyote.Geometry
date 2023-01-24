@@ -31,14 +31,14 @@ public sealed class PolygonVisualizer {
 		Console.WriteLine( "Polygon.Clip" );
 		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
 
-		IPolygon polygon1 = new Polygon( new List<Point>() {
+		Polygon polygon1 = new Polygon( new List<Point>() {
 			new Point( 200, 200 ),
 			new Point( _bounds.Width - 200, 200 ),
 			new Point( _bounds.Width - 200, _bounds.Height - 200 ),
 			new Point( 200, _bounds.Height - 200 )
 		} );
 
-		IPolygon polygon2 = new Polygon( new List<Point>() {
+		Polygon polygon2 = new Polygon( new List<Point>() {
 			new Point( 250, 250 ),
 			new Point( _bounds.Width - 250, 350 ),
 			new Point( _bounds.Width - 350, _bounds.Height - 150 ),
@@ -52,7 +52,7 @@ public sealed class PolygonVisualizer {
 				lines[i].Y = polygon1.Points[i % polygon1.Points.Count].Y;
 			}
 
-			context.DrawLines( Color.Yellow, 1.0f, lines );
+			_ = context.DrawLines( Color.Yellow, 1.0f, lines );
 		} );
 
 		image.Mutate( ( context ) => {
@@ -62,10 +62,10 @@ public sealed class PolygonVisualizer {
 				lines[i].Y = polygon2.Points[i % polygon2.Points.Count].Y;
 			}
 
-			context.DrawLines( Color.Orange, 1.0f, lines );
+			_ = context.DrawLines( Color.Orange, 1.0f, lines );
 		} );
 
-		_ = polygon1.TryFindIntersection( polygon2, out IPolygon polygon3 );
+		_ = polygon1.TryFindIntersection( polygon2, out Polygon polygon3 );
 		image.Mutate( ( context ) => {
 			PointF[] lines = new PointF[polygon3.Points.Count + 1];
 			for( int i = 0; i < polygon3.Points.Count + 1; i++ ) {
@@ -73,7 +73,7 @@ public sealed class PolygonVisualizer {
 				lines[i].Y = polygon3.Points[i % polygon3.Points.Count].Y;
 			}
 
-			context.DrawLines( Color.White, 2.0f, lines );
+			_ = context.DrawLines( Color.White, 2.0f, lines );
 		} );
 
 		image.SaveAsPng( Path.Combine( _outputFolder, "PolygonClip.png" ) );
@@ -83,14 +83,14 @@ public sealed class PolygonVisualizer {
 		Console.WriteLine( "Polygon.Intersections" );
 		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
 
-		IPolygon polygon1 = new Polygon( new List<Point>() {
+		Polygon polygon1 = new Polygon( new List<Point>() {
 			new Point( 200, 200 ),
 			new Point( _bounds.Width - 200, 200 ),
 			new Point( _bounds.Width - 200, _bounds.Height - 200 ),
 			new Point( 200, _bounds.Height - 200 )
 		} );
 
-		IPolygon polygon2 = new Polygon( new List<Point>() {
+		Polygon polygon2 = new Polygon( new List<Point>() {
 			new Point( 250, 250 ),
 			new Point( _bounds.Width - 250, 350 ),
 			new Point( _bounds.Width - 350, _bounds.Height - 150 ),
@@ -104,7 +104,7 @@ public sealed class PolygonVisualizer {
 				lines[i].Y = polygon1.Points[i % polygon1.Points.Count].Y;
 			}
 
-			context.DrawLines( Color.Yellow, 1.0f, lines );
+			_ = context.DrawLines( Color.Yellow, 1.0f, lines );
 		} );
 
 		image.Mutate( ( context ) => {
@@ -114,7 +114,7 @@ public sealed class PolygonVisualizer {
 				lines[i].Y = polygon2.Points[i % polygon2.Points.Count].Y;
 			}
 
-			context.DrawLines( Color.White, 1.0f, lines );
+			_ = context.DrawLines( Color.White, 1.0f, lines );
 		} );
 
 		IReadOnlyList<Point> intersections = polygon1.Intersections( polygon2.Points );
@@ -129,7 +129,7 @@ public sealed class PolygonVisualizer {
 		Console.WriteLine( "Polygon.Contains" );
 		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
 
-		IPolygon polygon = new Polygon(
+		Polygon polygon = new Polygon(
 			new List<Point>() {
 			new Point( 200, 200 ),
 			new Point( _bounds.Width - 200, 200 ),
@@ -144,7 +144,7 @@ public sealed class PolygonVisualizer {
 				lines[i].Y = polygon.Points[i % polygon.Points.Count].Y;
 			}
 
-			context.DrawLines( Color.Yellow, 1.0f, lines );
+			_ = context.DrawLines(Color.Yellow, 1.0f, lines);
 		} );
 
 		for( int i = 0; i < 5000; i++ ) {
