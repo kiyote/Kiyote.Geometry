@@ -14,7 +14,7 @@ internal sealed class Voronoi : IVoronoi {
 		OpenCells = cells.Where( c => c.IsOpen ).ToList();
 	}
 
-	public IReadOnlyList<IEdge> Edges { get; }
+	public IReadOnlyList<Edge> Edges { get; }
 
 	public IReadOnlyList<Cell> Cells { get; }
 

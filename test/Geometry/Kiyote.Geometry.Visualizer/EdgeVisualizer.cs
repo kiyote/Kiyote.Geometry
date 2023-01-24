@@ -36,13 +36,13 @@ public sealed class EdgeVisualizer {
 			int y1 = _random.NextInt( 0, _bounds.Height );
 			int x2 = _random.NextInt( 0, _bounds.Width );
 			int y2 = _random.NextInt( 0, _bounds.Height );
-			IEdge e1 = new Edge( new Point( x1, y1 ), new Point( x2, y2 ) );
+			Edge e1 = new Edge( new Point( x1, y1 ), new Point( x2, y2 ) );
 
 			int x3 = _random.NextInt( 0, _bounds.Width );
 			int y3 = _random.NextInt( 0, _bounds.Height );
 			int x4 = _random.NextInt( 0, _bounds.Width );
 			int y4 = _random.NextInt( 0, _bounds.Height );
-			IEdge e2 = new Edge( new Point( x3, y3 ), new Point( x4, y4 ) );
+			Edge e2 = new Edge( new Point( x3, y3 ), new Point( x4, y4 ) );
 
 			if( e1.TryFindIntersection( e2, out Point p ) ) {
 				image.Mutate( ( context ) => {
@@ -51,13 +51,13 @@ public sealed class EdgeVisualizer {
 					lines[0].Y = y1;
 					lines[1].X = x2;
 					lines[1].Y = y2;
-					context.DrawLines( Color.DarkGray, 1.0f, lines );
+					_ = context.DrawLines( Color.DarkGray, 1.0f, lines );
 
 					lines[0].X = x3;
 					lines[0].Y = y3;
 					lines[1].X = x4;
 					lines[1].Y = y4;
-					context.DrawLines( Color.DarkGray, 1.0f, lines );
+					_ = context.DrawLines( Color.DarkGray, 1.0f, lines );
 				} );
 
 				intersection = true;

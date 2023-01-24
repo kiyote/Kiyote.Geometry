@@ -81,14 +81,12 @@ how much of the cost of the routine came simply from randomizing points and cons
 # Voronoi Benchmarks
 |                      Method |         Mean |       Error |      StdDev |   Gen0 | Allocated |
 |---------------------------- |-------------:|------------:|------------:|-------:|----------:|
-|        IterateCells_100x100 |     900.4 ns |     4.44 ns |     3.94 ns | 0.0048 |      32 B |
-|        IterateEdges_100x100 |   6,074.2 ns |    61.64 ns |    54.64 ns |      - |      40 B |
-|   IterateNeighbours_100x100 | 287,751.3 ns | 1,841.92 ns | 1,538.08 ns |      - |      56 B |
-|                             |              |             |             |        |           |
-|        IterateCells_500x500 |  22,824.7 ns |    57.34 ns |    50.83 ns |      - |      32 B |
-|        IterateEdges_500x500 | 154,475.6 ns |   274.84 ns |   229.51 ns |      - |      40 B |
-|   IterateNeighbours_500x500 | 297,752.9 ns |   624.15 ns |   521.19 ns |      - |      56 B |
-|                             |              |             |             |        |           |
-|      IterateCells_1000x1000 |  91,453.6 ns |   772.08 ns |   722.20 ns |      - |      32 B |
-|      IterateEdges_1000x1000 | 635,916.6 ns | 1,681.00 ns | 1,403.71 ns |      - |      40 B |
-| IterateNeighbours_1000x1000 | 298,522.3 ns |   589.47 ns |   492.24 ns |      - |      56 B |
+|        IterateCells_100x100 |     899.5 ns |     8.88 ns |     7.41 ns | 0.0048 |      32 B |
+|        IterateEdges_100x100 |   4,967.7 ns |    18.65 ns |    16.53 ns | 0.0076 |      48 B |
+|   IterateNeighbours_100x100 | 328,075.9 ns | 1,959.68 ns | 1,833.09 ns |      - |      56 B |
+|        IterateCells_500x500 |  22,644.1 ns |    79.22 ns |    70.23 ns |      - |      32 B |
+|        IterateEdges_500x500 | 125,492.1 ns | 1,005.46 ns |   839.61 ns |      - |      48 B |
+|   IterateNeighbours_500x500 | 328,746.8 ns | 3,010.59 ns | 2,816.10 ns |      - |      56 B |
+|      IterateCells_1000x1000 |  89,901.2 ns |   263.49 ns |   246.47 ns |      - |      32 B |
+|      IterateEdges_1000x1000 | 516,312.4 ns | 2,282.10 ns | 2,023.02 ns |      - |      48 B |
+| IterateNeighbours_1000x1000 | 326,517.3 ns | 1,169.91 ns | 1,037.09 ns |      - |      56 B |

@@ -5,8 +5,8 @@ internal class EdgeUnitTests {
 
 	[Test]
 	public void Intersect_OtherIntersects_PointReturned() {
-		IEdge edge = new Edge( new Point( 0, 0 ), new Point( 10, 10 ) );
-		IEdge other = new Edge( new Point( 10, 0 ), new Point( 0, 10 ) );
+		Edge edge = new Edge( new Point( 0, 0 ), new Point( 10, 10 ) );
+		Edge other = new Edge( new Point( 10, 0 ), new Point( 0, 10 ) );
 
 		bool result = edge.TryFindIntersection( other, out Point intersection );
 
@@ -17,8 +17,8 @@ internal class EdgeUnitTests {
 
 	[Test]
 	public void Intersect_OtherDoesNotIntersect_ReturnsNull() {
-		IEdge edge = new Edge( new Point( 0, 0 ), new Point( 10, 0 ) );
-		IEdge other = new Edge( new Point( 0, 10 ), new Point( 10, 10 ) );
+		Edge edge = new Edge( new Point( 0, 0 ), new Point( 10, 0 ) );
+		Edge other = new Edge( new Point( 0, 10 ), new Point( 10, 10 ) );
 
 		bool result = edge.TryFindIntersection( other, out Point _ );
 
@@ -27,8 +27,8 @@ internal class EdgeUnitTests {
 
 	[Test]
 	public void Intersect_IntersectionNotOnSegment_ReturnsNull() {
-		IEdge edge = new Edge( new Point( 0, 0 ), new Point( 10, 0 ) );
-		IEdge other = new Edge( new Point( 0, 10 ), new Point( 100, 0 ) );
+		Edge edge = new Edge( new Point( 0, 0 ), new Point( 10, 0 ) );
+		Edge other = new Edge( new Point( 0, 10 ), new Point( 100, 0 ) );
 
 		bool result = edge.TryFindIntersection( other, out Point _ );
 
@@ -37,8 +37,8 @@ internal class EdgeUnitTests {
 
 	[Test]
 	public void Intersect_OtherIsZeroLength_ReturnsNull() {
-		IEdge edge = new Edge( new Point( 0, 0 ), new Point( 10, 0 ) );
-		IEdge other = new Edge( new Point( 0, 0 ), new Point( 0, 0 ) );
+		Edge edge = new Edge( new Point( 0, 0 ), new Point( 10, 0 ) );
+		Edge other = new Edge( new Point( 0, 0 ), new Point( 0, 0 ) );
 
 		bool result = edge.TryFindIntersection( other, out Point _ );
 

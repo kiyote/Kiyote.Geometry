@@ -3,8 +3,8 @@
 [MemoryDiagnoser( false )]
 public class EdgeBenchmarks {
 
-	private readonly IEdge _edge1;
-	private readonly IEdge _edge2;
+	private readonly Edge _edge1;
+	private readonly Edge _edge2;
 
 	public EdgeBenchmarks() {
 		Bounds bounds = new Bounds( 1000, 1000 );
@@ -14,7 +14,7 @@ public class EdgeBenchmarks {
 
 	[Benchmark]
 	public void TryFindIntersection() {
-		_ = _edge1.TryFindIntersection( _edge2, out Point __ );
+		_ = _edge1.TryFindIntersection( _edge2, out _ );
 	}
 }
 

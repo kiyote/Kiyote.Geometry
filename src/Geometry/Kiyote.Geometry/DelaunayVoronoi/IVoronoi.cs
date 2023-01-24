@@ -4,7 +4,7 @@ public interface IVoronoi {
 
 	IReadOnlyList<Cell> Cells { get; }
 
-	IReadOnlyList<IEdge> Edges { get; }
+	IReadOnlyList<Edge> Edges { get; }
 
 	IReadOnlyDictionary<Cell, IReadOnlyList<Cell>> Neighbours { get; }
 

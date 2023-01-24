@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Kiyote.Geometry.DelaunayVoronoi;
+﻿using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
-using Kiyote.Geometry;
+
+namespace Kiyote.Geometry.Benchmarks.DelaunayVoronoi;
 
 [MemoryDiagnoser( true )]
 [GroupBenchmarksBy( BenchmarkLogicalGroupRule.ByCategory )]
@@ -50,19 +46,19 @@ public class VoronoiBenchmarks {
 
 	[BenchmarkCategory( "1000x1000" ), Benchmark]
 	public void IterateEdges_1000x1000() {
-		foreach( IEdge edge in _1000points.Edges ) {
+		foreach( Edge edge in _1000points.Edges ) {
 		}
 	}
 
 	[BenchmarkCategory( "500x500" ), Benchmark]
 	public void IterateEdges_500x500() {
-		foreach( IEdge edge in _500points.Edges ) {
+		foreach( Edge edge in _500points.Edges ) {
 		}
 	}
 
 	[BenchmarkCategory( "100x100" ), Benchmark]
 	public void IterateEdges_100x100() {
-		foreach( IEdge edge in _100points.Edges ) {
+		foreach( Edge edge in _100points.Edges ) {
 		}
 	}
 

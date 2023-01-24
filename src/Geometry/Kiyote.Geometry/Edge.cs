@@ -1,6 +1,6 @@
 ﻿namespace Kiyote.Geometry;
 
-public sealed class Edge : IEdge {
+public readonly struct Edge: IEquatable<Edge> {
 
 	public Edge(
 		Point a,
@@ -10,22 +10,12 @@ public sealed class Edge : IEdge {
 		B = b;
 	}
 
-	public Edge(
-		int aX,
-		int aY,
-		int bX,
-		int bY
-	) {
-		A = new Point( aX, aY );
-		B = new Point( bX, bY );
-	}
+	public readonly Point A;
 
-	public Point A { get; }
-
-	public Point B { get; }
+	public readonly Point B;
 
 	public bool TryFindIntersection(
-		IEdge other,
+		Edge other,
 		out Point intersection
 	) {
 		return TryFindIntersection(
@@ -107,30 +97,34 @@ public sealed class Edge : IEdge {
 	}
 
 	public bool Equals(
-		Point a,
-		Point b
+		Edge other
 	) {
-		return ( A.Equals( a ) && B.Equals( b ) )
-			|| ( A.Equals( b ) && B.Equals( a ) );
+		return Equals( other.A, other.B );
 	}
 
 	public bool Equals(
-		IEdge? other
+		Point a,
+		Point b
 	) {
-		if( other is null ) {
-			return false;
-		}
-
-		return Equals( other.A, other.B );
+		return (A.Equals( a ) && B.Equals( b ))
+			|| (A.Equals( b ) && B.Equals( a ));
 	}
 
 	public override bool Equals(
 		object? obj
 	) {
-		return Equals( obj as Edge );
+		return obj is Edge edge && Equals( edge );
 	}
 
 	public override int GetHashCode() {
 		return HashCode.Combine( A, B );
+	}
+
+	public static bool operator ==( Edge left, Edge right ) {
+		return left.Equals( right );
+	}
+
+	public static bool operator !=( Edge left, Edge right ) {
+		return !( left == right );
 	}
 }
