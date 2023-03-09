@@ -4,17 +4,17 @@ namespace Kiyote.Geometry.DelaunayVoronoi;
 
 internal sealed class QuadTreeSearchableVoronoi : ISearchableVoronoi {
 
-	private readonly IQuadTree<IRect> _quadTree;
-	private readonly Dictionary<IRect, Cell> _bounds;
+	private readonly IQuadTree<Rect> _quadTree;
+	private readonly Dictionary<Rect, Cell> _bounds;
 	private readonly IVoronoi _voronoi;
 
 	public QuadTreeSearchableVoronoi(
-		IQuadTree<IRect> quadTree,
+		IQuadTree<Rect> quadTree,
 		IVoronoi voronoi
 	) {
 		_voronoi = voronoi;
 		_quadTree = quadTree;
-		_bounds = new Dictionary<IRect, Cell>();
+		_bounds = new Dictionary<Rect, Cell>();
 		foreach( Cell cell in voronoi.Cells ) {
 			_quadTree.Insert( cell.BoundingBox );
 			_bounds[cell.BoundingBox] = cell;
@@ -32,9 +32,9 @@ internal sealed class QuadTreeSearchableVoronoi : ISearchableVoronoi {
 	IReadOnlyDictionary<Cell, IReadOnlyList<Cell>> IVoronoi.Neighbours => _voronoi.Neighbours;
 
 	IReadOnlyList<Cell> ISearchableVoronoi.Search(
-		IRect area
+		Rect area
 	) {
-		IReadOnlyList<IRect> result = _quadTree.Query( area );
+		IReadOnlyList<Rect> result = _quadTree.Query( area );
 		if( result.Any() ) {
 			return result.Select( r => _bounds[r] ).ToList();
 		}
@@ -43,7 +43,7 @@ internal sealed class QuadTreeSearchableVoronoi : ISearchableVoronoi {
 	}
 
 	IReadOnlyList<Cell> ISearchableVoronoi.Search( int x, int y, int w, int h ) {
-		IRect area = new Rect( x, y, x + w, y + h );
+		Rect area = new Rect( x, y, x + w, y + h );
 		return ( this as ISearchableVoronoi ).Search( area );
 	}
 }

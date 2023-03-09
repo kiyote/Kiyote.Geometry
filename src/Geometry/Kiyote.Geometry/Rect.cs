@@ -1,6 +1,6 @@
 ﻿namespace Kiyote.Geometry;
 
-public sealed class Rect : IRect {
+public class Rect : IEquatable<Rect> {
 
 	public Rect(
 		Point topLeft,
@@ -36,23 +36,19 @@ public sealed class Rect : IRect {
 	}
 
 	public bool Equals(
-		IRect? other
+		Rect? other
 	) {
-		if( other is null ) {
+		if (other is null) {
 			return false;
 		}
 
-		return Equals( other.TopLeft, other.BottomRight );
+		return ( other.TopLeft == TopLeft && other.BottomRight == BottomRight );
 	}
 
 	public override bool Equals(
 		object? obj
 	) {
-		if( obj is null ) {
-			return false;
-		}
-
-		return Equals( obj as IRect );
+		return obj is Rect rect && Equals( rect );
 	}
 
 	public override int GetHashCode() {
@@ -81,7 +77,7 @@ public sealed class Rect : IRect {
 	}
 
 	public bool Intersects(
-		IRect rect
+		Rect rect
 	) {
 		return TopLeft.X + Width >= rect.TopLeft.X
 			 && TopLeft.X <= rect.TopLeft.X + rect.Width
@@ -90,7 +86,7 @@ public sealed class Rect : IRect {
 	}
 
 	public bool Contains(
-		IRect rect
+		Rect rect
 	) {
 		return TopLeft.X <= rect.TopLeft.X
 			&& TopLeft.Y <= rect.TopLeft.Y

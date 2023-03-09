@@ -5,7 +5,6 @@ namespace Kiyote.Geometry.Randomization;
 * https://sourceforge.net/projects/sharpneat/
 */
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage( "Performance", "CA1812:An internal (assembly-level) type is never instantiated.", Justification = "This class is instantiated via DI." )]
 internal sealed class FastRandom : IRandom {
 	private static readonly IRandom _seedRng = new FastRandom( Environment.TickCount );
 

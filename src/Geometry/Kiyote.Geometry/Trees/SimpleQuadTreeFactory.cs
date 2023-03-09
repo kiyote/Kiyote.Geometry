@@ -2,7 +2,7 @@
 
 internal sealed class SimpleQuadTreeFactory : IQuadTreeFactory {
 
-	IQuadTree<T> IQuadTreeFactory.Create<T>( IRect area ) {
+	IQuadTree<T> IQuadTreeFactory.Create<T>( Rect area ) {
 		return new SimpleQuadTree<T>( area );
 	}
 }

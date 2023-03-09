@@ -302,6 +302,7 @@ dotnet_naming_style.m_camelcase.capitalization = camel_case
 dotnet_diagnostic.CA2300.severity   = error     # Do not use insecure deserializer BinaryFormatter
 dotnet_diagnostic.IDE0090.severity  = none      # Use new(...)
 dotnet_diagnostic.NUnit1028.severity = error    # The non-test method is public
+dotnet_diagnostic.CA1062.severity  = none      # Validate parameter is non-null
 
 # Disable all NUnit assertion diagnostics as suggestions until they can be resolved
 dotnet_analyzer_diagnostic.category-Assertion.severity = none

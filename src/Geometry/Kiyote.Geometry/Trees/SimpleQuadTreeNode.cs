@@ -1,18 +1,18 @@
 ﻿namespace Kiyote.Geometry.Trees;
 
-public class QuadTreeNode<T> where T : IRect {
+public class QuadTreeNode<T> where T : Rect {
 	/// <summary>
 	/// Construct a quadtree node with the given bounds 
 	/// </summary>
 	/// <param name="area"></param>
-	public QuadTreeNode( IRect bounds ) {
+	public QuadTreeNode( Rect bounds ) {
 		_bounds = bounds;
 	}
 
 	/// <summary>
 	/// The area of this node
 	/// </summary>
-	private readonly IRect _bounds;
+	private readonly Rect _bounds;
 
 	/// <summary>
 	/// The contents of this node.
@@ -39,7 +39,7 @@ public class QuadTreeNode<T> where T : IRect {
 	/// <summary>
 	/// Area of the quadtree node
 	/// </summary>
-	public IRect Bounds => _bounds;
+	public Rect Bounds => _bounds;
 
 	/// <summary>
 	/// Total number of nodes in the this node and all SubNodes
@@ -81,7 +81,7 @@ public class QuadTreeNode<T> where T : IRect {
 	/// </summary>
 	/// <param name="queryArea"></pasram>
 	/// <returns></returns>
-	public IReadOnlyList<T> Query( IRect queryArea ) {
+	public IReadOnlyList<T> Query( Rect queryArea ) {
 		// create a list of the items that are found
 		List<T> results = new List<T>();
 

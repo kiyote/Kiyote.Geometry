@@ -14,8 +14,8 @@ public readonly struct Point : IEquatable<Point> {
 	public Point()
 		: this( int.MinValue, int.MinValue ) { }
 
-	public readonly int X;
-	public readonly int Y;
+	public int X { get; }
+	public int Y { get; }
 
 	public bool Equals(
 		Point other

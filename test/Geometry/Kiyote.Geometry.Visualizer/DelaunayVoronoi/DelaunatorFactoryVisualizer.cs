@@ -49,7 +49,7 @@ public sealed class DelaunatorFactoryVisualizer {
 				lines[3].X = lines[0].X;
 				lines[3].Y = lines[0].Y;
 
-				context.DrawLines( Color.DarkGray, 1.0f, lines );
+				_ = context.DrawLines( Color.DarkGray, 1.0f, lines );
 			}
 		} );
 
@@ -69,7 +69,7 @@ public sealed class DelaunatorFactoryVisualizer {
 			lines[delaunator.Hull.Count].X = lines[0].X;
 			lines[delaunator.Hull.Count].Y = lines[0].Y;
 
-			context.DrawLines( Color.Yellow, 1.0f, lines );
+			_ = context.DrawLines( Color.Yellow, 1.0f, lines );
 		} );
 
 		// Render the coords

@@ -17,7 +17,7 @@ internal sealed class QuadTreeSearchableVoronoiFactory : ISearchableVoronoiFacto
 		Bounds bounds
 	) {
 		return new QuadTreeSearchableVoronoi(
-			_quadTreeFactory.Create<IRect>( new Rect( 0, 0, bounds.Width, bounds.Height ) ),
+			_quadTreeFactory.Create<Rect>( new Rect( 0, 0, bounds.Width, bounds.Height ) ),
 			voronoi
 		);
 	}

@@ -1,7 +1,7 @@
 ﻿namespace Kiyote.Geometry.Tests;
 
 [TestFixture]
-internal class EdgeUnitTests {
+internal sealed class EdgeUnitTests {
 
 	[Test]
 	public void Intersect_OtherIntersects_PointReturned() {

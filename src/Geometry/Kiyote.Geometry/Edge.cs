@@ -10,9 +10,9 @@ public readonly struct Edge: IEquatable<Edge> {
 		B = b;
 	}
 
-	public readonly Point A;
+	public Point A { get; }
 
-	public readonly Point B;
+	public Point B { get; }
 
 	public bool TryFindIntersection(
 		Edge other,
