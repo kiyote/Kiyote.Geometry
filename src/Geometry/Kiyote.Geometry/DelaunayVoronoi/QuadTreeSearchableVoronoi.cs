@@ -43,7 +43,7 @@ internal sealed class QuadTreeSearchableVoronoi : ISearchableVoronoi {
 	}
 
 	IReadOnlyList<Cell> ISearchableVoronoi.Search( int x, int y, int w, int h ) {
-		Rect area = new Rect( x, y, x + w, y + h );
+		Rect area = new Rect( x, y, w, h );
 		return ( this as ISearchableVoronoi ).Search( area );
 	}
 }

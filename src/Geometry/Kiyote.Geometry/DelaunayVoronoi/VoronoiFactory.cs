@@ -122,7 +122,7 @@ internal sealed class VoronoiFactory : IVoronoiFactory {
 					points[i],
 					boundaryPolygon,
 					isOpen || ( boundaryPolygon.Points.Count <= 2 ),
-					new Rect( minX, minY, maxX, maxY )
+					new Rect( new Point( minX, minY ), new Point( maxX, maxY ) )
 				);
 			boundary.Clear();
 		}

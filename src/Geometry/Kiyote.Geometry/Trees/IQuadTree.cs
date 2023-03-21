@@ -1,6 +1,6 @@
 ﻿namespace Kiyote.Geometry.Trees;
 
-public interface IQuadTree<T> where T : Rect {
+public interface IQuadTree<T> where T : IRect {
 
 	int Count { get; }
 

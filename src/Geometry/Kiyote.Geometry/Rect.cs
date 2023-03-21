@@ -1,28 +1,45 @@
 ﻿namespace Kiyote.Geometry;
 
-public class Rect : IEquatable<Rect> {
+public class Rect : IEquatable<IRect>, IRect, IBounds {
 
 	public Rect(
 		Point topLeft,
 		Point bottomRight
 	) {
-		TopLeft = topLeft;
-		BottomRight = bottomRight;
-		Width = bottomRight.X - topLeft.X;
-		Height = bottomRight.Y - topLeft.Y;
+		X1 = topLeft.X;
+		Y1 = topLeft.Y;
+		X2 = bottomRight.X;
+		Y2 = bottomRight.Y;
+		Width =  bottomRight.X - topLeft.X  + 1;
+		Height = bottomRight.Y - topLeft.Y + 1;
 	}
 
 	public Rect(
-		int topX,
-		int topY,
-		int bottomX,
-		int bottomY
-	) : this( new Point( topX, topY ), new Point( bottomX, bottomY ) ) {
+		int x,
+		int y,
+		int width,
+		int height
+	) {
+		X1 = x;
+		Y1 = y;
+		if (width > 0) {
+			X2 = x + width - 1;
+			Y2 = y + height - 1;
+		} else if (width == 0) {
+			X2 = X1;
+			Y2 = Y1;
+		} else {
+			throw new InvalidOperationException( "Rect cannot have negative area." );
+		}
+		Width = width;
+		Height = height;
 	}
 
-	public Point TopLeft { get; }
+	public int X1 { get; }
+	public int Y1 { get; }
 
-	public Point BottomRight { get; }
+	public int X2 { get; }
+	public int Y2 { get; }
 
 	public int Width { get; }
 
@@ -32,27 +49,34 @@ public class Rect : IEquatable<Rect> {
 		Point topLeft,
 		Point bottomRight
 	) {
-		return TopLeft == topLeft && BottomRight == bottomRight;
+		return X1 == topLeft.X
+			&& Y1 == topLeft.Y
+			&& X2 == bottomRight.X
+			&& Y2 == bottomRight.Y;
 	}
 
 	public bool Equals(
-		Rect? other
+		IRect? other
 	) {
-		if (other is null) {
+		if( other is null ) {
 			return false;
 		}
 
-		return ( other.TopLeft == TopLeft && other.BottomRight == BottomRight );
+		return ( other.X1 == X1
+			&& other.Y1 == Y1
+			&& other.X2 == X2
+			&& other.Y2 == Y2
+		);
 	}
 
 	public override bool Equals(
 		object? obj
 	) {
-		return obj is Rect rect && Equals( rect );
+		return obj is IRect rect && Equals( rect );
 	}
 
 	public override int GetHashCode() {
-		return HashCode.Combine( TopLeft, BottomRight );
+		return HashCode.Combine( X1, Y1, X2, Y2 );
 	}
 
 	public bool Contains(
@@ -65,10 +89,10 @@ public class Rect : IEquatable<Rect> {
 		int x,
 		int y
 	) {
-		if( x >= TopLeft.X
-			&& x <= BottomRight.X
-			&& y >= TopLeft.Y
-			&& y <= BottomRight.Y
+		if( x >= X1
+			&& x <= X2
+			&& y >= Y1
+			&& y <= Y2
 		) {
 			return true;
 		}
@@ -77,21 +101,25 @@ public class Rect : IEquatable<Rect> {
 	}
 
 	public bool Intersects(
-		Rect rect
+		IRect rect
 	) {
-		return TopLeft.X + Width >= rect.TopLeft.X
-			 && TopLeft.X <= rect.TopLeft.X + rect.Width
-			 && TopLeft.Y + Height >= rect.TopLeft.Y
-			 && TopLeft.Y <= rect.TopLeft.Y + rect.Height;
+		return X1 + Width >= rect.X1
+			 && X1 <= rect.X2
+			 && Y1 + Height >= rect.Y1
+			 && Y1 <= rect.Y2;
 	}
 
 	public bool Contains(
-		Rect rect
+		IRect rect
 	) {
-		return TopLeft.X <= rect.TopLeft.X
-			&& TopLeft.Y <= rect.TopLeft.Y
-			&& BottomRight.X >= rect.BottomRight.X
-			&& BottomRight.Y >= rect.BottomRight.Y;
+		return X1 <= rect.X1
+			&& Y1 <= rect.Y1
+			&& X2 >= rect.X2
+			&& Y2 >= rect.Y2;
+	}
+
+	public override string ToString() {
+		return $"{X1},{Y1},{X2},{Y2}";
 	}
 }
 
