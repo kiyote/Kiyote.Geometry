@@ -8,4 +8,8 @@ public interface IVoronoiFactory {
 		int height
 	);
 
+	IVoronoi Create(
+		Delaunator delaunator,
+		Bounds bounds
+	);
 }

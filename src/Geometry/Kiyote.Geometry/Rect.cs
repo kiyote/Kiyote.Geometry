@@ -17,6 +17,13 @@ public class Rect : IEquatable<IRect>, IRect, IBounds {
 	public Rect(
 		int x,
 		int y,
+		Bounds bounds
+	): this(x, y, bounds.Width, bounds.Height ) {
+	}
+
+	public Rect(
+		int x,
+		int y,
 		int width,
 		int height
 	) {

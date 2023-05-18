@@ -17,9 +17,9 @@ public readonly struct Point : IEquatable<Point>, IBounds, IEquatable<IBounds> {
 	public int X { get; }
 	public int Y { get; }
 
-	int IBounds.Height => X;
+	int IBounds.Width => X;
 
-	int IBounds.Width => Y;
+	int IBounds.Height => Y;
 
 	public bool Equals(
 		Point other

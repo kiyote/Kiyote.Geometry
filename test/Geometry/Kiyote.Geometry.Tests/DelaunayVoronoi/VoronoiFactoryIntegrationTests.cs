@@ -25,4 +25,20 @@ public sealed class VoronoiFactoryIntegrationTests {
 
 		Assert.IsNotNull( voronoi );
 	}
+
+	[Test]
+	public void Create_FixedPoints_ReferenceDiagramCreated() {
+		Bounds bounds = new Bounds( 30, 30 );
+		IReadOnlyList<Point> points = new List<Point>() {
+			new Point(10, 10),
+			new Point(20, 10),
+			new Point(10, 20),
+			new Point(20, 20)
+		};
+		IDelaunatorFactory delaunatorFactory = new DelaunatorFactory();
+		Delaunator delaunator = delaunatorFactory.Create( points );
+		IVoronoi voronoi = _voronoiFactory.Create( delaunator, bounds.Width, bounds.Height );
+
+		Assert.IsNotNull( voronoi );
+	}
 }

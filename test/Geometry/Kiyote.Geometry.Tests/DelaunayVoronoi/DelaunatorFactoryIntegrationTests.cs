@@ -19,7 +19,7 @@ public sealed class DelaunatorFactoryIntegrationTests {
 			topRight
 		};
 
-		Assert.Throws<ArgumentException>( () => _delaunatorFactory.Create( points ) );
+		_ = Assert.Throws<ArgumentException>( () => _delaunatorFactory.Create( points ) );
 	}
 
 	[Test]
@@ -33,15 +33,25 @@ public sealed class DelaunatorFactoryIntegrationTests {
 			topRight
 		};
 
-		Assert.Throws<ArgumentException>( () => _delaunatorFactory.Create( points ) );
+		_ = Assert.Throws<ArgumentException>( () => _delaunatorFactory.Create( points ) );
 	}
 
-	[Test]
-	public void Create_Square_ExpectedResults() {
-		Point topLeft = new Point( 0, 0 );
-		Point topRight = new Point( 10, 0 );
-		Point bottomLeft = new Point( 0, 10 );
-		Point bottomRight = new Point( 10, 10 );
+	[TestCase( 0, 0, 10, 0, 0, 10, 10, 10 )]
+	[TestCase( 10, 10, 20, 10, 10, 20, 20, 20 )]
+	public void Create_Square_ExpectedResults(
+		int x1,
+		int y1,
+		int x2,
+		int y2,
+		int x3,
+		int y3,
+		int x4,
+		int y4
+	) {
+		Point topLeft = new Point( x1, y1 );
+		Point topRight = new Point( x2, y2 );
+		Point bottomLeft = new Point( x3, y3 );
+		Point bottomRight = new Point( x4, y4 );
 		List<Point> points = new List<Point>() {
 			topLeft,
 			topRight,
@@ -53,17 +63,24 @@ public sealed class DelaunatorFactoryIntegrationTests {
 
 		Assert.NotNull( delaunator );
 		// The 4 points of the hull
-		Assert.AreEqual( points[delaunator.Hull[0]], bottomLeft );
-		Assert.AreEqual( points[delaunator.Hull[1]], bottomRight );
-		Assert.AreEqual( points[delaunator.Hull[2]], topRight );
-		Assert.AreEqual( points[delaunator.Hull[3]], topLeft );
+		Assert.AreEqual( points[delaunator.Hull[0]], bottomLeft, nameof( bottomLeft ) );
+		Assert.AreEqual( points[delaunator.Hull[1]], bottomRight, nameof( bottomRight ) );
+		Assert.AreEqual( points[delaunator.Hull[2]], topRight, nameof( topRight ) );
+		Assert.AreEqual( points[delaunator.Hull[3]], topLeft, nameof( topLeft ) );
 		// The two triangles
-		Assert.AreEqual( points[delaunator.Triangles[0]], topLeft );
-		Assert.AreEqual( points[delaunator.Triangles[1]], bottomLeft );
-		Assert.AreEqual( points[delaunator.Triangles[2]], topRight );
-		Assert.AreEqual( points[delaunator.Triangles[3]], bottomLeft );
-		Assert.AreEqual( points[delaunator.Triangles[4]], bottomRight );
-		Assert.AreEqual( points[delaunator.Triangles[5]], topRight );
+		Assert.AreEqual( points[delaunator.Triangles[0]], topLeft, nameof( topLeft ) );
+		Assert.AreEqual( points[delaunator.Triangles[1]], bottomLeft, nameof( bottomLeft ) );
+		Assert.AreEqual( points[delaunator.Triangles[2]], topRight, nameof( topRight ) );
+		Assert.AreEqual( points[delaunator.Triangles[3]], bottomLeft, nameof( bottomLeft ) );
+		Assert.AreEqual( points[delaunator.Triangles[4]], bottomRight, nameof( bottomRight ) );
+		Assert.AreEqual( points[delaunator.Triangles[5]], topRight, nameof( topRight ) );
+		// Half-edges
+		Assert.AreEqual( delaunator.HalfEdges[0], -1 );
+		Assert.AreEqual( delaunator.HalfEdges[1], 5 );
+		Assert.AreEqual( delaunator.HalfEdges[2], -1 );
+		Assert.AreEqual( delaunator.HalfEdges[3], -1 );
+		Assert.AreEqual( delaunator.HalfEdges[4], -1 );
+		Assert.AreEqual( delaunator.HalfEdges[5], 1 );
 	}
 
 	[Test]
@@ -150,5 +167,27 @@ public sealed class DelaunatorFactoryIntegrationTests {
 		Assert.AreEqual( points[delaunator.Triangles[0]], p2 );
 		Assert.AreEqual( points[delaunator.Triangles[1]], p1 );
 		Assert.AreEqual( points[delaunator.Triangles[2]], p3 );
+	}
+
+	[TestCase( 0, 0, 10, 0, 0, 10, false )]
+	[TestCase( 0, 0, 0, 10, 10, 0, true )]
+	[TestCase( 10, 0, 10, 10, 0, 10, false )]
+	[TestCase( 10, 0, 0, 10, 10, 10, true )]
+	[TestCase( 10, 10, 20, 10, 10, 20, false )]
+	[TestCase( 10, 10, 10, 20, 20, 10, true )]
+	[TestCase( 20, 10, 20, 20, 10, 20, false )]
+	[TestCase( 20, 10, 10, 20, 20, 20, true )]
+	public void Orient_ThreePoints_ExpectedOrientation(
+		double x1,
+		double y1,
+		double x2,
+		double y2,
+		double x3,
+		double y3,
+		bool positive
+	) {
+		double result = DelaunatorFactory.Orient( x1, y1, x2, y2, x3, y3 );
+		Assert.AreNotEqual( 0.0D, result );
+		Assert.AreEqual( positive, result > 0.0D );
 	}
 }

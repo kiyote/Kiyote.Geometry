@@ -8,6 +8,13 @@ internal sealed class VoronoiFactory : IVoronoiFactory {
 
 	IVoronoi IVoronoiFactory.Create(
 		Delaunator delaunator,
+		Bounds bounds
+	) {
+		return DoCreate( delaunator, bounds.Width, bounds.Height );
+	}
+
+	IVoronoi IVoronoiFactory.Create(
+		Delaunator delaunator,
 		int width,
 		int height
 	) {

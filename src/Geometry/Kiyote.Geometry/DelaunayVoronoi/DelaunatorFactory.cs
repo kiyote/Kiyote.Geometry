@@ -4,6 +4,8 @@
 
 internal sealed class DelaunatorFactory : IDelaunatorFactory {
 
+	public const double MinimumPrecision = 0.0000000001D;
+
 	Delaunator IDelaunatorFactory.Create(
 		IEnumerable<Point> input
 	) {
@@ -444,7 +446,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		return (int)Math.Floor( PseudoAngle( x - circumcenterX, y - circumcenterY ) * hashSize ) % hashSize;
 	}
 
-	private static double Orient(
+	internal static double Orient(
 		double ax,
 		double ay,
 		double bx,
