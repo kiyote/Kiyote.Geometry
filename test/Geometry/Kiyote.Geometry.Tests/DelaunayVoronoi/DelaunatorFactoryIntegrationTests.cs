@@ -1,14 +1,7 @@
 ﻿namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
 
 [TestFixture]
-public sealed class DelaunatorFactoryIntegrationTests {
-
-	private IDelaunatorFactory _delaunatorFactory;
-
-	[SetUp]
-	public void SetUp() {
-		_delaunatorFactory = new DelaunatorFactory();
-	}
+public sealed class MapboxDelaunatorFactoryIntegrationTests {
 
 	[Test]
 	public void Test_InsufficientPoints_ThrowsException() {
@@ -19,7 +12,7 @@ public sealed class DelaunatorFactoryIntegrationTests {
 			topRight
 		};
 
-		_ = Assert.Throws<ArgumentException>( () => _delaunatorFactory.Create( points ) );
+		_ = Assert.Throws<InvalidOperationException>( () => MapboxDelaunatorFactory.Create( points.ToCoords() ) );
 	}
 
 	[Test]
@@ -33,7 +26,7 @@ public sealed class DelaunatorFactoryIntegrationTests {
 			topRight
 		};
 
-		_ = Assert.Throws<ArgumentException>( () => _delaunatorFactory.Create( points ) );
+		_ = Assert.Throws<InvalidOperationException>( () => MapboxDelaunatorFactory.Create( points.Distinct().ToList().ToCoords() ) );
 	}
 
 	[TestCase( 0, 0, 10, 0, 0, 10, 10, 10 )]
@@ -59,7 +52,7 @@ public sealed class DelaunatorFactoryIntegrationTests {
 			bottomRight
 		};
 
-		Delaunator delaunator = _delaunatorFactory.Create( points );
+		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( points.ToCoords() );
 
 		Assert.NotNull( delaunator );
 		// The 4 points of the hull
@@ -98,7 +91,7 @@ public sealed class DelaunatorFactoryIntegrationTests {
 			center
 		};
 
-		Delaunator delaunator = _delaunatorFactory.Create( points );
+		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( points.ToCoords() );
 
 		Assert.NotNull( delaunator );
 		// Four points for the hull
@@ -132,7 +125,7 @@ public sealed class DelaunatorFactoryIntegrationTests {
 			p3
 		};
 
-		Delaunator delaunator = _delaunatorFactory.Create( points );
+		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( points.ToCoords() );
 
 		Assert.NotNull( delaunator );
 		// The 3 points of the hull
@@ -156,7 +149,7 @@ public sealed class DelaunatorFactoryIntegrationTests {
 			p3
 		};
 
-		Delaunator delaunator = _delaunatorFactory.Create( points );
+		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( points.ToCoords() );
 
 		Assert.NotNull( delaunator );
 		// The 3 points of the hull
@@ -186,7 +179,7 @@ public sealed class DelaunatorFactoryIntegrationTests {
 		double y3,
 		bool positive
 	) {
-		double result = DelaunatorFactory.Orient( x1, y1, x2, y2, x3, y3 );
+		double result = MapboxDelaunatorFactory.Orient( x1, y1, x2, y2, x3, y3 );
 		Assert.AreNotEqual( 0.0D, result );
 		Assert.AreEqual( positive, result > 0.0D );
 	}

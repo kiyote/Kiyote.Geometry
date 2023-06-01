@@ -2,6 +2,7 @@
 
 namespace Kiyote.Geometry.DelaunayVoronoi;
 
+/*
 internal sealed class QuadTreeSearchableVoronoiFactory : ISearchableVoronoiFactory {
 
 	private readonly IQuadTreeFactory _quadTreeFactory;
@@ -22,3 +23,4 @@ internal sealed class QuadTreeSearchableVoronoiFactory : ISearchableVoronoiFacto
 		);
 	}
 }
+*/

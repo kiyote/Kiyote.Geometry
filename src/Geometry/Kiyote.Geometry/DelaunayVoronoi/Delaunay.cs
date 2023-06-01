@@ -1,7 +1,7 @@
 ﻿namespace Kiyote.Geometry.DelaunayVoronoi;
 
-public sealed record Delaunay(
+internal sealed record Delaunay(
 	IReadOnlyList<Point> Points,
-	IReadOnlyList<Edge> Edges,
-	IReadOnlyList<Triangle> Triangles
-);
+	IReadOnlyList<Triangle> Triangles,
+	IReadOnlyList<Point> Hull
+) : IDelaunay;

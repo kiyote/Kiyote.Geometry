@@ -103,7 +103,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		double cellSize,
 		int gridWidth,
 		int gridHeight,
-		Point[] grid
+		ReadOnlySpan<Point> grid
 	) {
 		int di = (int)( x / cellSize );
 		int dj = (int)( y / cellSize );
@@ -115,7 +115,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 			int o = j * gridWidth;
 			for( int i = i0; i < i1; i++ ) {
 				ref readonly Point s = ref grid[o + i];
-				if( !s.Equals( Point.None ) ) {
+				if( s != Point.None ) {
 					int dx = s.X - x;
 					int dy = s.Y - y;
 					if( ( dx * dx ) + ( dy * dy ) < radius2 ) {
@@ -139,7 +139,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		int y,
 		int gridWidth,
 		double cellSize,
-		Point[] grid,
+		Span<Point> grid,
 		List<Point> candidates
 	) {
 		Point s = new Point( x, y );

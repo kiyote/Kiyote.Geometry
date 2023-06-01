@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Kiyote.Geometry.Randomization;
-using Kiyote.Geometry.Trees;
+﻿using Kiyote.Geometry.Trees;
 
 namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
 
+/*
 [TestFixture]
 public sealed class QuadTreeSearchableVoronoiUnitTests {
 
@@ -17,8 +12,8 @@ public sealed class QuadTreeSearchableVoronoiUnitTests {
 
 	[OneTimeSetUp]
 	public void OneTimeSetUp() {
-		Bounds bounds = new Bounds( 100, 100 );
-		_area = new Rect( 0, 0, bounds );
+		Bounds size = new Bounds( 100, 100 );
+		_area = new Rect( 0, 0, size );
 		IReadOnlyList<Point> points = new List<Point>() {
 			new Point( 25, 25 ),
 			new Point( 75, 25 ),
@@ -26,10 +21,8 @@ public sealed class QuadTreeSearchableVoronoiUnitTests {
 			new Point( 25, 75 ),
 			new Point( 75, 75 )
 		};
-		IDelaunatorFactory delaunatorFactory = new DelaunatorFactory();
-		Delaunator delaunator = delaunatorFactory.Create( points );
-		IVoronoiFactory voronoiFactory = new VoronoiFactory();
-		_voronoi = voronoiFactory.Create( delaunator, bounds );
+		IVoronoiFactory voronoiFactory = new D3VoronoiFactory();
+		_voronoi = voronoiFactory.Create( _area, points );
 	}
 
 	[SetUp]
@@ -38,7 +31,6 @@ public sealed class QuadTreeSearchableVoronoiUnitTests {
 		_searchableVoronoi = new QuadTreeSearchableVoronoi( quadTree, _voronoi );
 	}
 
-	/*
 	[TestCase( -1, -1, 52, 52, 25, 25 )]
 	public void Search_SingleQuadrant_PointReturned(
 		int x,
@@ -54,5 +46,5 @@ public sealed class QuadTreeSearchableVoronoiUnitTests {
 		Assert.AreEqual( cx, cell.Center.X );
 		Assert.AreEqual( cy, cell.Center.Y );
 	}
-	*/
 }
+*/

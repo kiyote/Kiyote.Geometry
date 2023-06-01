@@ -1,74 +1,48 @@
 ﻿namespace Kiyote.Geometry.DelaunayVoronoi;
 
-// Ported from https://github.com/mapbox/delaunator
+// Ported from: https://github.com/mapbox/delaunator/blob/main/index.js
+/*
+ISC License
 
-internal sealed class DelaunatorFactory : IDelaunatorFactory {
+Copyright (c) 2021, Mapbox
 
-	public const double MinimumPrecision = 0.0000000001D;
+Permission to use, copy, modify, and/or distribute this software for any purpose
+with or without fee is hereby granted, provided that the above copyright notice
+and this permission notice appear in all copies.
 
-	Delaunator IDelaunatorFactory.Create(
-		IEnumerable<Point> input
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+THIS SOFTWARE.
+ */
+
+internal sealed class MapboxDelaunatorFactory {
+
+	public static MapboxDelaunator Create(
+		ReadOnlySpan<double> coords
 	) {
-		List<Point> distinctInput = input.Distinct().ToList();
-		double[] coords = new double[distinctInput.Count * 2];
-		for( int i = 0; i < distinctInput.Count; i++ ) {
-			Point point = distinctInput[i];
-			coords[2 * i] = point.X;
-			coords[( 2 * i ) + 1] = point.Y;
-		}
-
-		if( coords.Length < 6 ) {
-			throw new ArgumentException( "Must provide at least 3 distinct points.", nameof( input ) );
-		}
+		int n = coords.Length / 2;
 
 		int[] edgeStack = new int[512];
 
-		int n = coords.Length / 2;
-		int[] hullPrev = new int[n];
-		int[] hullNext = new int[n];
-		int[] hullTri = new int[n];
+		// arrays that will store the triangulation graph
+		int maxTriangles = Math.Max( ( 2 * n ) - 5, 0 );
+		int[] triangles = new int[maxTriangles * 3];
+		int[] halfEdges = new int[maxTriangles * 3];
+
+		// temporary arrays for tracking the edges of the advancing convex hull
+		int hashSize = (int)Math.Ceiling( Math.Sqrt( n ) );
+		int[] hullPrev = new int[n]; // edge to prev edge
+		int[] hullNext = new int[n]; // edge to next edge
+		int[] hullTri = new int[n]; // edge to adjacent triangle
+		int[] hullHash = new int[hashSize];
+
+		// temporary arrays for sorting points
 		int[] ids = new int[n];
 		double[] dists = new double[n];
-
-		int maximumTriangles = ( 2 * n ) - 5;
-
-		int triangleCapacity = maximumTriangles * 3;
-		int[] triangles = new int[triangleCapacity];
-
-		// Half edges represent the "connectivity" between edges.  That is,
-		// given 3 edges of a triangle, there is a half-edge entry that corresponds
-		// to the edge of the adjacent triangle.  If there is no triangle on the
-		// other side of the edge, it will be -1.  That is: a given half-edge
-		// entry indicates the edge on the other side of that edge (if connected)
-		//
-		// Given edges numbered
-		//       1
-		//    _______
-		//    |\    |
-		//    | \   |
-		//  5 | 4\2 |  0
-		//    |   \ |
-		//    |____\|
-		//
-		//       3
-		//
-		// The half-edges would be
-		//       -1
-		//    _______
-		//    |\    |
-		//    | \   |
-		// -1 | 2\4 |  -1
-		//    |   \ |
-		//    |____\|
-		//
-		//       -1
-		//
-		// So, halfEdges[2] = 4
-		// And halfEdges[4] = 2
-		int halfEdgeCapacity = maximumTriangles * 3;
-		int[] halfEdges = new int[halfEdgeCapacity];
-
-		int hashSize = (int)Math.Ceiling( Math.Sqrt( n ) );
 
 		double minX = double.PositiveInfinity;
 		double minY = double.PositiveInfinity;
@@ -76,7 +50,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		double maxY = double.NegativeInfinity;
 
 		for( int i = 0; i < n; i++ ) {
-			double x = coords[2 * i];
+			double x = coords[( 2 * i ) + 0];
 			double y = coords[( 2 * i ) + 1];
 			if( x < minX ) {
 				minX = x;
@@ -99,11 +73,10 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		double cx = ( minX + maxY ) / 2.0D;
 		double cy = ( minY + maxY ) / 2.0D;
 
+		int i0 = int.MinValue;
+		int i1 = int.MinValue;
+		int i2 = int.MinValue;
 		double minDist = double.PositiveInfinity;
-		int i0 = 0;
-		int i1 = 0;
-		int i2 = 0;
-
 		// pick a seed point close to the center
 		for( int i = 0; i < n; i++ ) {
 			double d = Dist( cx, cy, coords[2 * i], coords[( 2 * i ) + 1] );
@@ -113,11 +86,10 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 			}
 		}
 
-		double i0x = coords[2 * i0];
+		double i0x = coords[( 2 * i0 ) + 0];
 		double i0y = coords[( 2 * i0 ) + 1];
 
 		minDist = double.PositiveInfinity;
-
 		// find the point closest to the seed
 		for( int i = 0; i < n; i++ ) {
 			if( i == i0 ) {
@@ -133,7 +105,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 			}
 		}
 
-		double i1x = coords[2 * i1];
+		double i1x = coords[( 2 * i1 ) + 0];
 		double i1y = coords[( 2 * i1 ) + 1];
 
 		double minRadius = double.PositiveInfinity;
@@ -153,14 +125,14 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 			}
 		}
 
-		double i2x = coords[2 * i2];
+		double i2x = coords[( 2 * i2 ) + 0];
 		double i2y = coords[( 2 * i2 ) + 1];
 
 		if( minRadius == double.PositiveInfinity ) {
 			throw new InvalidOperationException( "No Delaunay triangulation exists for this input." );
 		}
 
-		if( Orient( i0x, i0y, i1x, i1y, i2x, i2y ) < 0.0D ) {
+		if( Orient( i0x, i0y, i1x, i1y, i2x, i2y ) < 0D ) {
 			int i = i1;
 			double x = i1x;
 			double y = i1y;
@@ -192,7 +164,6 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		hullTri[i1] = 1;
 		hullTri[i2] = 2;
 
-		int[] hullHash = new int[hashSize];
 		Array.Fill( hullHash, -1 );
 		hullHash[HashKey( i0x, i0y, hashSize, circumcenterX, circumcenterY )] = i0;
 		hullHash[HashKey( i1x, i1y, hashSize, circumcenterX, circumcenterY )] = i1;
@@ -203,7 +174,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 
 		for( int k = 0; k < ids.Length; k++ ) {
 			int i = ids[k];
-			double x = coords[2 * i];
+			double x = coords[( 2 * i ) + 0];
 			double y = coords[( 2 * i ) + 1];
 
 			// skip seed triangle points
@@ -301,18 +272,22 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		triangles = triangles[0..trianglesLen];
 		halfEdges = halfEdges[0..trianglesLen];
 
-		return new Delaunator( coords, hull, triangles, halfEdges );
+		return new MapboxDelaunator(
+			hull,
+			triangles,
+			halfEdges
+		);
 	}
 
 	private static int Legalize(
 		int a,
 		int hullStart,
-		int[] halfEdges,
-		int[] edgeStack,
-		int[] triangles,
-		double[] coords,
-		int[] hullTri,
-		int[] hullPrev
+		Span<int> halfEdges,
+		Span<int> edgeStack,
+		Span<int> triangles,
+		ReadOnlySpan<double> coords,
+		Span<int> hullTri,
+		Span<int> hullPrev
 	) {
 		int i = 0;
 		int ar;
@@ -407,8 +382,8 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 		int b,
 		int c,
 		ref int trianglesLen,
-		int[] triangles,
-		int[] halfEdges
+		Span<int> triangles,
+		Span<int> halfEdges
 	) {
 		int t = trianglesLen;
 
@@ -428,7 +403,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 	private static void Link(
 		int a,
 		int b,
-		int[] halfEdges
+		Span<int> halfEdges
 	) {
 		halfEdges[a] = b;
 		if( b != -1 ) {
@@ -548,9 +523,9 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 				( ap * ( ( ex * fy ) - ( ey * fx ) ) ) < 0.0D;
 	}
 
-	private void Quicksort(
-		int[] ids,
-		double[] dists,
+	private static void Quicksort(
+		Span<int> ids,
+		Span<double> dists,
 		int left,
 		int right
 	) {
@@ -607,7 +582,7 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 	}
 
 	private static void Swap(
-		int[] arr,
+		Span<int> arr,
 		int i,
 		int j
 	) {
@@ -615,3 +590,4 @@ internal sealed class DelaunatorFactory : IDelaunatorFactory {
 	}
 
 }
+

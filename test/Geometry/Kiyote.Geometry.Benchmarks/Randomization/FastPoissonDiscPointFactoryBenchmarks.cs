@@ -18,7 +18,7 @@ public class FastPoissonDiscPointFactoryBenchmarks {
 
 	[BenchmarkCategory( "100x100" ), Benchmark]
 	public void Fill_100x100() {
-		_poissonDisc.Fill( new Bounds( 100, 100 ), 5 );
+		_ = _poissonDisc.Fill( new Bounds( 100, 100 ), 5 );
 	}
 
 	[BenchmarkCategory( "100x100" ), Benchmark( Baseline = true )]
@@ -32,7 +32,7 @@ public class FastPoissonDiscPointFactoryBenchmarks {
 
 	[BenchmarkCategory( "500x500" ), Benchmark]
 	public void Fill_500x500() {
-		_poissonDisc.Fill( new Bounds( 500, 500 ), 5 );
+		_ = _poissonDisc.Fill( new Bounds( 500, 500 ), 5 );
 	}
 
 	[BenchmarkCategory( "500x500" ), Benchmark( Baseline = true )]
@@ -46,7 +46,7 @@ public class FastPoissonDiscPointFactoryBenchmarks {
 
 	[BenchmarkCategory( "1000x1000" ), Benchmark]
 	public void Fill_1000x1000() {
-		_poissonDisc.Fill( new Bounds( 1000, 1000 ), 5 );
+		_ = _poissonDisc.Fill( new Bounds( 1000, 1000 ), 5 );
 	}
 
 	[BenchmarkCategory( "1000x1000" ), Benchmark( Baseline = true )]

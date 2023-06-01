@@ -12,16 +12,14 @@ public sealed class DelaunayFactoryIntegrationTests {
 	public void SetUp() {
 		IRandom random = new FastRandom();
 		_pointFactory = new FastPoissonDiscPointFactory( random );
-		_delaunayFactory = new DelaunayFactory();
+		_delaunayFactory = new D3DelaunayFactory();
 	}
 
 	[Test]
 	public void Create_HappyPath_DelaunayCreated() {
 		Bounds bounds = new Bounds( 1000, 1000 );
 		IReadOnlyList<Point> points = _pointFactory.Fill( bounds, 25 );
-		IDelaunatorFactory delaunatorFactory = new DelaunatorFactory();
-		Delaunator delaunator = delaunatorFactory.Create( points );
-		Delaunay delaunay = _delaunayFactory.Create( delaunator );
+		IDelaunay delaunay = _delaunayFactory.Create( points );
 
 		Assert.IsNotNull( delaunay );
 	}

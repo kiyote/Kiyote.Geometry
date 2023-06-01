@@ -12,33 +12,32 @@ public sealed class VoronoiFactoryIntegrationTests {
 	public void SetUp() {
 		IRandom random = new FastRandom();
 		_pointFactory = new FastPoissonDiscPointFactory( random );
-		_voronoiFactory = new VoronoiFactory();
+		_voronoiFactory = new D3VoronoiFactory();
 	}
 
 	[Test]
 	public void Create_HappyPath_DelaunayCreated() {
-		Bounds bounds = new Bounds( 1000, 1000 );
-		IReadOnlyList<Point> points = _pointFactory.Fill( bounds, 25 );
-		IDelaunatorFactory delaunatorFactory = new DelaunatorFactory();
-		Delaunator delaunator = delaunatorFactory.Create( points );
-		IVoronoi voronoi = _voronoiFactory.Create( delaunator, bounds.Width, bounds.Height );
+		Bounds size = new Bounds( 1000, 1000 );
+		IRect bounds = new Rect( 0, 0, size );
+		IReadOnlyList<Point> points = _pointFactory.Fill( size, 25 );
+		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
 		Assert.IsNotNull( voronoi );
 	}
 
 	[Test]
 	public void Create_FixedPoints_ReferenceDiagramCreated() {
-		Bounds bounds = new Bounds( 30, 30 );
+		Bounds size = new Bounds( 30, 30 );
+		IRect bounds = new Rect( 0, 0, size );
 		IReadOnlyList<Point> points = new List<Point>() {
 			new Point(10, 10),
 			new Point(20, 10),
 			new Point(10, 20),
 			new Point(20, 20)
 		};
-		IDelaunatorFactory delaunatorFactory = new DelaunatorFactory();
-		Delaunator delaunator = delaunatorFactory.Create( points );
-		IVoronoi voronoi = _voronoiFactory.Create( delaunator, bounds.Width, bounds.Height );
+		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
 		Assert.IsNotNull( voronoi );
 	}
 }
+

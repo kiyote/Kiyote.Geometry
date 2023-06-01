@@ -3,13 +3,14 @@
 public interface IVoronoiFactory {
 
 	IVoronoi Create(
-		Delaunator delaunator,
-		int width,
-		int height
+		IRect bounds,
+		IReadOnlyList<Point> points
 	);
 
 	IVoronoi Create(
-		Delaunator delaunator,
-		Bounds bounds
+		IRect bounds,
+		IReadOnlyList<Point> points,
+		bool sanitizePoints
 	);
+
 }

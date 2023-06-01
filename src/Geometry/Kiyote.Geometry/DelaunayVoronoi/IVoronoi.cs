@@ -4,11 +4,8 @@ public interface IVoronoi {
 
 	IReadOnlyList<Cell> Cells { get; }
 
-	IReadOnlyList<Edge> Edges { get; }
+	IReadOnlyList<Point> Points { get; }
 
 	IReadOnlyDictionary<Cell, IReadOnlyList<Cell>> Neighbours { get; }
 
-	IReadOnlyList<Cell> OpenCells { get; }
-
-	IReadOnlyList<Cell> ClosedCells { get; }
 }

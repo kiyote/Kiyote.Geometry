@@ -8,5 +8,6 @@ using Kiyote.Geometry.Randomization;
 
 
 #pragma warning disable CA1852 // Until https://github.com/dotnet/roslyn-analyzers/issues/6141 is fixed
-BenchmarkRunner.Run<VoronoiFactoryBenchmarks>();
+BenchmarkRunner.Run<D3VoronoiFactoryBenchmarks>();
 #pragma warning restore CA1852
+
