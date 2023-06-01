@@ -19,6 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Packages.props = Directory.Packages.props
 		LICENSE = LICENSE
 		nuget.config = nuget.config
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Geometry", "Geometry", "{D8A59D9B-83C9-4085-92FB-385089A1E9BA}"
@@ -29,7 +30,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kiyote.Geometry.Benchmarks"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kiyote.Geometry.Visualizer", "test\Geometry\Kiyote.Geometry.Visualizer\Kiyote.Geometry.Visualizer.csproj", "{4162602C-B52A-420B-B7C9-F8E27AD3291C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kiyote.Geometry.Profiler", "test\Geometry\Kiyote.Geometry.Profiler\Kiyote.Geometry.Profiler.csproj", "{A72BFC80-44A3-445C-BDDB-51592F8D4FC3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kiyote.Geometry.Profiler", "test\Geometry\Kiyote.Geometry.Profiler\Kiyote.Geometry.Profiler.csproj", "{A72BFC80-44A3-445C-BDDB-51592F8D4FC3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
