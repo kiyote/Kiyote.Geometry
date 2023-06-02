@@ -3,7 +3,7 @@
 namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
 
 [TestFixture]
-public sealed class DelaunayFactoryIntegrationTests {
+public sealed class D3DelaunayFactoryIntegrationTests {
 
 	private IDelaunayFactory _delaunayFactory;
 	private IPointFactory _pointFactory;

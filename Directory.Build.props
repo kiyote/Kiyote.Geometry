@@ -1,6 +1,6 @@
 <Project>
 	<PropertyGroup>
-		<ProductVersion>0.1.0</ProductVersion>
+		<ProductVersion>0.2.0</ProductVersion>
 	</PropertyGroup>
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
