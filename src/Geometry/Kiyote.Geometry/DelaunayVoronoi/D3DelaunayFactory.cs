@@ -36,7 +36,7 @@ internal sealed class D3DelaunayFactory : IDelaunayFactory {
 		double[] coords = points.ToCoords();
 		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( coords );
 
-		List<Triangle> triangles = new List<Triangle>();
+		List<Triangle> triangles = new List<Triangle>( delaunator.Triangles.Length / 3 );
 		for( int i = 0; i < delaunator.Triangles.Length; i += 3 ) {
 			int t1 = delaunator.Triangles[i + 0] * 2;
 			int t2 = delaunator.Triangles[i + 1] * 2;
@@ -57,7 +57,7 @@ internal sealed class D3DelaunayFactory : IDelaunayFactory {
 			);
 		}
 
-		List<Point> hull = new List<Point>();
+		List<Point> hull = new List<Point>( delaunator.Hull.Count( h => h >= 0 ) );
 		for( int i = 0; i < delaunator.Hull.Length; i++ ) {
 			int c = delaunator.Hull[i];
 			if( c >= 0 ) {
@@ -94,7 +94,7 @@ internal sealed class D3DelaunayFactory : IDelaunayFactory {
 		// Used to give the first neighbor of each point; for this reason,
 		// on the hull we give priority to exterior halfedges
 		for( int e = 0; e < halfEdges.Length; e++ ) {
-			int p = triangles[(e % 3 == 2 ? e - 2 : e + 1)];
+			int p = triangles[( e % 3 == 2 ? e - 2 : e + 1 )];
 			if( halfEdges[e] == -1
 				|| inedges[p] == -1
 			) {
@@ -105,9 +105,7 @@ internal sealed class D3DelaunayFactory : IDelaunayFactory {
 			hullIndex[hull[i]] = i;
 		}
 
-		if( hull.Length <= 2
-			&& hull.Length > 0
-		) {
+		if( hull.Length <= 2 ) {
 			throw new InvalidOperationException( "Degenerate diagram detected." );
 		}
 

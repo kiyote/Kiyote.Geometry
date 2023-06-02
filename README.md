@@ -60,13 +60,13 @@ All of the following benchmarks fill a surface of the specified size with a pois
 # D3DelaunayFactory Benchmarks
 |           Method |         Mean |      Error |     StdDev |  Allocated |
 |----------------- |-------------:|-----------:|-----------:|-----------:|
-|   Create_100x100 |     84.85 us |   1.648 us |   2.466 us |   89.84 KB |
-|   Create_500x500 |  3,096.43 us |  46.525 us |  43.520 us | 1740.89 KB |
-| Create_1000x1000 | 14,201.93 us | 109.762 us | 102.671 us | 6940.13 KB |
+|   Create_100x100 |     91.69 us |   2.557 us |   2.135 us |    71.6 KB |
+|   Create_500x500 |  4,084.48 us |  83.001 us |  77.639 us | 1785.83 KB |
+| Create_1000x1000 | 17,116.12 us | 396.626 us | 371.005 us | 7163.57 KB |
 
 # D3VoronoiFactory Benchmarks
-|           Method |        Mean |       Error |    StdDev |   Allocated |
-|----------------- |------------:|------------:|----------:|------------:|
-|   Create_100x100 |    327.5 us |     6.47 us |   6.05 us |   460.45 KB |
-|   Create_500x500 | 15,045.4 us |   288.65 us | 354.49 us | 11011.56 KB |
-| Create_1000x1000 | 60,415.0 us | 1,011.59 us | 844.72 us | 43555.18 KB |
+|           Method |        Mean |       Error |      StdDev |   Allocated |
+|----------------- |------------:|------------:|------------:|------------:|
+|   Create_100x100 |    362.8 us |     3.75 us |     3.33 us |   570.73 KB |
+|   Create_500x500 | 19,431.0 us |   872.09 us |   773.08 us | 13882.85 KB |
+| Create_1000x1000 | 86,832.1 us | 5,455.04 us | 5,102.64 us | 55436.74 KB |

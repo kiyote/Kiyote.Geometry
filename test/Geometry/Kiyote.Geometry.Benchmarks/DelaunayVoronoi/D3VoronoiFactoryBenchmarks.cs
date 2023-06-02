@@ -7,6 +7,8 @@ namespace Kiyote.Geometry.Benchmarks.DelaunayVoronoi;
 [GroupBenchmarksBy( BenchmarkLogicalGroupRule.ByCategory )]
 public class D3VoronoiFactoryBenchmarks {
 
+	public const int DistanceApart = 5;
+
 	private readonly IVoronoiFactory _voronoiFactory;
 	private readonly IRect _100bounds;
 	private readonly IReadOnlyList<Point> _100points;
@@ -16,19 +18,37 @@ public class D3VoronoiFactoryBenchmarks {
 	private readonly IReadOnlyList<Point> _1000points;
 
 	public D3VoronoiFactoryBenchmarks() {
-		IRandom random = new FastRandom();
-		IPointFactory pointFactory = new FastPoissonDiscPointFactory( random );
 
 		_1000bounds = new Rect( 0, 0, 1000, 1000 );
-		_1000points = pointFactory.Fill( new Bounds( 1000, 1000 ), 5 );
+		_1000points = Fill( new Bounds( 1000, 1000 ) );
 
 		_500bounds = new Rect( 0, 0, 500, 500 );
-		_500points = pointFactory.Fill( new Bounds( 500, 500 ), 5 );
+		_500points = Fill( new Bounds( 500, 500 ) );
 
 		_100bounds = new Rect( 0, 0, 100, 100 );
-		_100points = pointFactory.Fill( new Bounds( 100, 100 ), 5 );
+		_100points = Fill( new Bounds( 100, 100 ) );
 
 		_voronoiFactory = new D3VoronoiFactory();
+	}
+
+	private static IReadOnlyList<Point> Fill(
+		Bounds bounds
+	) {
+		int horizontalPoints = bounds.Width / DistanceApart;
+		int verticalPoints = bounds.Height / DistanceApart;
+		int offset = DistanceApart / 2;
+		List<Point> points = new List<Point>( bounds.Width / horizontalPoints * (bounds.Height / verticalPoints) );
+		for( int i = 0; i < horizontalPoints; i++ ) {
+			for( int j = 0; j < verticalPoints; j++ ) {
+				points.Add(
+					new Point(
+						( DistanceApart * i ) + offset,
+						( DistanceApart * j ) + offset
+					)
+				);
+			}
+		}
+		return points;
 	}
 
 	[BenchmarkCategory( "100x100" ), Benchmark]
