@@ -22,6 +22,9 @@ THIS SOFTWARE.
 
 internal sealed class D3VoronoiFactory : IVoronoiFactory {
 
+	private const int MaximumExpectedPointsPerCell = 25;
+	private const int MaximumExpectedNeighbours = 10;
+
 	IVoronoi IVoronoiFactory.Create(
 		IRect bounds,
 		IReadOnlyList<Point> points
@@ -54,50 +57,32 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( coords );
 		D3Delaunay delaunay = D3DelaunayFactory.Create( coords, delaunator );
 
-		ReadOnlySpan<int> triangles = delaunator.Triangles;
-		ReadOnlySpan<int> hull = delaunator.Hull;
-		ReadOnlySpan<int> halfEdges = delaunator.HalfEdges;
-		ReadOnlySpan<int> hullIndex = delaunay.HullIndex;
-		ReadOnlySpan<int> inedges = delaunay.Inedges;
+		double[] circumcenters = CalculateCircumcenters( delaunator, coords );
+		double[] vectors = CalculateVectors( delaunator, coords );
 
-		double[] circumcenters = new double[triangles.Length / 3 * 2];
-		CalculateCircumcenters(
-			triangles,
-			coords,
-			circumcenters
-		);
-		Span<double> vectors = new double[coords.Length * 2];
-		CalculateVectors(
-			hull,
-			coords,
-			vectors
-		);
-
-		List<double> cellCoords = new List<double>( 20 );
-		double[] cellPointBuffer = new double[50];
+		double[] cellPointBuffer = new double[MaximumExpectedPointsPerCell * 2];
+		double[] projectedPointBuffer = new double[cellPointBuffer.Length + 4];
 
 		List<Cell> cells = new List<Cell>( points.Count );
+		List<double> cellCoords = new List<double>( MaximumExpectedPointsPerCell * 2 );
 		for( int i = 0; i < points.Count; i++ ) {
 			bool isOpen = false;
 			Clip(
 				bounds,
 				coords,
 				circumcenters,
-				inedges,
-				halfEdges,
-				triangles,
+				delaunator,
+				delaunay,
 				vectors,
-				hull,
-				hullIndex,
 				i,
 				cellCoords,
 				cellPointBuffer,
+				projectedPointBuffer,
 				ref isOpen
 			);
 
 			if( !cellCoords.Any() ) {
 				throw new InvalidOperationException();
-				//continue;
 			}
 
 			int minX = int.MaxValue;
@@ -134,9 +119,10 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			cells.Add( cell );
 		}
 
+		ReadOnlySpan<int> inedges = delaunay.Inedges;
+		ReadOnlySpan<int> hullIndex = delaunay.HullIndex;
 		Dictionary<Cell, IReadOnlyList<Cell>> cellNeighbours = new Dictionary<Cell, IReadOnlyList<Cell>>( points.Count );
-
-		List<Cell> neighbours = new List<Cell>( 10 );
+		List<Cell> neighbours = new List<Cell>( MaximumExpectedNeighbours );
 		for( int i = 0; i < points.Count; i++ ) {
 			int e0 = inedges[i];
 			if( e0 == -1 ) {
@@ -162,7 +148,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				}
 
 			} while( e != e0 );
-			cellNeighbours[cells[i]] = neighbours.ToList();
+			cellNeighbours[cells[i]] = neighbours.ToList(); // Make a copy
 			neighbours.Clear();
 		}
 
@@ -173,28 +159,20 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		IRect bounds,
 		ReadOnlySpan<double> coords,
 		ReadOnlySpan<double> circumcenters,
-		ReadOnlySpan<int> inedges,
-		ReadOnlySpan<int> halfEdges,
-		ReadOnlySpan<int> triangles,
+		MapboxDelaunator delaunator,
+		D3Delaunay delaunay,
 		ReadOnlySpan<double> vectors,
-		ReadOnlySpan<int> hull,
-		ReadOnlySpan<int> hullIndex,		
 		int i,
 		List<double> cellCoords,
 		Span<double> cellPointBuffer,
+		Span<double> projectedPointBuffer,
 		ref bool isOpen
 	) {
-		if( i == 0
-			&& hull.Length == 1
-		) {
-			throw new InvalidOperationException( "degenerate case (1 valid point)." );
-		}
 		Cell(
 			i,
 			circumcenters,
-			inedges,
-			halfEdges,
-			triangles,
+			delaunator,
+			delaunay,
 			cellPointBuffer,
 			out int cellPointCount
 		);
@@ -210,13 +188,11 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			ClipInfinite(
 				bounds,
 				coords,
-				inedges,
-				triangles,
-				hull,
-				hullIndex,
-				halfEdges,
+				delaunator,
+				delaunay,
 				i,
 				cellPointBuffer[..cellPointCount],
+				projectedPointBuffer,
 				vectors[v + 0],
 				vectors[v + 1],
 				vectors[v + 2],
@@ -228,11 +204,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			ClipFinite(
 				bounds,
 				coords,
-				inedges,
-				triangles,
-				hull,
-				hullIndex,
-				halfEdges,
+				delaunator,
+				delaunay,
 				i,
 				cellPointBuffer[..cellPointCount],
 				cellCoords,
@@ -265,13 +238,11 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	private static void ClipInfinite(
 		IRect bounds,
 		ReadOnlySpan<double> coords,
-		ReadOnlySpan<int> inedges,
-		ReadOnlySpan<int> triangles,
-		ReadOnlySpan<int> hull,
-		ReadOnlySpan<int> hullIndex,
-		ReadOnlySpan<int> halfEdges,
+		MapboxDelaunator delaunator,
+		D3Delaunay delaunay,
 		int i,
 		ReadOnlySpan<double> points,
+		Span<double> projectedPointBuffer,
 		double vx0,
 		double vy0,
 		double vxn,
@@ -281,19 +252,18 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	) {
 		// Duplicate the points, but make spaces for potential points
 		// at the start and end so we don't have to re-allocate
-		double[] localPoints = new double[points.Length + 4];
-		points.CopyTo( localPoints.AsSpan()[2..] );
+		points.CopyTo( projectedPointBuffer[2..] );
 		int startIndex = 2;
 		int endIndex = points.Length + 2;
 
 		if( Project( bounds, points[0], points[1], vx0, vy0, out double px, out double py ) ) {
-			localPoints[0] = px;
-			localPoints[1] = py;
+			projectedPointBuffer[0] = px;
+			projectedPointBuffer[1] = py;
 			startIndex = 0;
 		}
 		if( Project( bounds, points[^2], points[^1], vxn, vyn, out px, out py ) ) {
-			localPoints[^2] = px;
-			localPoints[^1] = py;
+			projectedPointBuffer[endIndex + 0] = px;
+			projectedPointBuffer[endIndex + 1] = py;
 			endIndex += 2;
 		}
 
@@ -301,13 +271,10 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		ClipFinite(
 				bounds,
 				coords,
-				inedges,
-				triangles,
-				hull,
-				hullIndex,
-				halfEdges,
+				delaunator,
+				delaunay,
 				i,
-				localPoints.AsSpan()[startIndex..endIndex],
+				projectedPointBuffer[startIndex..endIndex],
 				cellCoords,
 				ref isOpen
 			);
@@ -325,11 +292,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 					j = Edge(
 						bounds,
 						coords,
-						inedges,
-						triangles,
-						hull,
-						hullIndex,
-						halfEdges,
+						delaunator,
+						delaunay,
 						i,
 						c0,
 						c1,
@@ -342,11 +306,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		} else if(
 			Contains(
 				coords,
-				inedges,
-				triangles,
-				hull,
-				hullIndex,
-				halfEdges,
+				delaunator,
+				delaunay,
 				i,
 				( bounds.X1 + bounds.X2 ) / 2,
 				( bounds.Y1 + bounds.Y2 ) / 2
@@ -368,11 +329,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	private static void ClipFinite(
 		IRect bounds,
 		ReadOnlySpan<double> coords,
-		ReadOnlySpan<int> inedges,
-		ReadOnlySpan<int> triangles,
-		ReadOnlySpan<int> hull,
-		ReadOnlySpan<int> hullIndex,
-		ReadOnlySpan<int> halfEdges,
+		MapboxDelaunator delaunator,
+		D3Delaunay delaunay,
 		int i,
 		ReadOnlySpan<double> points,
 		List<double> cellCoords,
@@ -407,7 +365,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				double sx1;
 				double sy1;
 				if( c0 == 0 ) {
-					if( !ClipSegment( bounds, x0, y0, x1, y1, c0, c1, out double cx0, out double cy0, out double cx1, out double cy1) ) {
+					if( !ClipSegment( bounds, x0, y0, x1, y1, c0, c1, out double cx0, out double cy0, out double cx1, out double cy1 ) ) {
 						continue;
 					}
 					//sx0 = S[0];
@@ -432,11 +390,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 						_ = Edge(
 							bounds,
 							coords,
-							inedges,
-							triangles,
-							hull,
-							hullIndex,
-							halfEdges,
+							delaunator,
+							delaunay,
 							i,
 							e0,
 							e1,
@@ -456,11 +411,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 					_ = Edge(
 						bounds,
 						coords,
-						inedges,
-						triangles,
-						hull,
-						hullIndex,
-						halfEdges,
+						delaunator,
+						delaunay,
 						i,
 						e0,
 						e1,
@@ -482,11 +434,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				_ = Edge(
 					bounds,
 					coords,
-					inedges,
-					triangles,
-					hull,
-					hullIndex,
-					halfEdges,
+					delaunator,
+					delaunay,
 					i,
 					e0,
 					e1,
@@ -497,11 +446,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		} else if(
 			Contains(
 				coords,
-				inedges,
-				triangles,
-				hull,
-				hullIndex,
-				halfEdges,
+				delaunator,
+				delaunay,
 				i,
 				( bounds.X1 + bounds.X2 ) / 2,
 				( bounds.Y1 + bounds.Y2 ) / 2
@@ -523,11 +469,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	private static int Edge(
 		IRect bounds,
 		ReadOnlySpan<double> coords,
-		ReadOnlySpan<int> inedges,
-		ReadOnlySpan<int> triangles,
-		ReadOnlySpan<int> hull,
-		ReadOnlySpan<int> hullIndex,
-		ReadOnlySpan<int> halfEdges,
+		MapboxDelaunator delaunator,
+		D3Delaunay delaunay,
 		int i,
 		int e0,
 		int e1,
@@ -578,11 +521,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				|| points[j + 1] != y )
 				&& Contains(
 					coords,
-					inedges,
-					triangles,
-					hull,
-					hullIndex,
-					halfEdges,
+					delaunator,
+					delaunay,
 					i,
 					x,
 					y
@@ -597,34 +537,33 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 
 	private static bool Contains(
 		ReadOnlySpan<double> coords,
-		ReadOnlySpan<int> inedges,
-		ReadOnlySpan<int> triangles,
-		ReadOnlySpan<int> hull,
-		ReadOnlySpan<int> hullIndex,
-		ReadOnlySpan<int> halfEdges,
+		MapboxDelaunator delaunator,
+		D3Delaunay delaunay,
 		int i,
 		double x,
 		double y
 	) {
-		return ( Step( coords, inedges, triangles, hull, hullIndex, halfEdges, i, x, y ) == i );
+		return ( Step( coords, delaunator, delaunay, i, x, y ) == i );
 	}
 
 	private static int Step(
 		ReadOnlySpan<double> coords,
-		ReadOnlySpan<int> inedges,
-		ReadOnlySpan<int> triangles,
-		ReadOnlySpan<int> hull,
-		ReadOnlySpan<int> hullIndex,
-		ReadOnlySpan<int> halfEdges,
+		MapboxDelaunator delaunator,
+		D3Delaunay delaunay,
 		int i,
 		double x,
 		double y
 	) {
+		ReadOnlySpan<int> inedges = delaunay.Inedges;
 		if( inedges[i] == -1
 			|| coords.Length == 0
 		) {
 			return ( i + 1 ) % ( coords.Length / 2 );
 		}
+		ReadOnlySpan<int> triangles = delaunator.Triangles;
+		ReadOnlySpan<int> halfEdges = delaunator.HalfEdges;
+		ReadOnlySpan<int> hull = delaunator.Hull;
+		ReadOnlySpan<int> hullIndex = delaunay.HullIndex;
 		int c = i;
 		double dc = Math.Pow( x - coords[i * 2], 2 ) + Math.Pow( y - coords[( i * 2 ) + 1], 2 );
 		int e0 = inedges[i];
@@ -686,7 +625,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			if( c0 == 0
 				&& c1 == 0
 			) {
-				if (flip) {
+				if( flip ) {
 					cx0 = x1;
 					cy0 = y1;
 					cx1 = x0;
@@ -843,12 +782,14 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	private static void Cell(
 		int i,
 		ReadOnlySpan<double> circumcenters,
-		ReadOnlySpan<int> inedges,
-		ReadOnlySpan<int> halfEdges,
-		ReadOnlySpan<int> triangles,
+		MapboxDelaunator delaunator,
+		D3Delaunay delaunay,
 		Span<double> cellPointBuffer,
 		out int cellPointCount
 	) {
+		ReadOnlySpan<int> triangles = delaunator.Triangles;
+		ReadOnlySpan<int> halfEdges = delaunator.HalfEdges;
+		ReadOnlySpan<int> inedges = delaunay.Inedges;
 		int e0 = inedges[i];
 		if( e0 == -1 ) {
 			throw new InvalidOperationException( "Coincident points." );
@@ -869,11 +810,13 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		} while( e != e0 && e != -1 );
 	}
 
-	private static void CalculateVectors(
-		ReadOnlySpan<int> hull,
-		ReadOnlySpan<double> coords,
-		Span<double> vectors
+	private static double[] CalculateVectors(
+		MapboxDelaunator delaunator,
+		ReadOnlySpan<double> coords
 	) {
+		ReadOnlySpan<int> hull = delaunator.Hull;
+		// Two vectors for each point
+		double[] vectors = new double[coords.Length * 2];
 		int h = hull[^1];
 		int p0;
 		int p1 = h * 4;
@@ -895,13 +838,16 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			vectors[p0 + 2] = vectors[p1 + 0] = v0;
 			vectors[p0 + 3] = vectors[p1 + 1] = v1;
 		}
+		return vectors;
 	}
 
-	private static void CalculateCircumcenters(
-		ReadOnlySpan<int> triangles,
-		ReadOnlySpan<double> coords,
-		Span<double> circumcenters
+	private static double[] CalculateCircumcenters(
+		MapboxDelaunator delaunator,
+		ReadOnlySpan<double> coords
 	) {
+		ReadOnlySpan<int> triangles = delaunator.Triangles;
+		// Two coordinates for every triangle
+		double[] circumcenters = new double[triangles.Length / 3 * 2];
 		int j = 0;
 		int n = triangles.Length;
 		for( int i = 0; i < n; i += 3 ) {
@@ -933,5 +879,6 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			circumcenters[j + 1] = y;
 			j += 2;
 		}
+		return circumcenters;
 	}
 }

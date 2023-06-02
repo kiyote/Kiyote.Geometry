@@ -11,6 +11,7 @@ using Kiyote.Geometry.Randomization;
 
 #pragma warning disable CA1852 // Until https://github.com/dotnet/roslyn-analyzers/issues/6141 is fixed
 
+
 ManualConfig config = DefaultConfig.Instance
 	.AddJob( Job
 		 .MediumRun
@@ -18,6 +19,12 @@ ManualConfig config = DefaultConfig.Instance
 		 .WithToolchain( InProcessNoEmitToolchain.Instance ) );
 
 BenchmarkRunner.Run<D3VoronoiFactoryBenchmarks>( config );
+
+
+/*
+var b = new D3VoronoiFactoryBenchmarks();
+b.Create_1000x1000();
+*/
 
 #pragma warning restore CA1852
 

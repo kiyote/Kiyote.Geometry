@@ -279,6 +279,7 @@ internal sealed class MapboxDelaunatorFactory {
 		);
 	}
 
+	// NOTE - This represents the largest single contributor to runtime
 	private static int Legalize(
 		int a,
 		int hullStart,
