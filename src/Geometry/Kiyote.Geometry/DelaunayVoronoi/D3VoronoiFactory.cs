@@ -73,10 +73,13 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			vectors
 		);
 
+		List<double> cellCoords = new List<double>( 20 );
+		double[] cellPointBuffer = new double[50];
+
 		List<Cell> cells = new List<Cell>( points.Count );
 		for( int i = 0; i < points.Count; i++ ) {
 			bool isOpen = false;
-			double[] cellCoords = Clip(
+			Clip(
 				bounds,
 				coords,
 				circumcenters,
@@ -87,6 +90,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				hull,
 				hullIndex,
 				i,
+				cellCoords,
+				cellPointBuffer,
 				ref isOpen
 			);
 
@@ -100,7 +105,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			int maxX = int.MinValue;
 			int maxY = int.MinValue;
 			List<Point> cellPoints = new List<Point>();
-			for( int j = 0; j < cellCoords.Length / 2; j++ ) {
+			for( int j = 0; j < cellCoords.Count / 2; j++ ) {
 				int x = (int)cellCoords[( j * 2 ) + 0];
 				int y = (int)cellCoords[( j * 2 ) + 1];
 				if( x < minX ) {
@@ -164,7 +169,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		return new Voronoi( points, cells, cellNeighbours );
 	}
 
-	private static double[] Clip(
+	private static void Clip(
 		IRect bounds,
 		ReadOnlySpan<double> coords,
 		ReadOnlySpan<double> circumcenters,
@@ -173,8 +178,10 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		ReadOnlySpan<int> triangles,
 		ReadOnlySpan<double> vectors,
 		ReadOnlySpan<int> hull,
-		ReadOnlySpan<int> hullIndex,
+		ReadOnlySpan<int> hullIndex,		
 		int i,
+		List<double> cellCoords,
+		Span<double> cellPointBuffer,
 		ref bool isOpen
 	) {
 		if( i == 0
@@ -182,24 +189,25 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		) {
 			throw new InvalidOperationException( "degenerate case (1 valid point)." );
 		}
-		double[] points = Cell(
+		Cell(
 			i,
 			circumcenters,
 			inedges,
 			halfEdges,
-			triangles
+			triangles,
+			cellPointBuffer,
+			out int cellPointCount
 		);
 		// If it's an empty calculation, bail early
-		if( !points.Any() ) {
+		if( cellPointCount == 0 ) {
 			throw new InvalidOperationException();
 			//return Array.Empty<double>();
 		}
 		int v = i * 4;
-		List<double> clippedPoints;
 		if( vectors[v] != 0
 			|| vectors[v + 1] != 0
 		) {
-			clippedPoints = ClipInfinite(
+			ClipInfinite(
 				bounds,
 				coords,
 				inedges,
@@ -208,15 +216,16 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				hullIndex,
 				halfEdges,
 				i,
-				points,
+				cellPointBuffer[..cellPointCount],
 				vectors[v + 0],
 				vectors[v + 1],
 				vectors[v + 2],
 				vectors[v + 3],
+				cellCoords,
 				ref isOpen
 			);
 		} else {
-			clippedPoints = ClipFinite(
+			ClipFinite(
 				bounds,
 				coords,
 				inedges,
@@ -225,14 +234,15 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				hullIndex,
 				halfEdges,
 				i,
-				points,
+				cellPointBuffer[..cellPointCount],
+				cellCoords,
 				ref isOpen
 			);
 		}
-		return Simplify( clippedPoints ).ToArray();
+		Simplify( cellCoords );
 	}
 
-	private static List<double> Simplify(
+	private static void Simplify(
 		List<double> points
 	) {
 		if( points.Count > 4 ) {
@@ -250,10 +260,9 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				throw new InvalidOperationException();
 			}
 		}
-		return points;
 	}
 
-	private static List<double> ClipInfinite(
+	private static void ClipInfinite(
 		IRect bounds,
 		ReadOnlySpan<double> coords,
 		ReadOnlySpan<int> inedges,
@@ -267,20 +276,29 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		double vy0,
 		double vxn,
 		double vyn,
+		List<double> cellCoords, // Re-used list of doubles for cell vertices
 		ref bool isOpen
 	) {
-		List<double> clippedPoints = new List<double>( points.ToArray() );
-		double[] p = Project( bounds, clippedPoints[0], clippedPoints[1], vx0, vy0 );
-		if( p.Any() ) {
-			clippedPoints.Insert( 0, p[0] );
-			clippedPoints.Insert( 1, p[1] );
+		// Duplicate the points, but make spaces for potential points
+		// at the start and end so we don't have to re-allocate
+		double[] localPoints = new double[points.Length + 4];
+		points.CopyTo( localPoints.AsSpan()[2..] );
+		int startIndex = 2;
+		int endIndex = points.Length + 2;
+
+		if( Project( bounds, points[0], points[1], vx0, vy0, out double px, out double py ) ) {
+			localPoints[0] = px;
+			localPoints[1] = py;
+			startIndex = 0;
 		}
-		p = Project( bounds, clippedPoints[^2], clippedPoints[^1], vxn, vyn );
-		if( p.Any() ) {
-			clippedPoints.Add( p[0] );
-			clippedPoints.Add( p[1] );
+		if( Project( bounds, points[^2], points[^1], vxn, vyn, out px, out py ) ) {
+			localPoints[^2] = px;
+			localPoints[^1] = py;
+			endIndex += 2;
 		}
-		clippedPoints = ClipFinite(
+
+		cellCoords.Clear();
+		ClipFinite(
 				bounds,
 				coords,
 				inedges,
@@ -289,16 +307,17 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				hullIndex,
 				halfEdges,
 				i,
-				clippedPoints.ToArray(),
+				localPoints.AsSpan()[startIndex..endIndex],
+				cellCoords,
 				ref isOpen
 			);
-		if( clippedPoints.Any() ) {
-			int n = clippedPoints.Count;
+		if( cellCoords.Any() ) {
+			int n = cellCoords.Count;
 			int c0;
-			int c1 = EdgeCode( bounds, clippedPoints[^2], clippedPoints[^1] );
+			int c1 = EdgeCode( bounds, cellCoords[^2], cellCoords[^1] );
 			for( int j = 0; j < n; j += 2 ) {
 				c0 = c1;
-				c1 = EdgeCode( bounds, clippedPoints[j], clippedPoints[j + 1] );
+				c1 = EdgeCode( bounds, cellCoords[j], cellCoords[j + 1] );
 				if( c0 != 0
 					&& c1 != 0
 				) {
@@ -314,10 +333,10 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 						i,
 						c0,
 						c1,
-						clippedPoints,
+						cellCoords,
 						j
 					);
-					n = clippedPoints.Count;
+					n = cellCoords.Count;
 				}
 			}
 		} else if(
@@ -332,7 +351,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				( bounds.X1 + bounds.X2 ) / 2,
 				( bounds.Y1 + bounds.Y2 ) / 2
 		) ) {
-			clippedPoints = new List<double> {
+			cellCoords.Clear();
+			cellCoords.AddRange( new double[] {
 				bounds.X1,
 				bounds.Y1,
 				bounds.X2,
@@ -341,12 +361,11 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				bounds.Y2,
 				bounds.X1,
 				bounds.Y2
-			};
+			} );
 		}
-		return clippedPoints;
 	}
 
-	private static List<double> ClipFinite(
+	private static void ClipFinite(
 		IRect bounds,
 		ReadOnlySpan<double> coords,
 		ReadOnlySpan<int> inedges,
@@ -356,10 +375,11 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		ReadOnlySpan<int> halfEdges,
 		int i,
 		ReadOnlySpan<double> points,
+		List<double> cellCoords,
 		ref bool isOpen
 	) {
 		int n = points.Length;
-		List<double> clippedPoints = new List<double>();
+		cellCoords.Clear();
 		double x0;
 		double y0;
 		double x1 = points[^2];
@@ -379,33 +399,30 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			if( c0 == 0 && c1 == 0 ) {
 				//e0 = e1;
 				e1 = 0;
-				clippedPoints.Add( x1 );
-				clippedPoints.Add( y1 );
+				cellCoords.Add( x1 );
+				cellCoords.Add( y1 );
 			} else {
-				double[] segment;
 				double sx0;
 				double sy0;
 				double sx1;
 				double sy1;
 				if( c0 == 0 ) {
-					segment = ClipSegment( bounds, x0, y0, x1, y1, c0, c1 );
-					if( !segment.Any() ) {
+					if( !ClipSegment( bounds, x0, y0, x1, y1, c0, c1, out double cx0, out double cy0, out double cx1, out double cy1) ) {
 						continue;
 					}
 					//sx0 = S[0];
 					//sy0 = S[1];
-					sx1 = segment[2];
-					sy1 = segment[3];
+					sx1 = cx1;
+					sy1 = cy1;
 					isOpen = true;
 				} else {
-					segment = ClipSegment( bounds, x1, y1, x0, y0, c1, c0 );
-					if( !segment.Any() ) {
+					if( !ClipSegment( bounds, x1, y1, x0, y0, c1, c0, out double cx0, out double cy0, out double cx1, out double cy1 ) ) {
 						continue;
 					}
-					sx1 = segment[0];
-					sy1 = segment[1];
-					sx0 = segment[2];
-					sy0 = segment[3];
+					sx1 = cx0;
+					sy1 = cy0;
+					sx0 = cx1;
+					sy0 = cy1;
 					isOpen = true;
 					e0 = e1;
 					e1 = EdgeCode( bounds, sx0, sy0 );
@@ -423,12 +440,12 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 							i,
 							e0,
 							e1,
-							clippedPoints,
-							clippedPoints.Count
+							cellCoords,
+							cellCoords.Count
 						);
 					}
-					clippedPoints.Add( sx0 );
-					clippedPoints.Add( sy0 );
+					cellCoords.Add( sx0 );
+					cellCoords.Add( sy0 );
 				}
 				e0 = e1;
 				e1 = EdgeCode( bounds, sx1, sy1 );
@@ -447,17 +464,17 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 						i,
 						e0,
 						e1,
-						clippedPoints,
-						clippedPoints.Count
+						cellCoords,
+						cellCoords.Count
 					);
 				}
-				clippedPoints.Add( sx1 );
-				clippedPoints.Add( sy1 );
+				cellCoords.Add( sx1 );
+				cellCoords.Add( sy1 );
 			}
 		}
-		if( clippedPoints.Any() ) {
+		if( cellCoords.Any() ) {
 			e0 = e1;
-			e1 = EdgeCode( bounds, clippedPoints[0], clippedPoints[1] );
+			e1 = EdgeCode( bounds, cellCoords[0], cellCoords[1] );
 			if( e0 != 0
 				&& e1 != 0
 			) {
@@ -473,8 +490,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 					i,
 					e0,
 					e1,
-					clippedPoints,
-					clippedPoints.Count
+					cellCoords,
+					cellCoords.Count
 				);
 			}
 		} else if(
@@ -489,7 +506,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				( bounds.X1 + bounds.X2 ) / 2,
 				( bounds.Y1 + bounds.Y2 ) / 2
 		) ) {
-			return new List<double> {
+			cellCoords.Clear();
+			cellCoords.AddRange( new double[] {
 				bounds.X2,
 				bounds.Y1,
 				bounds.X2,
@@ -498,9 +516,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				bounds.Y2,
 				bounds.X1,
 				bounds.Y1
-			};
+			} );
 		}
-		return clippedPoints;
 	}
 
 	private static int Edge(
@@ -638,14 +655,18 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		return c;
 	}
 
-	private static double[] ClipSegment(
+	private static bool ClipSegment(
 		IRect bounds,
 		double x0,
 		double y0,
 		double x1,
 		double y1,
 		int c0,
-		int c1
+		int c1,
+		out double cx0,
+		out double cy0,
+		out double cx1,
+		out double cy1
 	) {
 		bool flip = c0 < c1;
 		if( flip ) {
@@ -665,12 +686,28 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			if( c0 == 0
 				&& c1 == 0
 			) {
-				return flip ? new double[4] { x1, y1, x0, y0 } : new double[4] { x0, y0, x1, y1 };
+				if (flip) {
+					cx0 = x1;
+					cy0 = y1;
+					cx1 = x0;
+					cy1 = y0;
+					return true;
+				} else {
+					cx0 = x0;
+					cy0 = y0;
+					cx1 = x1;
+					cy1 = y1;
+					return true;
+				}
 			}
 			if( c0 != 0
 				&& c1 != 0
 			) {
-				return Array.Empty<double>();
+				cx0 = 0;
+				cy0 = 0;
+				cx1 = 0;
+				cy1 = 0;
+				return false;
 			}
 			double x;
 			double y;
@@ -744,20 +781,22 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		return code;
 	}
 
-	private static double[] Project(
+	private static bool Project(
 		IRect bounds,
 		double x0,
 		double y0,
 		double vx,
-		double vy
+		double vy,
+		out double x,
+		out double y
 	) {
 		double t = double.PositiveInfinity;
 		double c;
-		double x = 0;
-		double y = 0;
+		x = 0;
+		y = 0;
 		if( vy < 0 ) { // top
 			if( y0 <= bounds.Y1 ) {
-				return Array.Empty<double>();
+				return false;
 			}
 			c = ( bounds.Y1 - y0 ) / vy;
 			if( c < t ) {
@@ -767,7 +806,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			}
 		} else if( vy > 0 ) {
 			if( y0 >= bounds.Y2 ) {
-				return Array.Empty<double>();
+				return false;
 			}
 			c = ( bounds.Y2 - y0 ) / vy;
 			if( c < t ) {
@@ -779,7 +818,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 
 		if( vx > 0 ) {
 			if( x0 >= bounds.X2 ) {
-				return Array.Empty<double>();
+				return false;
 			}
 			c = ( bounds.X2 - x0 ) / vx;
 			if( c < t ) {
@@ -789,7 +828,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			}
 		} else if( vx < 0 ) {
 			if( x0 <= bounds.X1 ) {
-				return Array.Empty<double>();
+				return false;
 			}
 			c = ( bounds.X1 - x0 ) / vx;
 			if( c < t ) {
@@ -798,35 +837,36 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				y = y0 + ( t * vy );
 			}
 		}
-		return new double[] { x, y };
+		return true;
 	}
 
-	private static double[] Cell(
+	private static void Cell(
 		int i,
 		ReadOnlySpan<double> circumcenters,
 		ReadOnlySpan<int> inedges,
 		ReadOnlySpan<int> halfEdges,
-		ReadOnlySpan<int> triangles
+		ReadOnlySpan<int> triangles,
+		Span<double> cellPointBuffer,
+		out int cellPointCount
 	) {
 		int e0 = inedges[i];
 		if( e0 == -1 ) {
 			throw new InvalidOperationException( "Coincident points." );
 			// return Array.Empty<double>();
 		}
-		List<double> points = new List<double>();
 		int e = e0;
+		cellPointCount = 0;
 		do {
 			int t = e / 3;
-			points.Add( circumcenters[( t * 2 ) + 0] );
-			points.Add( circumcenters[( t * 2 ) + 1] );
+			cellPointBuffer[cellPointCount + 0] = circumcenters[( t * 2 ) + 0];
+			cellPointBuffer[cellPointCount + 1] = circumcenters[( t * 2 ) + 1];
+			cellPointCount += 2;
 			e = ( e % 3 ) == 2 ? e - 2 : e + 1;
 			if( triangles[e] != i ) {
 				throw new InvalidOperationException( "Bad triangulation." );
 			}
 			e = halfEdges[e];
 		} while( e != e0 && e != -1 );
-
-		return points.ToArray();
 	}
 
 	private static void CalculateVectors(
