@@ -58,11 +58,11 @@ The surface is filled with a separation of 5.
 All of the following benchmarks fill a surface of the specified size with a poisson disc set of random values with a separation of 5.
 
 # D3DelaunayFactory Benchmarks
-|           Method |         Mean |      Error |    StdDev |  Allocated |
-|----------------- |-------------:|-----------:|----------:|-----------:|
-|   Create_100x100 |     89.48 us |   0.575 us |  0.510 us |    71.6 KB |
-|   Create_500x500 |  3,980.82 us |  47.346 us | 41.971 us | 1785.83 KB |
-| Create_1000x1000 | 16,719.16 us | 108.105 us | 84.401 us | 7163.34 KB |
+|           Method |         Mean |      Error |     StdDev |  Allocated |
+|----------------- |-------------:|-----------:|-----------:|-----------:|
+|   Create_100x100 |     92.70 us |   1.665 us |   1.557 us |    71.6 KB |
+|   Create_500x500 |  3,995.70 us |  30.699 us |  28.716 us | 1785.83 KB |
+| Create_1000x1000 | 17,053.19 us | 395.222 us | 330.029 us | 7164.45 KB |
 
 
 # D3VoronoiFactory Benchmarks

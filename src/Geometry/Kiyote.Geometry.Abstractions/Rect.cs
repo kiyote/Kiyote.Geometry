@@ -1,6 +1,6 @@
 ﻿namespace Kiyote.Geometry;
 
-public class Rect : IEquatable<Rect>, ISize {
+public sealed class Rect : IEquatable<Rect>, ISize, IRect {
 
 	public Rect(
 		Point topLeft,
@@ -108,7 +108,7 @@ public class Rect : IEquatable<Rect>, ISize {
 	}
 
 	public bool Intersects(
-		Rect rect
+		IRect rect
 	) {
 		return X1 + Width >= rect.X1
 			 && X1 <= rect.X2
@@ -117,7 +117,7 @@ public class Rect : IEquatable<Rect>, ISize {
 	}
 
 	public bool Contains(
-		Rect rect
+		IRect rect
 	) {
 		return X1 <= rect.X1
 			&& Y1 <= rect.Y1

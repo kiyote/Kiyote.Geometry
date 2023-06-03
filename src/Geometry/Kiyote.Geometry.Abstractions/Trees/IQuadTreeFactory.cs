@@ -2,5 +2,6 @@
 
 public interface IQuadTreeFactory {
 
-	IQuadTree<T> Create<T>( Rect area ) where T: Rect;
+	IQuadTree<T> Create<T>( IRect area ) where T: IRect;
+
 }

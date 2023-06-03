@@ -19,15 +19,6 @@ public static class Program {
 		);
 		pointVisualizer.Visualize();
 
-		/*
-		// Edge
-		var edgeVisualizer = new EdgeVisualizer(
-			outputFolder,
-			bounds
-		);
-		edgeVisualizer.Visualize();
-		*/
-
 		// FastPoissonDiscPointFactory
 		var fastPoissonDiscPointFactory = new FastPoissonDiscPointFactoryVisualizer(
 			outputFolder,
