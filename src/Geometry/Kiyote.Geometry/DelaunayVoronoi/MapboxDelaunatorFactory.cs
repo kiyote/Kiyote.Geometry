@@ -1,4 +1,6 @@
-﻿namespace Kiyote.Geometry.DelaunayVoronoi;
+﻿using System.Runtime.CompilerServices;
+
+namespace Kiyote.Geometry.DelaunayVoronoi;
 
 // Ported from: https://github.com/mapbox/delaunator/blob/main/index.js
 /*
@@ -401,6 +403,7 @@ internal sealed class MapboxDelaunatorFactory {
 		return t;
 	}
 
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
 	private static void Link(
 		int a,
 		int b,
@@ -412,6 +415,7 @@ internal sealed class MapboxDelaunatorFactory {
 		}
 	}
 
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
 	private static int HashKey(
 		double x,
 		double y,
@@ -422,6 +426,7 @@ internal sealed class MapboxDelaunatorFactory {
 		return (int)Math.Floor( PseudoAngle( x - circumcenterX, y - circumcenterY ) * hashSize ) % hashSize;
 	}
 
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
 	internal static double Orient(
 		double ax,
 		double ay,
@@ -433,6 +438,7 @@ internal sealed class MapboxDelaunatorFactory {
 		return ( ( ay - cy ) * ( bx - cx ) ) - ( ( ax - cx ) * ( by - cy ) );
 	}
 
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
 	private static double Dist(
 		double ax,
 		double ay,
@@ -490,6 +496,7 @@ internal sealed class MapboxDelaunatorFactory {
 		y = ay + ( ( ( dx * cl ) - ( ex * bl ) ) * d );
 	}
 
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
 	private static double PseudoAngle(
 		double dx,
 		double dy
@@ -582,6 +589,7 @@ internal sealed class MapboxDelaunatorFactory {
 		}
 	}
 
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
 	private static void Swap(
 		Span<int> arr,
 		int i,

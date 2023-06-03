@@ -20,7 +20,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 	}
 
 	IReadOnlyList<Point> IPointFactory.Fill(
-		Bounds bounds,
+		IBounds bounds,
 		int distanceApart
 	) {
 		List<Point> result = new List<Point>();

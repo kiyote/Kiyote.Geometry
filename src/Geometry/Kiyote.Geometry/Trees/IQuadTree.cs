@@ -6,5 +6,5 @@ public interface IQuadTree<T> where T : IRect {
 
 	void Insert( T item );
 
-	IReadOnlyList<T> Query( Rect area );
+	IReadOnlyList<T> Query( IRect area );
 }

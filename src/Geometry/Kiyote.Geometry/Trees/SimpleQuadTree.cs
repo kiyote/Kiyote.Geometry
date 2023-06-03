@@ -38,7 +38,7 @@ internal sealed class SimpleQuadTree<T> : IQuadTree<T> where T : IRect {
 	/// </summary>
 	/// <param name="area"></param>
 	/// <returns></returns>
-	public IReadOnlyList<T> Query( Rect area ) {
+	public IReadOnlyList<T> Query( IRect area ) {
 		return _root.Query( area );
 	}
 }

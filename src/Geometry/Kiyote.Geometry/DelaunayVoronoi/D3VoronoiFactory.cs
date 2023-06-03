@@ -223,7 +223,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				int j = ( i + 2 ) % points.Count;
 				int k = ( i + 4 ) % points.Count;
 				if( ( points[i] == points[j] && points[j] == points[k] )
-					|| ( points[i + 1] == points[j + 1] && points[j + 1] == points[k + 1] )
+					|| ( points[i + 1] == points[j + 1]
+						&& points[j + 1] == points[k + 1] )
 				) {
 					points.RemoveRange( j, 2 );
 					i -= 2;
@@ -368,8 +369,6 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 					if( !ClipSegment( bounds, x0, y0, x1, y1, c0, c1, out double cx0, out double cy0, out double cx1, out double cy1 ) ) {
 						continue;
 					}
-					//sx0 = S[0];
-					//sy0 = S[1];
 					sx1 = cx1;
 					sy1 = cy1;
 					isOpen = true;
@@ -583,7 +582,9 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			if( e == -1 ) {
 				e = hull[( hullIndex[i] + 1 ) % hull.Length];
 				if( e != t ) {
-					if( ( Math.Pow( x - coords[e * 2], 2 ) + Math.Pow( y - coords[( e * 2 ) + 1], 2 ) ) < dc ) {
+					if( ( Math.Pow( x - coords[e * 2], 2 )
+						+ Math.Pow( y - coords[( e * 2 ) + 1], 2 ) ) < dc
+					) {
 						return e;
 					}
 				}

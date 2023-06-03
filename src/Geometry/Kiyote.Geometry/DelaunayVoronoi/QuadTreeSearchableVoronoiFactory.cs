@@ -2,7 +2,6 @@
 
 namespace Kiyote.Geometry.DelaunayVoronoi;
 
-/*
 internal sealed class QuadTreeSearchableVoronoiFactory : ISearchableVoronoiFactory {
 
 	private readonly IQuadTreeFactory _quadTreeFactory;
@@ -15,7 +14,7 @@ internal sealed class QuadTreeSearchableVoronoiFactory : ISearchableVoronoiFacto
 
 	ISearchableVoronoi ISearchableVoronoiFactory.Create(
 		IVoronoi voronoi,
-		Bounds bounds
+		IBounds bounds
 	) {
 		return new QuadTreeSearchableVoronoi(
 			_quadTreeFactory.Create<Rect>( new Rect( 0, 0, bounds.Width, bounds.Height ) ),
@@ -23,4 +22,3 @@ internal sealed class QuadTreeSearchableVoronoiFactory : ISearchableVoronoiFacto
 		);
 	}
 }
-*/
