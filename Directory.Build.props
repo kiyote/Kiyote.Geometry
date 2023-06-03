@@ -1,6 +1,8 @@
 <Project>
 	<PropertyGroup>
 		<ProductVersion>0.2.0</ProductVersion>
+		<Version Condition=" '$(ProductVersion)' == '' ">0.0.1</Version>
+		<Version Condition=" '$(ProductVersion)' != '' ">$(ProductVersion)</Version>		
 	</PropertyGroup>
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>

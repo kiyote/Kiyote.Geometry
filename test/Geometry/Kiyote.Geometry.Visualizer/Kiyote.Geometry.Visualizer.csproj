@@ -2,13 +2,14 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
+		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="SixLabors.ImageSharp" />
 		<PackageReference Include="SixLabors.ImageSharp.Drawing" />
 	</ItemGroup>
-	
+
 	<ItemGroup>
 		<ProjectReference Include="$(SolutionDir)src\Geometry\Kiyote.Geometry\Kiyote.Geometry.csproj" />
 	</ItemGroup>
