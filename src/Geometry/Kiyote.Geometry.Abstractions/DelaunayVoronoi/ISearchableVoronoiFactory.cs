@@ -2,5 +2,5 @@
 
 public interface ISearchableVoronoiFactory {
 
-	ISearchableVoronoi Create( IVoronoi voronoi, IBounds bounds );
+	ISearchableVoronoi Create( IVoronoi voronoi, ISize size );
 }

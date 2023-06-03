@@ -32,6 +32,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kiyote.Geometry.Visualizer"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kiyote.Geometry.Profiler", "test\Geometry\Kiyote.Geometry.Profiler\Kiyote.Geometry.Profiler.csproj", "{A72BFC80-44A3-445C-BDDB-51592F8D4FC3}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kiyote.Geometry.Abstractions", "src\Geometry\Kiyote.Geometry.Abstractions\Kiyote.Geometry.Abstractions.csproj", "{7B7D2F14-AFCA-42C7-A013-10EE1BF7F7B6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Abstractions", "Abstractions", "{BBA2DF03-3E8A-4B94-90BF-D09A7E0B7FEF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,6 +62,10 @@ Global
 		{A72BFC80-44A3-445C-BDDB-51592F8D4FC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A72BFC80-44A3-445C-BDDB-51592F8D4FC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A72BFC80-44A3-445C-BDDB-51592F8D4FC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B7D2F14-AFCA-42C7-A013-10EE1BF7F7B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B7D2F14-AFCA-42C7-A013-10EE1BF7F7B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B7D2F14-AFCA-42C7-A013-10EE1BF7F7B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B7D2F14-AFCA-42C7-A013-10EE1BF7F7B6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -70,6 +78,8 @@ Global
 		{C16CDE71-1F2C-4B50-B891-E2FE367B358D} = {E0DE70F0-2E6C-4E6A-A710-DE8D73764AC5}
 		{4162602C-B52A-420B-B7C9-F8E27AD3291C} = {E0DE70F0-2E6C-4E6A-A710-DE8D73764AC5}
 		{A72BFC80-44A3-445C-BDDB-51592F8D4FC3} = {E0DE70F0-2E6C-4E6A-A710-DE8D73764AC5}
+		{7B7D2F14-AFCA-42C7-A013-10EE1BF7F7B6} = {BBA2DF03-3E8A-4B94-90BF-D09A7E0B7FEF}
+		{BBA2DF03-3E8A-4B94-90BF-D09A7E0B7FEF} = {D8A59D9B-83C9-4085-92FB-385089A1E9BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2BC3C0E9-3ECD-4276-B787-7089DC63C56F}

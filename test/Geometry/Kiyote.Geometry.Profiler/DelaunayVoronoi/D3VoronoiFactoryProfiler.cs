@@ -8,15 +8,15 @@ public sealed class D3VoronoiFactoryProfiler {
 	public const int Separation = 5;
 	private readonly IReadOnlyList<Point> _points;
 	private readonly IVoronoiFactory _voronoiFactory;
-	private readonly IRect _bounds;
+	private readonly Rect _bounds;
 
 	public D3VoronoiFactoryProfiler() {
-		Bounds bounds = new Bounds( 1000, 1000 );
-		_bounds = new Rect( 0, 0, bounds );
+		ISize size = new Point( 1000, 1000 );
+		_bounds = new Rect( 0, 0, size );
 
 		IRandom random = new FastRandom();
 		IPointFactory pointFactory = new FastPoissonDiscPointFactory( random );
-		_points = pointFactory.Fill( bounds, Separation );
+		_points = pointFactory.Fill( size, Separation );
 
 		_voronoiFactory = new D3VoronoiFactory();
 	}

@@ -11,7 +11,7 @@ public sealed class QuadTreeSearchableVoronoiUnitTests {
 
 	[OneTimeSetUp]
 	public void OneTimeSetUp() {
-		Bounds size = new Bounds( 100, 100 );
+		ISize size = new Point( 100, 100 );
 		_area = new Rect( 0, 0, size );
 		IReadOnlyList<Point> points = new List<Point>() {
 			new Point( 25, 25 ),

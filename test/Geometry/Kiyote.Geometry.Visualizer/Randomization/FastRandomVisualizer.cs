@@ -6,13 +6,13 @@ namespace Kiyote.Geometry.Visualizer.Randomization;
 public sealed class FastRandomVisualizer {
 
 	private readonly string _outputFolder;
-	private readonly Bounds _bounds;
+	private readonly ISize _bounds;
 	private readonly IRandom _random;
 	private readonly int _count;
 
 	public FastRandomVisualizer(
 		string outputFolder,
-		Bounds bounds
+		ISize bounds
 	) {
 		_outputFolder = outputFolder;
 		_bounds = bounds;

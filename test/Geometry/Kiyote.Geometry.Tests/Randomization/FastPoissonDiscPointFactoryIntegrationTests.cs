@@ -16,8 +16,8 @@ public sealed class FastPoissonDiscPointFactoryIntegrationTests {
 
 	[Test]
 	public void Fill_ValidBounds_AreaFilled() {
-		Bounds bounds = new Bounds( 100, 100 );
-		IReadOnlyList<Point> points = _pointFactory.Fill( bounds, 5 );
+		ISize size = new Point( 100, 100 );
+		IReadOnlyList<Point> points = _pointFactory.Fill( size, 5 );
 
 		Assert.IsNotEmpty( points );
 	}

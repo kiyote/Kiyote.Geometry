@@ -7,15 +7,15 @@ namespace Kiyote.Geometry.Visualizer.DelaunayVoronoi;
 public sealed class D3VoronoiFactoryVisualizer {
 
 	private readonly string _outputFolder;
-	private readonly Bounds _bounds;
+	private readonly ISize _size;
 	private readonly IVoronoiFactory _voronoiFactory;
 
 	public D3VoronoiFactoryVisualizer(
 		string outputFolder,
-		Bounds bounds
+		ISize size
 	) {
 		_outputFolder = outputFolder;
-		_bounds = bounds;
+		_size = size;
 
 		_voronoiFactory = new D3VoronoiFactory();
 	}
@@ -30,8 +30,8 @@ public sealed class D3VoronoiFactoryVisualizer {
 	}
 
 	private void VisualizeSquare() {
-		int width = _bounds.Width;
-		int height = _bounds.Height;
+		int width = _size.Width;
+		int height = _size.Height;
 		List<Point> points = new List<Point>(4) {
 			new Point( width / 4, height / 4 ),
 			new Point( width / 4 * 3, height / 4 ),
@@ -39,10 +39,10 @@ public sealed class D3VoronoiFactoryVisualizer {
 			new Point( width / 4 * 3, height / 4 * 3 )
 		};
 
-		Rect bounds = new Rect( 0, 0, _bounds );
+		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
+		using Image<Rgb24> image = new Image<Rgb24>( _size.Width, _size.Height );
 
 		Render( image, voronoi );
 
@@ -50,8 +50,8 @@ public sealed class D3VoronoiFactoryVisualizer {
 	}
 
 	private void VisualizeGrid() {
-		int width = _bounds.Width;
-		int height = _bounds.Height;
+		int width = _size.Width;
+		int height = _size.Height;
 		int widthSlice = width / 3;
 		int widthOffset = widthSlice / 2;
 		int heightSlice = height / 3;
@@ -95,10 +95,10 @@ public sealed class D3VoronoiFactoryVisualizer {
 			)
 		};
 
-		Rect bounds = new Rect( 0, 0, _bounds );
+		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
+		using Image<Rgb24> image = new Image<Rgb24>( _size.Width, _size.Height );
 
 		Render( image, voronoi );
 
@@ -108,12 +108,12 @@ public sealed class D3VoronoiFactoryVisualizer {
 	private void VisualizeRandom() {
 		IRandom random = new FastRandom();
 		IPointFactory pointFactory = new FastPoissonDiscPointFactory( random );
-		IReadOnlyList<Point> points = pointFactory.Fill( _bounds, 25 );
+		IReadOnlyList<Point> points = pointFactory.Fill( _size, 25 );
 
-		Rect bounds = new Rect( 0, 0, _bounds );
+		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
+		using Image<Rgb24> image = new Image<Rgb24>( _size.Width, _size.Height );
 
 		Render( image, voronoi );
 
@@ -123,12 +123,12 @@ public sealed class D3VoronoiFactoryVisualizer {
 	private void VisualizeNeighbours() {
 		IRandom random = new FastRandom();
 		IPointFactory pointFactory = new FastPoissonDiscPointFactory( random );
-		IReadOnlyList<Point> points = pointFactory.Fill( _bounds, 25 );
+		IReadOnlyList<Point> points = pointFactory.Fill( _size, 25 );
 
-		Rect bounds = new Rect( 0, 0, _bounds );
+		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
+		using Image<Rgb24> image = new Image<Rgb24>( _size.Width, _size.Height );
 
 		Render( image, voronoi );
 
@@ -154,12 +154,12 @@ public sealed class D3VoronoiFactoryVisualizer {
 	private void VisualizeOpen() {
 		IRandom random = new FastRandom();
 		IPointFactory pointFactory = new FastPoissonDiscPointFactory( random );
-		IReadOnlyList<Point> points = pointFactory.Fill( _bounds, 25 );
+		IReadOnlyList<Point> points = pointFactory.Fill( _size, 25 );
 
-		Rect bounds = new Rect( 0, 0, _bounds );
+		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
+		using Image<Rgb24> image = new Image<Rgb24>( _size.Width, _size.Height );
 
 		//Render( image, voronoi );
 

@@ -17,7 +17,7 @@ public sealed class D3DelaunayFactoryIntegrationTests {
 
 	[Test]
 	public void Create_HappyPath_DelaunayCreated() {
-		Bounds bounds = new Bounds( 1000, 1000 );
+		ISize bounds = new Point( 1000, 1000 );
 		IReadOnlyList<Point> points = _pointFactory.Fill( bounds, 25 );
 		IDelaunay delaunay = _delaunayFactory.Create( points );
 

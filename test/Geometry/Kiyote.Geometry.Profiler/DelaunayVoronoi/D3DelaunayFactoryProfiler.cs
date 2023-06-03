@@ -11,10 +11,10 @@ public sealed class D3DelaunayFactoryProfiler {
 	private readonly MapboxDelaunator _delaunator;
 
 	public D3DelaunayFactoryProfiler() {
-		Bounds bounds = new Bounds( 1000, 1000 );
+		ISize size = new Point( 1000, 1000 );
 		IRandom random = new FastRandom();
 		IPointFactory pointFactory = new FastPoissonDiscPointFactory( random );
-		_points = pointFactory.Fill( bounds, Separation );
+		_points = pointFactory.Fill( size, Separation );
 		_coords = _points.ToCoords();
 		_delaunator = MapboxDelaunatorFactory.Create( _coords );
 	}

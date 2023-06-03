@@ -3,12 +3,12 @@
 public interface IVoronoiFactory {
 
 	IVoronoi Create(
-		IRect bounds,
+		Rect bounds,
 		IReadOnlyList<Point> points
 	);
 
 	IVoronoi Create(
-		IRect bounds,
+		Rect bounds,
 		IReadOnlyList<Point> points,
 		bool sanitizePoints
 	);

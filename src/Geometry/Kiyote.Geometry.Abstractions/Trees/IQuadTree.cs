@@ -1,10 +1,10 @@
 ﻿namespace Kiyote.Geometry.Trees;
 
-public interface IQuadTree<T> where T : IRect {
+public interface IQuadTree<T> where T : Rect {
 
 	int Count { get; }
 
 	void Insert( T item );
 
-	IReadOnlyList<T> Query( IRect area );
+	IReadOnlyList<T> Query( Rect area );
 }

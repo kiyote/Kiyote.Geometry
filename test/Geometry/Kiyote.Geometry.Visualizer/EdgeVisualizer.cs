@@ -6,15 +6,16 @@ using SixLabors.ImageSharp.Processing;
 
 namespace Kiyote.Geometry.Visualizer;
 
+/*
 public sealed class EdgeVisualizer {
 
 	private readonly string _outputFolder;
-	private readonly Bounds _bounds;
+	private readonly ISize _bounds;
 	private readonly IRandom _random;
 
 	public EdgeVisualizer(
 		string outputFolder,
-		Bounds bounds
+		ISize bounds
 	) {
 		_outputFolder = outputFolder;
 		_bounds = bounds;
@@ -73,4 +74,4 @@ public sealed class EdgeVisualizer {
 		image.SaveAsPng( Path.Combine( _outputFolder, "EdgeIntersect.png" ) );
 	}
 }
-
+*/

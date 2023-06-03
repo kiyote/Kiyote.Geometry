@@ -73,5 +73,5 @@ public interface IRandom {
 	/// </returns>
 	float NextFloat( float lowerBound, float upperBound );
 
-	void NextBytes( byte[] buffer );
+	void NextBytes( Span<byte> buffer );
 }

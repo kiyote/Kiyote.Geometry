@@ -26,14 +26,14 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	private const int MaximumExpectedNeighbours = 10;
 
 	IVoronoi IVoronoiFactory.Create(
-		IRect bounds,
+		Rect bounds,
 		IReadOnlyList<Point> points
 	) {
 		return ( this as IVoronoiFactory ).Create( bounds, points, false );
 	}
 
 	IVoronoi IVoronoiFactory.Create(
-		IRect bounds,
+		Rect bounds,
 		IReadOnlyList<Point> points,
 		bool sanitizePoints
 	) {
@@ -156,7 +156,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	}
 
 	private static void Clip(
-		IRect bounds,
+		Rect bounds,
 		ReadOnlySpan<double> coords,
 		ReadOnlySpan<double> circumcenters,
 		MapboxDelaunator delaunator,
@@ -237,7 +237,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	}
 
 	private static void ClipInfinite(
-		IRect bounds,
+		Rect bounds,
 		ReadOnlySpan<double> coords,
 		MapboxDelaunator delaunator,
 		D3Delaunay delaunay,
@@ -328,7 +328,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	}
 
 	private static void ClipFinite(
-		IRect bounds,
+		Rect bounds,
 		ReadOnlySpan<double> coords,
 		MapboxDelaunator delaunator,
 		D3Delaunay delaunay,
@@ -366,7 +366,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				double sx1;
 				double sy1;
 				if( c0 == 0 ) {
-					if( !ClipSegment( bounds, x0, y0, x1, y1, c0, c1, out double cx0, out double cy0, out double cx1, out double cy1 ) ) {
+					if( !ClipSegment( bounds, x0, y0, x1, y1, c0, c1, out double _, out double _, out double cx1, out double cy1 ) ) {
 						continue;
 					}
 					sx1 = cx1;
@@ -466,7 +466,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	}
 
 	private static int Edge(
-		IRect bounds,
+		Rect bounds,
 		ReadOnlySpan<double> coords,
 		MapboxDelaunator delaunator,
 		D3Delaunay delaunay,
@@ -596,7 +596,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	}
 
 	private static bool ClipSegment(
-		IRect bounds,
+		Rect bounds,
 		double x0,
 		double y0,
 		double x1,
@@ -678,7 +678,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	}
 
 	private static int RegionCode(
-		IRect bounds,
+		Rect bounds,
 		double x,
 		double y
 	) {
@@ -700,7 +700,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	}
 
 	private static int EdgeCode(
-		IRect bounds,
+		Rect bounds,
 		double x,
 		double y
 	) {
@@ -722,7 +722,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	}
 
 	private static bool Project(
-		IRect bounds,
+		Rect bounds,
 		double x0,
 		double y0,
 		double vx,

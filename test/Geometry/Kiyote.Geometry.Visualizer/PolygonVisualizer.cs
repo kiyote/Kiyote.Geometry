@@ -8,13 +8,13 @@ namespace Kiyote.Geometry.Visualizer;
 
 public sealed class PolygonVisualizer {
 
-	private readonly Bounds _bounds;
+	private readonly ISize _bounds;
 	private readonly string _outputFolder;
 	private readonly IRandom _random;
 
 	public PolygonVisualizer(
 		string outputFolder,
-		Bounds bounds
+		ISize bounds
 	) {
 		_outputFolder = outputFolder;
 		_bounds = bounds;

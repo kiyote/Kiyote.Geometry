@@ -58,15 +58,17 @@ The surface is filled with a separation of 5.
 All of the following benchmarks fill a surface of the specified size with a poisson disc set of random values with a separation of 5.
 
 # D3DelaunayFactory Benchmarks
-|           Method |         Mean |      Error |     StdDev |  Allocated |
-|----------------- |-------------:|-----------:|-----------:|-----------:|
-|   Create_100x100 |     91.69 us |   2.557 us |   2.135 us |    71.6 KB |
-|   Create_500x500 |  4,084.48 us |  83.001 us |  77.639 us | 1785.83 KB |
-| Create_1000x1000 | 17,116.12 us | 396.626 us | 371.005 us | 7163.57 KB |
+|           Method |         Mean |      Error |    StdDev |  Allocated |
+|----------------- |-------------:|-----------:|----------:|-----------:|
+|   Create_100x100 |     89.48 us |   0.575 us |  0.510 us |    71.6 KB |
+|   Create_500x500 |  3,980.82 us |  47.346 us | 41.971 us | 1785.83 KB |
+| Create_1000x1000 | 16,719.16 us | 108.105 us | 84.401 us | 7163.34 KB |
+
 
 # D3VoronoiFactory Benchmarks
 |           Method |        Mean |       Error |      StdDev |   Allocated |
 |----------------- |------------:|------------:|------------:|------------:|
-|   Create_100x100 |    281.3 us |     6.18 us |     5.47 us |   215.05 KB |
-|   Create_500x500 | 10,246.9 us |   131.51 us |   116.58 us |  5339.79 KB |
-| Create_1000x1000 | 51,499.7 us | 2,233.25 us | 2,088.99 us | 21472.88 KB |
+|   Create_100x100 |    255.8 us |     8.80 us |     7.35 us |   215.05 KB |
+|   Create_500x500 |  9,713.7 us |   103.15 us |    91.44 us |  5340.07 KB |
+| Create_1000x1000 | 50,446.8 us | 1,690.59 us | 1,581.38 us | 21474.53 KB |
+

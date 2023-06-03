@@ -1,6 +1,6 @@
 ﻿namespace Kiyote.Geometry.Trees;
 
-internal sealed class SimpleQuadTree<T> : IQuadTree<T> where T : IRect {
+internal sealed class SimpleQuadTree<T> : IQuadTree<T> where T : Rect {
 	/// <summary>
 	/// The root QuadTreeNode
 	/// </summary>
@@ -9,13 +9,13 @@ internal sealed class SimpleQuadTree<T> : IQuadTree<T> where T : IRect {
 	/// <summary>
 	/// The bounds of this QuadTree
 	/// </summary>
-	private readonly IRect _rectangle;
+	private readonly Rect _rectangle;
 
 	/// <summary>
 	/// 
 	/// </summary>
 	/// <param name="rectangle"></param>
-	public SimpleQuadTree( IRect rectangle ) {
+	public SimpleQuadTree( Rect rectangle ) {
 		_rectangle = rectangle;
 		_root = new SimpleQuadTreeNode<T>( _rectangle );
 	}
@@ -38,7 +38,7 @@ internal sealed class SimpleQuadTree<T> : IQuadTree<T> where T : IRect {
 	/// </summary>
 	/// <param name="area"></param>
 	/// <returns></returns>
-	public IReadOnlyList<T> Query( IRect area ) {
+	public IReadOnlyList<T> Query( Rect area ) {
 		return _root.Query( area );
 	}
 }

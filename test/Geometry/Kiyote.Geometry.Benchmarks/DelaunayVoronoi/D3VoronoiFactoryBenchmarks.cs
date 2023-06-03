@@ -10,29 +10,29 @@ public class D3VoronoiFactoryBenchmarks {
 	public const int DistanceApart = 5;
 
 	private readonly IVoronoiFactory _voronoiFactory;
-	private readonly IRect _100bounds;
+	private readonly Rect _100bounds;
 	private readonly IReadOnlyList<Point> _100points;
-	private readonly IRect _500bounds;
+	private readonly Rect _500bounds;
 	private readonly IReadOnlyList<Point> _500points;
-	private readonly IRect _1000bounds;
+	private readonly Rect _1000bounds;
 	private readonly IReadOnlyList<Point> _1000points;
 
 	public D3VoronoiFactoryBenchmarks() {
 
 		_1000bounds = new Rect( 0, 0, 1000, 1000 );
-		_1000points = Fill( new Bounds( 1000, 1000 ) );
+		_1000points = Fill( new Point( 1000, 1000 ) );
 
 		_500bounds = new Rect( 0, 0, 500, 500 );
-		_500points = Fill( new Bounds( 500, 500 ) );
+		_500points = Fill( new Point( 500, 500 ) );
 
 		_100bounds = new Rect( 0, 0, 100, 100 );
-		_100points = Fill( new Bounds( 100, 100 ) );
+		_100points = Fill( new Point( 100, 100 ) );
 
 		_voronoiFactory = new D3VoronoiFactory();
 	}
 
 	private static IReadOnlyList<Point> Fill(
-		Bounds bounds
+		ISize bounds
 	) {
 		int horizontalPoints = bounds.Width / DistanceApart;
 		int verticalPoints = bounds.Height / DistanceApart;

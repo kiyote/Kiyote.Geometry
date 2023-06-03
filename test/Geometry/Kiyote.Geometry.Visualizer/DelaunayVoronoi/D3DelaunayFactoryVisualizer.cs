@@ -7,15 +7,15 @@ namespace Kiyote.Geometry.Visualizer.DelaunayVoronoi;
 public sealed class D3DelaunayFactoryVisualizer {
 
 	private readonly string _outputFolder;
-	private readonly Bounds _bounds;
+	private readonly ISize _size;
 	private readonly IDelaunayFactory _delaunayFactory;
 
 	public D3DelaunayFactoryVisualizer(
 		string outputFolder,
-		Bounds bounds
+		ISize size
 	) {
 		_outputFolder = outputFolder;
-		_bounds = bounds;
+		_size = size;
 		_delaunayFactory = new D3DelaunayFactory();
 	}
 
@@ -26,8 +26,8 @@ public sealed class D3DelaunayFactoryVisualizer {
 	}
 
 	private void VisualizeSquare() {
-		int width = _bounds.Width;
-		int height = _bounds.Height;
+		int width = _size.Width;
+		int height = _size.Height;
 
 		List<Point> points = new List<Point>( 4 ) {
 			new Point( width / 4, height / 4 ),
@@ -37,7 +37,7 @@ public sealed class D3DelaunayFactoryVisualizer {
 		};
 		IDelaunay delaunay = _delaunayFactory.Create( points );
 
-		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
+		using Image<Rgb24> image = new Image<Rgb24>( _size.Width, _size.Height );
 
 		Render( image, delaunay );
 
@@ -48,10 +48,10 @@ public sealed class D3DelaunayFactoryVisualizer {
 		IRandom random = new FastRandom();
 		IPointFactory pointFactory = new FastPoissonDiscPointFactory( random );
 
-		IReadOnlyList<Point> points = pointFactory.Fill( new Bounds( _bounds.Width, _bounds.Height ), 25 );
+		IReadOnlyList<Point> points = pointFactory.Fill( new Point( _size.Width, _size.Height ), 25 );
 		IDelaunay delaunay = _delaunayFactory.Create( points );
 
-		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
+		using Image<Rgb24> image = new Image<Rgb24>( _size.Width, _size.Height );
 
 		Render( image, delaunay );
 

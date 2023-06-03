@@ -224,7 +224,7 @@ internal sealed class FastRandom : IRandom {
 	}
 
 	void IRandom.NextBytes(
-		byte[] buffer
+		Span<byte> buffer
 	) {
 		// Fill up the bulk of the buffer in chunks of 4 bytes at a time.
 		uint x = _x;

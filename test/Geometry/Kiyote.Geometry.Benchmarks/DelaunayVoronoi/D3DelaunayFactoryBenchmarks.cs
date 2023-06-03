@@ -14,15 +14,15 @@ public class D3DelaunayFactoryBenchmarks {
 	private readonly IReadOnlyList<Point> _1000points;
 
 	public D3DelaunayFactoryBenchmarks() {
-		_1000points = Fill( new Bounds( 1000, 1000 ) );
-		_500points = Fill( new Bounds( 500, 500 ) );
-		_100points = Fill( new Bounds( 100, 100 ) );
+		_1000points = Fill( new Point( 1000, 1000 ) );
+		_500points = Fill( new Point( 500, 500 ) );
+		_100points = Fill( new Point( 100, 100 ) );
 
 		_delaunayFactory = new D3DelaunayFactory();
 	}
 
 	private static IReadOnlyList<Point> Fill(
-		Bounds bounds
+		ISize bounds
 	) {
 		int horizontalPoints = bounds.Width / DistanceApart;
 		int verticalPoints = bounds.Height / DistanceApart;

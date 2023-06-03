@@ -1,6 +1,6 @@
 ﻿namespace Kiyote.Geometry.Trees;
 
-public class SimpleQuadTreeNode<T> where T : IRect {
+public class SimpleQuadTreeNode<T> where T : Rect {
 
 	public const int SmallestAllowedArea = 10;
 
@@ -14,7 +14,7 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 	/// </summary>
 	/// <param name="area"></param>
 	public SimpleQuadTreeNode(
-		IRect bounds
+		Rect bounds
 	) {
 		if (bounds.X2 - bounds.X1 == 0
 			|| bounds.Y2 - bounds.Y1 == 0
@@ -36,7 +36,7 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 	/// <summary>
 	/// Area of the quadtree node
 	/// </summary>
-	public IRect Bounds { get; }
+	public Rect Bounds { get; }
 
 	/// <summary>
 	/// Total number of nodes in the this node and all SubNodes
@@ -78,7 +78,7 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 	/// </summary>
 	/// <param name="queryArea"></pasram>
 	/// <returns></returns>
-	public IReadOnlyList<T> Query( IRect queryArea ) {
+	public IReadOnlyList<T> Query( Rect queryArea ) {
 		// create a list of the items that are found
 		List<T> results = new List<T>();
 

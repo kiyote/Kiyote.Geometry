@@ -1,5 +1,6 @@
 ﻿namespace Kiyote.Geometry.Tests;
 
+/*
 [TestFixture]
 internal sealed class EdgeUnitTests {
 
@@ -45,3 +46,4 @@ internal sealed class EdgeUnitTests {
 		Assert.IsFalse( result );
 	}
 }
+*/

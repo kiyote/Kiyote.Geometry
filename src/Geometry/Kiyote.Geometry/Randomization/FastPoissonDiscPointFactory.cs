@@ -20,15 +20,15 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 	}
 
 	IReadOnlyList<Point> IPointFactory.Fill(
-		IBounds bounds,
+		ISize size,
 		int distanceApart
 	) {
 		List<Point> result = new List<Point>();
 
 		int radius2 = distanceApart * distanceApart;
 		double cellSize = distanceApart * Sqrt1_2;
-		int gridWidth = (int)Math.Ceiling( bounds.Width / cellSize );
-		int gridHeight = (int)Math.Ceiling( bounds.Height / cellSize );
+		int gridWidth = (int)Math.Ceiling( size.Width / cellSize );
+		int gridHeight = (int)Math.Ceiling( size.Height / cellSize );
 		Point[] grid = new Point[gridWidth * gridHeight];
 		Array.Fill( grid, Point.None );
 		List<Point> candidates = new List<Point>( 10 );
@@ -37,8 +37,8 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 
 		result.Add(
 			Sample(
-				bounds.Width / 2,
-				bounds.Height / 2,
+				size.Width / 2,
+				size.Height / 2,
 				gridWidth,
 				cellSize,
 				grid,
@@ -65,9 +65,9 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 				int y = (int)( parent.Y + ( r * dy ) );
 
 				if( 0 <= x
-					&& x < bounds.Width
+					&& x < size.Width
 					&& 0 <= y
-					&& y < bounds.Height
+					&& y < size.Height
 					&& Far( x, y, radius2, cellSize, gridWidth, gridHeight, grid )
 				) {
 					Point p = Sample(

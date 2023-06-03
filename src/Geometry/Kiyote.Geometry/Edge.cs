@@ -1,5 +1,6 @@
 ﻿namespace Kiyote.Geometry;
 
+/*
 public readonly struct Edge: IEquatable<Edge> {
 
 	public Edge(
@@ -128,3 +129,4 @@ public readonly struct Edge: IEquatable<Edge> {
 		return !( left == right );
 	}
 }
+*/

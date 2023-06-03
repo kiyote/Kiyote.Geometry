@@ -10,8 +10,8 @@ public static class Program {
 		if (!Directory.Exists( outputFolder )) {
 			_ = Directory.CreateDirectory( outputFolder );
 		}
-		Bounds bounds = new Bounds( 1000, 1000 );
-		/*
+		ISize bounds = new Point( 1000, 1000 );
+		
 		// Edge
 		var pointVisualizer = new PolygonVisualizer(
 			outputFolder,
@@ -19,12 +19,14 @@ public static class Program {
 		);
 		pointVisualizer.Visualize();
 
+		/*
 		// Edge
 		var edgeVisualizer = new EdgeVisualizer(
 			outputFolder,
 			bounds
 		);
 		edgeVisualizer.Visualize();
+		*/
 
 		// FastPoissonDiscPointFactory
 		var fastPoissonDiscPointFactory = new FastPoissonDiscPointFactoryVisualizer(
@@ -39,31 +41,6 @@ public static class Program {
 			bounds
 		);
 		fastRandom.Visualize();
-		*/
-
-		/*
-		// DelaunatorFactory
-		var delaunatorFactory = new DelaunatorFactoryVisualizer(
-			outputFolder,
-			bounds
-		);
-		delaunatorFactory.Visualize();
-
-		// DelaunayFactory
-		var delaunayFactory = new DelaunayFactoryVisualizer(
-			outputFolder,
-			bounds
-		);
-		delaunayFactory.Visualize();
-
-		// VoronoiFactory
-		var voronoiFactory = new VoronoiFactoryVisualizer(
-			outputFolder,
-			bounds
-		);
-		voronoiFactory.Visualize();
-		*/
-
 
 		// D3DelaunayFactory
 		var d3DelaunayFactory = new D3DelaunayFactoryVisualizer(

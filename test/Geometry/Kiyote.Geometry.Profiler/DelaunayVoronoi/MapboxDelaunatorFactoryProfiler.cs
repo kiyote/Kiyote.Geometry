@@ -10,7 +10,7 @@ public sealed class MapboxDelaunatorFactoryProfiler {
 	private readonly double[] _coords;
 
 	public MapboxDelaunatorFactoryProfiler() {
-		Bounds bounds = new Bounds( 1000, 1000 );
+		ISize bounds = new Point( 1000, 1000 );
 		IRandom random = new FastRandom();
 		IPointFactory pointFactory = new FastPoissonDiscPointFactory( random );
 		_points = pointFactory.Fill( bounds, Separation );

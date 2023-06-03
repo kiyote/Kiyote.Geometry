@@ -1,6 +1,6 @@
 ﻿namespace Kiyote.Geometry;
 
-public readonly struct Point : IEquatable<Point>, IBounds, IEquatable<IBounds> {
+public readonly struct Point : IEquatable<Point>, ISize, IEquatable<ISize> {
 	public readonly static Point None = new Point( int.MinValue, int.MinValue );
 
 	public Point(
@@ -17,9 +17,9 @@ public readonly struct Point : IEquatable<Point>, IBounds, IEquatable<IBounds> {
 	public int X { get; }
 	public int Y { get; }
 
-	int IBounds.Width => X;
+	int ISize.Width => X;
 
-	int IBounds.Height => Y;
+	int ISize.Height => Y;
 
 	public bool Equals(
 		Point other
@@ -34,13 +34,13 @@ public readonly struct Point : IEquatable<Point>, IBounds, IEquatable<IBounds> {
 	}
 
 	public override int GetHashCode() {
-		return (X << 16) ^ Y;
+		return ( X << 16 ) ^ Y;
 	}
 
-	bool IEquatable<IBounds>.Equals(
-		IBounds? other
+	bool IEquatable<ISize>.Equals(
+		ISize? other
 	) {
-		if (other is null) {
+		if( other is null ) {
 			return false;
 		}
 		return other.Width == X

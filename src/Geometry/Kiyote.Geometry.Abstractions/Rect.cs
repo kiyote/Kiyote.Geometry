@@ -1,6 +1,6 @@
 ﻿namespace Kiyote.Geometry;
 
-public class Rect : IEquatable<IRect>, IRect, IBounds {
+public class Rect : IEquatable<Rect>, ISize {
 
 	public Rect(
 		Point topLeft,
@@ -10,15 +10,15 @@ public class Rect : IEquatable<IRect>, IRect, IBounds {
 		Y1 = topLeft.Y;
 		X2 = bottomRight.X;
 		Y2 = bottomRight.Y;
-		Width =  bottomRight.X - topLeft.X  + 1;
+		Width = bottomRight.X - topLeft.X + 1;
 		Height = bottomRight.Y - topLeft.Y + 1;
 	}
 
 	public Rect(
 		int x,
 		int y,
-		Bounds bounds
-	): this(x, y, bounds.Width, bounds.Height ) {
+		ISize size
+	) : this( x, y, size.Width, size.Height ) {
 	}
 
 	public Rect(
@@ -29,10 +29,10 @@ public class Rect : IEquatable<IRect>, IRect, IBounds {
 	) {
 		X1 = x;
 		Y1 = y;
-		if (width > 0) {
+		if( width > 0 ) {
 			X2 = x + width - 1;
 			Y2 = y + height - 1;
-		} else if (width == 0) {
+		} else if( width == 0 ) {
 			X2 = X1;
 			Y2 = Y1;
 		} else {
@@ -63,7 +63,7 @@ public class Rect : IEquatable<IRect>, IRect, IBounds {
 	}
 
 	public bool Equals(
-		IRect? other
+		Rect? other
 	) {
 		if( other is null ) {
 			return false;
@@ -79,7 +79,7 @@ public class Rect : IEquatable<IRect>, IRect, IBounds {
 	public override bool Equals(
 		object? obj
 	) {
-		return obj is IRect rect && Equals( rect );
+		return obj is Rect rect && Equals( rect );
 	}
 
 	public override int GetHashCode() {
@@ -108,7 +108,7 @@ public class Rect : IEquatable<IRect>, IRect, IBounds {
 	}
 
 	public bool Intersects(
-		IRect rect
+		Rect rect
 	) {
 		return X1 + Width >= rect.X1
 			 && X1 <= rect.X2
@@ -117,7 +117,7 @@ public class Rect : IEquatable<IRect>, IRect, IBounds {
 	}
 
 	public bool Contains(
-		IRect rect
+		Rect rect
 	) {
 		return X1 <= rect.X1
 			&& Y1 <= rect.Y1
@@ -129,5 +129,4 @@ public class Rect : IEquatable<IRect>, IRect, IBounds {
 		return $"{X1},{Y1},{X2},{Y2}";
 	}
 }
-
 
