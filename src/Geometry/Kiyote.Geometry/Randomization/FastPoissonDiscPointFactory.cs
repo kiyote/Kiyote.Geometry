@@ -30,7 +30,6 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		int gridWidth = (int)Math.Ceiling( size.Width / cellSize );
 		int gridHeight = (int)Math.Ceiling( size.Height / cellSize );
 		Point[] grid = new Point[gridWidth * gridHeight];
-		Array.Fill( grid, Point.None );
 		List<Point> candidates = new List<Point>( 10 );
 		double rotx = Math.Cos( 2 * Math.PI * M / K );
 		double roty = Math.Sin( 2 * Math.PI * M / K );
@@ -114,10 +113,10 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		for( int j = j0; j < j1; j++ ) {
 			int o = j * gridWidth;
 			for( int i = i0; i < i1; i++ ) {
-				ref readonly Point s = ref grid[o + i];
-				if( s != Point.None ) {
-					int dx = s.X - x;
-					int dy = s.Y - y;
+				int index = o + i;
+				if (index < grid.Length) {					
+					int dx = grid[index].X - x;
+					int dy = grid[index].Y - y;
 					if( ( dx * dx ) + ( dy * dy ) < radius2 ) {
 						return false;
 					}

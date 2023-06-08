@@ -3,7 +3,6 @@
 namespace Kiyote.Geometry;
 
 public readonly struct Point : IEquatable<Point>, ISize, IEquatable<ISize> {
-	public readonly static Point None = new Point( int.MinValue, int.MinValue );
 
 	public Point(
 		int x,

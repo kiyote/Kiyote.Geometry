@@ -46,14 +46,14 @@ how much of the cost of the routine came simply from randomizing points and cons
 The surface is filled with a separation of 5.
 </sub>
 
-|              Method |          Mean |       Error |        StdDev |  Ratio | RatioSD |  Allocated | Alloc Ratio |
-|-------------------- |--------------:|------------:|--------------:|-------:|--------:|-----------:|------------:|
-|        Fill_100x100 |    357.744 us |   6.5474 us |     6.1244 us | 131.23 |    3.25 |   17.31 KB |        2.11 |
-|   Fill_100x100_Base |      2.724 us |   0.0536 us |     0.0769 us |   1.00 |    0.00 |    8.21 KB |        1.00 |
-|        Fill_500x500 |  9,185.087 us | 180.4538 us |   252.9710 us | 162.86 |    5.37 |  297.72 KB |        2.32 |
-|   Fill_500x500_Base |     56.388 us |   1.0657 us |     1.0944 us |   1.00 |    0.00 |   128.3 KB |        1.00 |
-|      Fill_1000x1000 | 37,575.765 us | 746.8535 us | 1,247.8244 us | 110.17 |    5.07 | 1166.02 KB |        2.28 |
-| Fill_1000x1000_Base |    340.854 us |   6.5919 us |     9.2409 us |   1.00 |    0.00 |  512.39 KB |        1.00 |
+|              Method |          Mean |       Error |      StdDev |  Ratio | RatioSD |  Allocated | Alloc Ratio |
+|-------------------- |--------------:|------------:|------------:|-------:|--------:|-----------:|------------:|
+|        Fill_100x100 |    228.085 us |   2.7777 us |   2.4624 us |  84.48 |    1.19 |   17.31 KB |        2.11 |
+|   Fill_100x100_Base |      2.697 us |   0.0347 us |   0.0324 us |   1.00 |    0.00 |    8.21 KB |        1.00 |
+|        Fill_500x500 |  5,654.220 us |  33.4337 us |  29.6381 us | 100.82 |    0.88 |  297.25 KB |        2.32 |
+|   Fill_500x500_Base |     56.085 us |   0.5111 us |   0.4530 us |   1.00 |    0.00 |   128.3 KB |        1.00 |
+|      Fill_1000x1000 | 22,629.135 us | 236.5962 us | 209.7364 us |  63.98 |    1.30 | 1165.02 KB |        2.27 |
+| Fill_1000x1000_Base |    353.122 us |   7.0368 us |   6.5822 us |   1.00 |    0.00 |  512.39 KB |        1.00 |
 
 All of the following benchmarks fill a surface of the specified size with a poisson disc set of random values with a separation of 5.
 
