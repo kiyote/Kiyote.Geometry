@@ -12,11 +12,11 @@ public readonly struct Triangle : IEquatable<Triangle> {
 		P3 = p3;
 	}
 
-	public Point P1 { get; }
+	public readonly Point P1 { get; }
 
-	public Point P2 { get; }
+	public readonly Point P2 { get; }
 
-	public Point P3 { get; }
+	public readonly Point P3 { get; }
 
 	public bool Equals(
 		Triangle other

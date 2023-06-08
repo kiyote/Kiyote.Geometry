@@ -18,7 +18,7 @@ ManualConfig config = DefaultConfig.Instance
 		 .WithLaunchCount( 1 )
 		 .WithToolchain( InProcessNoEmitToolchain.Instance ) );
 
-BenchmarkRunner.Run<D3DelaunayFactoryBenchmarks>( config );
+BenchmarkRunner.Run<D3VoronoiFactoryBenchmarks>( config );
 
 #pragma warning restore CA1852
 

@@ -1,6 +1,6 @@
 ﻿namespace Kiyote.Geometry;
 
-public sealed class Rect : IEquatable<Rect>, ISize, IRect {
+public readonly struct Rect : IEquatable<Rect>, ISize, IRect {
 
 	public Rect(
 		Point topLeft,
@@ -42,15 +42,15 @@ public sealed class Rect : IEquatable<Rect>, ISize, IRect {
 		Height = height;
 	}
 
-	public int X1 { get; }
-	public int Y1 { get; }
+	public readonly int X1 { get; }
+	public readonly int Y1 { get; }
 
-	public int X2 { get; }
-	public int Y2 { get; }
+	public readonly int X2 { get; }
+	public readonly int Y2 { get; }
 
-	public int Width { get; }
+	public readonly int Width { get; }
 
-	public int Height { get; }
+	public readonly int Height { get; }
 
 	public bool Equals(
 		Point topLeft,
@@ -63,17 +63,12 @@ public sealed class Rect : IEquatable<Rect>, ISize, IRect {
 	}
 
 	public bool Equals(
-		Rect? other
+		Rect other
 	) {
-		if( other is null ) {
-			return false;
-		}
-
-		return ( other.X1 == X1
+		return other.X1 == X1
 			&& other.Y1 == Y1
 			&& other.X2 == X2
-			&& other.Y2 == Y2
-		);
+			&& other.Y2 == Y2;
 	}
 
 	public override bool Equals(
@@ -127,6 +122,14 @@ public sealed class Rect : IEquatable<Rect>, ISize, IRect {
 
 	public override string ToString() {
 		return $"{X1},{Y1},{X2},{Y2}";
+	}
+
+	public static bool operator ==( Rect left, Rect right ) {
+		return left.Equals( right );
+	}
+
+	public static bool operator !=( Rect left, Rect right ) {
+		return !( left == right );
 	}
 }
 

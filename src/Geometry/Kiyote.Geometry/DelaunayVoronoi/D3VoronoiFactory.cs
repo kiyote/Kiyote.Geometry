@@ -48,11 +48,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				.Distinct()
 				.ToList();
 		}
-		double[] coords = new double[points.Count * 2];
-		for( int c = 0; c < points.Count; c++ ) {
-			coords[( c * 2 ) + 0] = points[c].X;
-			coords[( c * 2 ) + 1] = points[c].Y;
-		}
+		double[] coords = points.ToCoords();
 
 		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( coords );
 		D3Delaunay delaunay = D3DelaunayFactory.Create( coords, delaunator );

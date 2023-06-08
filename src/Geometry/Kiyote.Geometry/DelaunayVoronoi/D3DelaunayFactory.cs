@@ -38,32 +38,20 @@ internal sealed class D3DelaunayFactory : IDelaunayFactory {
 
 		List<Triangle> triangles = new List<Triangle>( delaunator.Triangles.Length / 3 );
 		for( int i = 0; i < delaunator.Triangles.Length; i += 3 ) {
-			int t1 = delaunator.Triangles[i + 0] * 2;
-			int t2 = delaunator.Triangles[i + 1] * 2;
-			int t3 = delaunator.Triangles[i + 2] * 2;
-			double x1 = coords[t1 + 0];
-			double y1 = coords[t1 + 1];
-			double x2 = coords[t2 + 0];
-			double y2 = coords[t2 + 1];
-			double x3 = coords[t3 + 0];
-			double y3 = coords[t3 + 1];
-
 			triangles.Add(
 				new Triangle(
-					new Point( (int)x1, (int)y1 ),
-					new Point( (int)x2, (int)y2 ),
-					new Point( (int)x3, (int)y3 )
+					points[delaunator.Triangles[i + 0]],
+					points[delaunator.Triangles[i + 1]],
+					points[delaunator.Triangles[i + 2]]
 				)
 			);
 		}
 
-		List<Point> hull = new List<Point>( delaunator.Hull.Count( h => h >= 0 ) );
+		List<Point> hull = new List<Point>();
 		for( int i = 0; i < delaunator.Hull.Length; i++ ) {
 			int c = delaunator.Hull[i];
 			if( c >= 0 ) {
-				double x = coords[( c * 2 ) + 0];
-				double y = coords[( c * 2 ) + 1];
-				hull.Add( new Point( (int)x, (int)y ) );
+				hull.Add( points[c] );
 			}
 		}
 

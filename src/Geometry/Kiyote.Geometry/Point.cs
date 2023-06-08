@@ -1,4 +1,6 @@
-﻿namespace Kiyote.Geometry;
+﻿using System.Runtime.CompilerServices;
+
+namespace Kiyote.Geometry;
 
 public readonly struct Point : IEquatable<Point>, ISize, IEquatable<ISize> {
 	public readonly static Point None = new Point( int.MinValue, int.MinValue );
@@ -11,16 +13,14 @@ public readonly struct Point : IEquatable<Point>, ISize, IEquatable<ISize> {
 		Y = y;
 	}
 
-	public Point()
-		: this( int.MinValue, int.MinValue ) { }
-
-	public int X { get; }
-	public int Y { get; }
+	public readonly int X { get; }
+	public readonly int Y { get; }
 
 	int ISize.Width => X;
 
 	int ISize.Height => Y;
 
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
 	public bool Equals(
 		Point other
 	) {
@@ -48,12 +48,10 @@ public readonly struct Point : IEquatable<Point>, ISize, IEquatable<ISize> {
 	}
 
 	public static bool operator ==( Point left, Point right ) {
-		return left.X == right.X && left.Y == right.Y;
-		// return left.Equals( right );
+		return left.Equals( right );
 	}
 
 	public static bool operator !=( Point left, Point right ) {
-		return left.X != right.X || left.Y != right.Y;
-		//return !( left == right );
+		return !( left == right );
 	}
 }
