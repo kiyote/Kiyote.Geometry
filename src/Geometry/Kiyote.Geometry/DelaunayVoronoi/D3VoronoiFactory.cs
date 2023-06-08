@@ -658,9 +658,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 					return true;
 				}
 			}
-			if( c0 != 0
-				&& c1 != 0
-			) {
+			if( ( c0 & c1 ) != 0 ) {
 				cx0 = 0;
 				cy0 = 0;
 				cx1 = 0;

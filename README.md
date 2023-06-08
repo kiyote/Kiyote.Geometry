@@ -68,7 +68,8 @@ All of the following benchmarks fill a surface of the specified size with a pois
 # D3VoronoiFactory Benchmarks
 |           Method |        Mean |       Error |      StdDev |   Allocated |
 |----------------- |------------:|------------:|------------:|------------:|
-|   Create_100x100 |    327.4 us |     3.20 us |     2.83 us |   321.88 KB |
-|   Create_500x500 | 11,165.4 us |    72.28 us |    67.61 us |  7480.03 KB |
-| Create_1000x1000 | 60,698.0 us | 2,309.74 us | 2,047.52 us | 30637.67 KB |
+|   Create_100x100 |    332.6 us |     6.60 us |     6.18 us |   321.88 KB |
+|   Create_500x500 | 10,961.3 us |   123.76 us |   115.77 us |  7480.06 KB |
+| Create_1000x1000 | 61,192.8 us | 5,057.99 us | 4,731.25 us | 30640.84 KB |
+
 
