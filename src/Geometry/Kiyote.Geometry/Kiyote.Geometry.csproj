@@ -2,7 +2,4 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
 	</ItemGroup>
-	<ItemGroup>
-	  <ProjectReference Include="$(SolutionDir)src\Geometry\Kiyote.Geometry.Abstractions\Kiyote.Geometry.Abstractions.csproj" />
-	</ItemGroup>
 </Project>

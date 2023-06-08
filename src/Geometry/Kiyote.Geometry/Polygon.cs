@@ -39,6 +39,13 @@ public sealed record Polygon(
 	public bool Contains(
 		Point target
 	) {
+		return Contains( target.X, target.Y );
+	}
+
+	public bool Contains(
+		int x,
+		int y
+	) {
 		int minX = int.MaxValue;
 		int minY = int.MaxValue;
 		int maxX = int.MinValue;
@@ -59,7 +66,7 @@ public sealed record Polygon(
 				maxY = point.Y;
 			}
 		}
-		if( target.X < minX || target.X > maxX || target.Y < minY || target.Y > maxY ) {
+		if( x < minX || x > maxX || y < minY || y > maxY ) {
 			return false;
 		}
 
@@ -67,8 +74,8 @@ public sealed record Polygon(
 		bool inside = false;
 		for( int i = 0, j = Points.Count - 1; i < Points.Count; j = i++ ) {
 			if(
-				( Points[i].Y > target.Y ) != ( Points[j].Y > target.Y )
-				&& target.X < ( ( Points[j].X - Points[i].X ) * ( target.Y - Points[i].Y ) / ( Points[j].Y - Points[i].Y ) ) + Points[i].X
+				( Points[i].Y > y ) != ( Points[j].Y > y )
+				&& x < ( ( Points[j].X - Points[i].X ) * ( y - Points[i].Y ) / ( Points[j].Y - Points[i].Y ) ) + Points[i].X
 			) {
 				inside = !inside;
 			}

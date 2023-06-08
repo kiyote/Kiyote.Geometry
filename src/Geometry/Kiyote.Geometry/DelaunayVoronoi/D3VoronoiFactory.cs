@@ -82,7 +82,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			);
 
 			if( !cellCoords.Any() ) {
-				throw new InvalidOperationException();
+				throw new InvalidOperationException( "Clipped cell contains no points." );
 			}
 
 			int minX = int.MaxValue;
@@ -126,7 +126,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		for( int i = 0; i < points.Count; i++ ) {
 			int e0 = inedges[i];
 			if( e0 == -1 ) {
-				throw new InvalidOperationException();
+				throw new InvalidOperationException( "Coincident point." );
 			}
 			int e = e0;
 			int p0;
@@ -136,7 +136,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 
 				e = e % 3 == 2 ? e - 2 : e + 1;
 				if( delaunator.Triangles[e] != i ) {
-					throw new InvalidOperationException();
+					throw new InvalidOperationException( "Bad triangulation." );
 				}
 				e = delaunator.HalfEdges[e];
 				if( e == -1 ) {
@@ -152,7 +152,29 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			neighbours.Clear();
 		}
 
-		return new Voronoi( points, cells, cellNeighbours );
+		HashSet<Edge> edges = new HashSet<Edge>();
+		for( int i = 0; i < delaunator.Triangles.Length; i++ ) {
+			if( i < delaunator.HalfEdges[i] ) {
+				int t1 = i / 3;
+				Point c1 = new Point(
+					(int)circumcenters[(t1 * 2) + 0],
+					(int)circumcenters[(t1 * 2) + 1]
+				);
+
+				int t2 = delaunator.HalfEdges[i] / 3;
+				Point c2 = new Point(
+					(int)circumcenters[(t2 * 2) + 0],
+					(int)circumcenters[(t2 * 2) + 1]
+				);
+
+				Edge edge = new Edge( c1, c2 );
+				if( !edges.Contains( edge ) ) {
+					_ = edges.Add( edge );
+				}
+			}
+		}
+
+		return new Voronoi( points, cells, cellNeighbours, edges.ToList() );
 	}
 
 	private static void Clip(
@@ -178,7 +200,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		);
 		// If it's an empty calculation, bail early
 		if( cellPointCount == 0 ) {
-			throw new InvalidOperationException();
+			throw new InvalidOperationException( "Cell contains no points." );
 			//return Array.Empty<double>();
 		}
 		int v = i * 4;
@@ -231,7 +253,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				}
 			}
 			if( points.Count == 0 ) {
-				throw new InvalidOperationException();
+				throw new InvalidOperationException( "Cell simplified to no points." );
 			}
 		}
 	}
@@ -513,7 +535,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 					y = bounds.Y1;
 					break;
 				default:
-					throw new InvalidOperationException();
+					throw new InvalidOperationException( "Unable to calculate edge." );
 			}
 			if( j + 1 >= points.Count
 				|| ( ( points[j] != x

@@ -47,5 +47,12 @@ public static class Program {
 			bounds
 		);
 		d3VoronoiFactory.Visualize();
+
+		// Rasterizer
+		var rasterizer = new RasterizerVisualizer(
+			outputFolder,
+			bounds
+		);
+		rasterizer.Visualize();
 	}
 }

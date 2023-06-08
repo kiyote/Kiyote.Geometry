@@ -8,4 +8,6 @@ public interface IVoronoi {
 
 	IReadOnlyDictionary<Cell, IReadOnlyList<Cell>> Neighbours { get; }
 
+	IReadOnlyList<Edge> Edges { get; }
+
 }
