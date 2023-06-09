@@ -29,8 +29,8 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		double cellSize = distanceApart * Sqrt1_2;
 		int gridWidth = (int)Math.Ceiling( size.Width / cellSize );
 		int gridHeight = (int)Math.Ceiling( size.Height / cellSize );
-		Point[] grid = new Point[gridWidth * gridHeight];
-		List<Point> candidates = new List<Point>( 10 );
+		double[] grid = new double[ gridWidth * gridHeight * 2 ];
+		List<int> candidates = new List<int>();
 		double rotx = Math.Cos( 2 * Math.PI * M / K );
 		double roty = Math.Sin( 2 * Math.PI * M / K );
 
@@ -47,7 +47,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 
 		while( candidates.Any() ) {
 			int i = _random.NextInt( candidates.Count );
-			Point parent = candidates[i];
+			int parent = candidates[i];
 			double t = TanPi2( ( 2.0D * _random.NextDouble() ) - 1.0D );
 			double q = 1.0D / ( 1.0D + ( t * t ) );
 
@@ -60,8 +60,8 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 				dy = ( dx * roty ) + ( dy * rotx );
 				dx = dw;
 				double r = distanceApart * ( 1.0D + ( Epsilon + ( 0.65D * _random.NextDouble() * _random.NextDouble() ) ) );
-				int x = (int)( parent.X + ( r * dx ) );
-				int y = (int)( parent.Y + ( r * dy ) );
+				int x = (int)( grid[parent + 0] + ( r * dx ) );
+				int y = (int)( grid[parent + 1] + ( r * dy ) );
 
 				if( 0 <= x
 					&& x < size.Width
@@ -84,7 +84,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 			}
 			if( !added ) {
 				int index = candidates.Count - 1;
-				Point pr = candidates[index];
+				int pr = candidates[index];
 				candidates.RemoveAt( index );
 				if( i < candidates.Count ) {
 					candidates[i] = pr;
@@ -102,7 +102,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		double cellSize,
 		int gridWidth,
 		int gridHeight,
-		ReadOnlySpan<Point> grid
+		ReadOnlySpan<double> grid
 	) {
 		int di = (int)( x / cellSize );
 		int dj = (int)( y / cellSize );
@@ -113,10 +113,10 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		for( int j = j0; j < j1; j++ ) {
 			int o = j * gridWidth;
 			for( int i = i0; i < i1; i++ ) {
-				int index = o + i;
-				if (index < grid.Length) {					
-					int dx = grid[index].X - x;
-					int dy = grid[index].Y - y;
+				int index = (o + i) * 2;
+				if (index < grid.Length) {			
+					double dx = grid[index + 0] - x;
+					double dy = grid[index + 1] - y;
 					if( ( dx * dx ) + ( dy * dy ) < radius2 ) {
 						return false;
 					}
@@ -134,17 +134,18 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 	}
 
 	private static Point Sample(
-		int x,
-		int y,
+		double x,
+		double y,
 		int gridWidth,
 		double cellSize,
-		Span<Point> grid,
-		List<Point> candidates
+		Span<double> grid,
+		List<int> candidates
 	) {
-		Point s = new Point( x, y );
-		int index = ( gridWidth * (int)( y / cellSize ) ) + (int)( x / cellSize );
-		grid[index] = s;
-		candidates.Add( s );
+		Point s = new Point( (int)x, (int)y );
+		int index = (( gridWidth * (int)( y / cellSize ) ) + (int)( x / cellSize )) * 2;
+		grid[index + 0] = x;
+		grid[index + 1] = y;
+		candidates.Add( index );
 		return s;
 
 	}

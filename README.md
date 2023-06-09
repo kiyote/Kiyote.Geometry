@@ -48,12 +48,12 @@ The surface is filled with a separation of 5.
 
 |              Method |          Mean |       Error |      StdDev |  Ratio | RatioSD |  Allocated | Alloc Ratio |
 |-------------------- |--------------:|------------:|------------:|-------:|--------:|-----------:|------------:|
-|        Fill_100x100 |    228.085 us |   2.7777 us |   2.4624 us |  84.48 |    1.19 |   17.31 KB |        2.11 |
-|   Fill_100x100_Base |      2.697 us |   0.0347 us |   0.0324 us |   1.00 |    0.00 |    8.21 KB |        1.00 |
-|        Fill_500x500 |  5,654.220 us |  33.4337 us |  29.6381 us | 100.82 |    0.88 |  297.25 KB |        2.32 |
-|   Fill_500x500_Base |     56.085 us |   0.5111 us |   0.4530 us |   1.00 |    0.00 |   128.3 KB |        1.00 |
-|      Fill_1000x1000 | 22,629.135 us | 236.5962 us | 209.7364 us |  63.98 |    1.30 | 1165.02 KB |        2.27 |
-| Fill_1000x1000_Base |    353.122 us |   7.0368 us |   6.5822 us |   1.00 |    0.00 |  512.39 KB |        1.00 |
+|        Fill_100x100 |    226.681 us |   2.1903 us |   1.9416 us |  85.96 |    1.09 |   15.96 KB |        1.94 |
+|   Fill_100x100_Base |      2.636 us |   0.0328 us |   0.0306 us |   1.00 |    0.00 |    8.21 KB |        1.00 |
+|        Fill_500x500 |  5,618.449 us |  29.8520 us |  27.9236 us | 102.66 |    0.53 |   294.1 KB |        2.29 |
+|   Fill_500x500_Base |     54.708 us |   0.3619 us |   0.3208 us |   1.00 |    0.00 |   128.3 KB |        1.00 |
+|      Fill_1000x1000 | 22,851.285 us | 426.9861 us | 356.5527 us |  66.06 |    1.20 | 1155.07 KB |        2.25 |
+| Fill_1000x1000_Base |    345.719 us |   3.2183 us |   2.8530 us |   1.00 |    0.00 |  512.39 KB |        1.00 |
 
 All of the following benchmarks fill a surface of the specified size with a poisson disc set of random values with a separation of 5.
 
