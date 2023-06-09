@@ -46,14 +46,14 @@ how much of the cost of the routine came simply from randomizing points and cons
 The surface is filled with a separation of 5.
 </sub>
 
-|              Method |          Mean |       Error |      StdDev |  Ratio | RatioSD |  Allocated | Alloc Ratio |
-|-------------------- |--------------:|------------:|------------:|-------:|--------:|-----------:|------------:|
-|        Fill_100x100 |    226.681 us |   2.1903 us |   1.9416 us |  85.96 |    1.09 |   15.96 KB |        1.94 |
-|   Fill_100x100_Base |      2.636 us |   0.0328 us |   0.0306 us |   1.00 |    0.00 |    8.21 KB |        1.00 |
-|        Fill_500x500 |  5,618.449 us |  29.8520 us |  27.9236 us | 102.66 |    0.53 |   294.1 KB |        2.29 |
-|   Fill_500x500_Base |     54.708 us |   0.3619 us |   0.3208 us |   1.00 |    0.00 |   128.3 KB |        1.00 |
-|      Fill_1000x1000 | 22,851.285 us | 426.9861 us | 356.5527 us |  66.06 |    1.20 | 1155.07 KB |        2.25 |
-| Fill_1000x1000_Base |    345.719 us |   3.2183 us |   2.8530 us |   1.00 |    0.00 |  512.39 KB |        1.00 |
+|              Method |          Mean |       Error |      StdDev | Ratio | RatioSD |  Allocated | Alloc Ratio |
+|-------------------- |--------------:|------------:|------------:|------:|--------:|-----------:|------------:|
+|        Fill_100x100 |    221.288 us |   3.4138 us |   3.0262 us | 79.57 |    2.58 |   15.96 KB |        1.94 |
+|   Fill_100x100_Base |      2.786 us |   0.0879 us |   0.0822 us |  1.00 |    0.00 |    8.21 KB |        1.00 |
+|        Fill_500x500 |  5,537.271 us | 106.5343 us |  99.6523 us | 95.97 |    3.70 |   294.1 KB |        2.29 |
+|   Fill_500x500_Base |     57.771 us |   2.4770 us |   2.3170 us |  1.00 |    0.00 |   128.3 KB |        1.00 |
+|      Fill_1000x1000 | 22,248.213 us | 536.6787 us | 502.0096 us | 61.24 |    2.12 | 1154.76 KB |        2.25 |
+| Fill_1000x1000_Base |    363.907 us |  10.0074 us |   8.3566 us |  1.00 |    0.00 |  512.39 KB |        1.00 |
 
 All of the following benchmarks fill a surface of the specified size with a poisson disc set of random values with a separation of 5.
 

@@ -9,8 +9,8 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 
 	public const int K = 13;
 	public const int M = 5;
-	public const double Sqrt1_2 = 0.7071067811865476D;
-	public const double Epsilon = 0.0000001D;
+	public const float Sqrt1_2 = 0.7071067811865476F;
+	public const float Epsilon = 0.0000001F;
 	private readonly IRandom _random;
 
 	public FastPoissonDiscPointFactory(
@@ -26,13 +26,13 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		List<Point> result = new List<Point>();
 
 		int radius2 = distanceApart * distanceApart;
-		double cellSize = distanceApart * Sqrt1_2;
+		float cellSize = distanceApart * Sqrt1_2;
 		int gridWidth = (int)Math.Ceiling( size.Width / cellSize );
 		int gridHeight = (int)Math.Ceiling( size.Height / cellSize );
-		double[] grid = new double[ gridWidth * gridHeight * 2 ];
+		float[] grid = new float[ gridWidth * gridHeight * 2 ];
 		List<int> candidates = new List<int>();
-		double rotx = Math.Cos( 2 * Math.PI * M / K );
-		double roty = Math.Sin( 2 * Math.PI * M / K );
+		float rotx = (float)Math.Cos( 2 * Math.PI * M / K );
+		float roty = (float)Math.Sin( 2 * Math.PI * M / K );
 
 		result.Add(
 			Sample(
@@ -48,20 +48,20 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		while( candidates.Any() ) {
 			int i = _random.NextInt( candidates.Count );
 			int parent = candidates[i];
-			double t = TanPi2( ( 2.0D * _random.NextDouble() ) - 1.0D );
-			double q = 1.0D / ( 1.0D + ( t * t ) );
+			float t = TanPi2( ( 2.0F * _random.NextFloat() ) - 1.0F );
+			float q = 1.0F / ( 1.0F + ( t * t ) );
 
-			double dx = ( 1.0D - ( t * t ) ) * q;
-			double dy = 2.0D * t * q;
+			float dx = ( 1.0F - ( t * t ) ) * q;
+			float dy = 2.0F * t * q;
 
 			bool added = false;
 			for( int j = 0; j < K; j++ ) {
-				double dw = ( dx * rotx ) - ( dy * roty );
+				float dw = ( dx * rotx ) - ( dy * roty );
 				dy = ( dx * roty ) + ( dy * rotx );
 				dx = dw;
-				double r = distanceApart * ( 1.0D + ( Epsilon + ( 0.65D * _random.NextDouble() * _random.NextDouble() ) ) );
-				int x = (int)( grid[parent + 0] + ( r * dx ) );
-				int y = (int)( grid[parent + 1] + ( r * dy ) );
+				float r = distanceApart * ( 1.0F + ( Epsilon + ( 0.65F * _random.NextFloat() * _random.NextFloat() ) ) );
+				float x = ( grid[parent + 0] + ( r * dx ) );
+				float y = ( grid[parent + 1] + ( r * dy ) );
 
 				if( 0 <= x
 					&& x < size.Width
@@ -96,13 +96,13 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 	}
 
 	private static bool Far(
-		int x,
-		int y,
+		float x,
+		float y,
 		int radius2,
-		double cellSize,
+		float cellSize,
 		int gridWidth,
 		int gridHeight,
-		ReadOnlySpan<double> grid
+		ReadOnlySpan<float> grid
 	) {
 		int di = (int)( x / cellSize );
 		int dj = (int)( y / cellSize );
@@ -113,32 +113,30 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		for( int j = j0; j < j1; j++ ) {
 			int o = j * gridWidth;
 			for( int i = i0; i < i1; i++ ) {
-				int index = (o + i) * 2;
-				if (index < grid.Length) {			
-					double dx = grid[index + 0] - x;
-					double dy = grid[index + 1] - y;
-					if( ( dx * dx ) + ( dy * dy ) < radius2 ) {
-						return false;
-					}
+				int index = (o + i) << 1;
+				float dx = grid[index + 0] - x;
+				float dy = grid[index + 1] - y;
+				if( ( dx * dx ) + ( dy * dy ) < radius2 ) {
+					return false;
 				}
 			}
 		}
 		return true;
 	}
 
-	private static double TanPi2(
-		double a
+	private static float TanPi2(
+		float a
 	) {
-		double b = 1.0D - ( a * a );
-		return a * ( ( -0.0187108D * b ) + 0.31583526D + ( 1.27365776D / b ) );
+		float b = 1.0F - ( a * a );
+		return a * ( ( -0.0187108F * b ) + 0.31583526F + ( 1.27365776F / b ) );
 	}
 
 	private static Point Sample(
-		double x,
-		double y,
+		float x,
+		float y,
 		int gridWidth,
-		double cellSize,
-		Span<double> grid,
+		float cellSize,
+		Span<float> grid,
 		List<int> candidates
 	) {
 		Point s = new Point( (int)x, (int)y );
