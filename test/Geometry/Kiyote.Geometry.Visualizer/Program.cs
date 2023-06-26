@@ -49,7 +49,7 @@ public static class Program {
 		d3VoronoiFactory.Visualize();
 
 		// Rasterizer
-		var rasterizer = new RasterizerVisualizer(
+		var rasterizer = new IntegerRasterizerVisualizer(
 			outputFolder,
 			bounds
 		);

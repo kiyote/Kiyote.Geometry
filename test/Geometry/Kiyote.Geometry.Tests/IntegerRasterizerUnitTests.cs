@@ -1,14 +1,19 @@
-﻿namespace Kiyote.Geometry.Tests;
+﻿using System.Drawing;
+using Kiyote.Geometry.DelaunayVoronoi;
+using Kiyote.Geometry.Randomization;
+using Kiyote.Geometry.Rasterizers;
+
+namespace Kiyote.Geometry.Tests;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage( "Performance", "CA1814:Prefer jagged arrays over multidimensional", Justification = "Simplicity for test" )]
 [TestFixture]
-public sealed class RasterizerUnitTests {
+public sealed class IntegerRasterizerUnitTests {
 
 	private IRasterizer _rasterizer;
 
 	[SetUp]
 	public void SetUp() {
-		_rasterizer = new Rasterizer();
+		_rasterizer = new IntegerRasterizer();
 	}
 
 	[Test]
@@ -95,9 +100,76 @@ public sealed class RasterizerUnitTests {
 	}
 
 	[Test]
+	public void Rasterize_VoronoiPolygons_EdgesMatch() {
+		IPointFactory pointFactory = new FastPoissonDiscPointFactory( new FastRandom() );
+		ISize size = new Point( 1000, 1000 );
+		IReadOnlyList<Point> voronoiPoints = pointFactory.Fill( size, 5 );
+		IVoronoiFactory voronoiFactory = new D3VoronoiFactory();
+		IVoronoi voronoi = voronoiFactory.Create( new Rect( 0, 0, size.Width, size.Height ), voronoiPoints, false );
+		foreach (Cell cell in voronoi.Cells) {
+			int cellWidth = cell.BoundingBox.Width;
+			int cellHeight = cell.BoundingBox.Height;
+			IReadOnlyList<Point> points = cell.Polygon.Points;
+			bool[,] line = new bool[cellWidth, cellHeight];
+			// Rasterize the lines
+			for( int i = 0; i < points.Count - 1; i++ ) {
+				_rasterizer.Rasterize(
+					points[i],
+					points[i + 1],
+					( int x, int y ) => {
+						line[x - cell.BoundingBox.X1, y - cell.BoundingBox.Y1] = true;
+					}
+				);
+			}
+			_rasterizer.Rasterize(
+				points[^1],
+				points[0],
+				( int x, int y ) => {
+					line[x - cell.BoundingBox.X1, y - cell.BoundingBox.Y1] = true;
+				}
+			);
+
+			// Fill the lines
+			for( int y = 0; y < cellHeight; y++ ) {
+				int minX = int.MaxValue;
+				// Find the smallest X
+				for( int x = 0; x < cellWidth; x++ ) {
+					if( line[x, y] ) {
+						minX = x;
+						break;
+					}
+				}
+				// Find the largest X
+				int maxX = int.MinValue;
+				for( int x = ( cellWidth - 1 ); x >= 0; x-- ) {
+					if( line[x, y] ) {
+						maxX = x;
+						break;
+					}
+				}
+
+				for( int x = minX; x <= maxX; x++ ) {
+					line[x, y] = true;
+				}
+			}
+
+			bool[,] poly = new bool[cellWidth, cellHeight];
+			_rasterizer.Rasterize( points, ( int x, int y ) => {
+				poly[x - cell.BoundingBox.X1, y - cell.BoundingBox.Y1] = true;
+			} );
+
+			for( int y = 0; y < cellHeight; y++ ) {
+				for( int x = 0; x < cellWidth; x++ ) {
+					Assert.AreEqual( poly[x, y], line[x, y], $"Polygon does not match at {x},{y}: poly {poly[x, y]} vs line {line[x, y]}." );
+				}
+			}
+		}
+	}
+
+	[Test]
 	public void Rasterize_SquareRotation_EdgesMatch() {
 
-		const int size = 10;
+		const int size = 50;
 
 		List<Point> points = new List<Point>() {
 			new Point( 0, 0 ),

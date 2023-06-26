@@ -1,5 +1,6 @@
 ﻿using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
+using Kiyote.Geometry.Rasterizers;
 using Kiyote.Geometry.Trees;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -11,7 +12,7 @@ public static class ExtensionMethods {
 	public static IServiceCollection AddRasterizer(
 		this IServiceCollection services
 	) {
-		_ = services.AddScoped<IRasterizer, Rasterizer>();
+		_ = services.AddScoped<IRasterizer, IntegerRasterizer>();
 
 		return services;
 	}
