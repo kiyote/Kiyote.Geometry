@@ -12,6 +12,19 @@
 |  Contains_1000x1000 | 1,243,724.41 ns | 8,193.126 ns | 6,841.632 ns |       1 B |
 |       Intersections |       280.64 ns |     4.764 ns |     3.978 ns |      88 B |
 
+# FastRandom
+|                                    Method |      Mean |     Error |    StdDev | Allocated |
+|------------------------------------------ |----------:|----------:|----------:|----------:|
+|                        FastRandom_NextInt |  1.968 ns | 0.1981 ns | 0.1756 ns |         - |
+|             FastRandom_NextInt_UpperBound |  2.171 ns | 0.0382 ns | 0.0358 ns |         - |
+|   FastRandom_NextInt_LowerBoundUpperBound |  2.248 ns | 0.0299 ns | 0.0279 ns |         - |
+|                       FastRandom_NextBool |  1.551 ns | 0.0187 ns | 0.0146 ns |         - |
+|                       FastRandom_NextUInt |  1.825 ns | 0.0316 ns | 0.0296 ns |         - |
+|                     FastRandom_NextDouble |  1.804 ns | 0.0296 ns | 0.0277 ns |         - |
+|                      FastRandom_NextFloat |  1.668 ns | 0.0382 ns | 0.0357 ns |         - |
+| FastRandom_NextFloat_LowerBoundUpperBound |  2.594 ns | 0.0825 ns | 0.0689 ns |         - |
+|                      FastRandom_NextBytes | 57.480 ns | 0.3992 ns | 0.3538 ns |         - |
+
 # FastRandom Benchmarks vs System.Random
 |                  Method |      Mean |     Error |    StdDev | Ratio | RatioSD | Allocated | Alloc Ratio |
 |------------------------ |----------:|----------:|----------:|------:|--------:|----------:|------------:|
@@ -46,14 +59,14 @@ how much of the cost of the routine came simply from randomizing points and cons
 The surface is filled with a separation of 5.
 </sub>
 
-|              Method |          Mean |       Error |      StdDev | Ratio | RatioSD |  Allocated | Alloc Ratio |
-|-------------------- |--------------:|------------:|------------:|------:|--------:|-----------:|------------:|
-|        Fill_100x100 |    221.288 us |   3.4138 us |   3.0262 us | 79.57 |    2.58 |   15.96 KB |        1.94 |
-|   Fill_100x100_Base |      2.786 us |   0.0879 us |   0.0822 us |  1.00 |    0.00 |    8.21 KB |        1.00 |
-|        Fill_500x500 |  5,537.271 us | 106.5343 us |  99.6523 us | 95.97 |    3.70 |   294.1 KB |        2.29 |
-|   Fill_500x500_Base |     57.771 us |   2.4770 us |   2.3170 us |  1.00 |    0.00 |   128.3 KB |        1.00 |
-|      Fill_1000x1000 | 22,248.213 us | 536.6787 us | 502.0096 us | 61.24 |    2.12 | 1154.76 KB |        2.25 |
-| Fill_1000x1000_Base |    363.907 us |  10.0074 us |   8.3566 us |  1.00 |    0.00 |  512.39 KB |        1.00 |
+|              Method |          Mean |      Error |     StdDev | Ratio | RatioSD |  Allocated | Alloc Ratio |
+|-------------------- |--------------:|-----------:|-----------:|------:|--------:|-----------:|------------:|
+|        Fill_100x100 |    216.607 us |  1.3626 us |  1.2079 us | 81.08 |    0.87 |   15.96 KB |        1.94 |
+|   Fill_100x100_Base |      2.672 us |  0.0262 us |  0.0245 us |  1.00 |    0.00 |    8.21 KB |        1.00 |
+|        Fill_500x500 |  5,457.190 us | 75.1963 us | 62.7923 us | 97.65 |    1.40 |   294.1 KB |        2.29 |
+|   Fill_500x500_Base |     55.955 us |  0.6339 us |  0.5930 us |  1.00 |    0.00 |   128.3 KB |        1.00 |
+|      Fill_1000x1000 | 21,685.149 us | 95.3074 us | 89.1506 us | 60.93 |    0.78 | 1154.76 KB |        2.25 |
+| Fill_1000x1000_Base |    355.969 us |  4.2217 us |  3.9490 us |  1.00 |    0.00 |  512.39 KB |        1.00 |
 
 All of the following benchmarks fill a surface of the specified size with a poisson disc set of random values with a separation of 5.
 

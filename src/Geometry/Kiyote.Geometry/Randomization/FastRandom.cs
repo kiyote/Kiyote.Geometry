@@ -9,11 +9,13 @@ internal sealed class FastRandom : IRandom {
 	private static readonly IRandom _seedRng = new FastRandom( Environment.TickCount );
 
 	// The +1 ensures NextDouble doesn't generate 1.0
-	public const double REAL_UNIT_INT = 1.0 / ( int.MaxValue + 1.0 );
-	public const double REAL_UNIT_UINT = 1.0 / ( uint.MaxValue + 1.0 );
-	public const float SINGLE_UNIT_INT = 1.0f / (float)( int.MaxValue + 1.0 );
-	public const float SINGLE_UNIT_UINT = 1.0f / (float)( uint.MaxValue + 1.0 );
-	public const uint Y = 842502087, Z = 3579807591, W = 273326509;
+	public const double REAL_UNIT_INT = 1.0D / ( int.MaxValue + 1.0D );
+	public const double REAL_UNIT_UINT = 1.0D / ( uint.MaxValue + 1.0D );
+	public const float SINGLE_UNIT_INT = 1.0f / (float)( int.MaxValue + 1.0f );
+	public const float SINGLE_UNIT_UINT = 1.0f / (float)( uint.MaxValue + 1.0f );
+	public const uint Y = 842502087;
+	public const uint Z = 3579807591;
+	public const uint W = 273326509;
 
 	// Used by NextBool
 	// Buffer 32 bits in bitBuffer, return 1 at a time, keep track of how many have been returned
@@ -65,7 +67,7 @@ internal sealed class FastRandom : IRandom {
 		_bitMask = 1;
 	}
 
-	public uint NextUInt() {
+	uint IRandom.NextUInt() {
 		uint t = _x ^ ( _x << 11 );
 		_x = _y;
 		_y = _z;
@@ -78,7 +80,7 @@ internal sealed class FastRandom : IRandom {
 	/// This method's performance is improved by generating 32 bits in one operation and storing them
 	/// ready for future calls.
 	/// </summary>
-	public bool NextBool() {
+	bool IRandom.NextBool() {
 		if( 0 == _bitMask ) {
 			// Generate 32 more bits.
 			uint t = _x ^ ( _x << 11 );
@@ -110,7 +112,7 @@ internal sealed class FastRandom : IRandom {
 		//
 		// Also note that the loss of one bit of precision is equivalent to what occurs within 
 		// System.Random.
-		return REAL_UNIT_INT * (int)( ( 0x7FFFFFFE & ( _w =  _w ^ ( _w >> 19 )  ^  t ^ ( t >> 8 )  ) ) + 1U );
+		return REAL_UNIT_INT * (int)( ( 0x7FFFFFFF & ( _w =  _w ^ ( _w >> 19 )  ^  t ^ ( t >> 8 )  ) ) );
 	}
 
 	float IRandom.NextFloat() {
@@ -128,7 +130,7 @@ internal sealed class FastRandom : IRandom {
 		//
 		// Also note that the loss of one bit of precision is equivalent to what occurs within 
 		// System.Random.
-		return SINGLE_UNIT_INT * (int)( 0x7FFFFFFF & ( _w = _w ^ ( _w >> 19 ) ^ t ^ ( t >> 8 ) ) );
+		return SINGLE_UNIT_INT * (int)( ( 0x7FFFFFFF & ( _w = _w ^ ( _w >> 19 ) ^ t ^ ( t >> 8 ) ) ) );
 	}
 
 	float IRandom.NextFloat(
@@ -239,7 +241,9 @@ internal sealed class FastRandom : IRandom {
 			// Also note that no mask needs to be applied to zero out the higher order bytes before
 			// casting because the cast ignores those bytes. Thanks to Stefan Troschütz for pointing this out.
 			t = x ^ ( x << 11 );
-			x = y; y = z; z = w;
+			x = y;
+			y = z;
+			z = w;
 			w = w ^ ( w >> 19 ) ^ t ^ ( t >> 8 );
 
 			buffer[i++] = (byte)w;
@@ -252,7 +256,9 @@ internal sealed class FastRandom : IRandom {
 		if( i < buffer.Length ) {
 			// Generate 4 bytes.
 			t = x ^ ( x << 11 );
-			x = y; y = z; z = w;
+			x = y;
+			y = z;
+			z = w;
 			w = w ^ ( w >> 19 ) ^ t ^ ( t >> 8 );
 
 			buffer[i++] = (byte)w;

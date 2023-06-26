@@ -6,3 +6,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage( "Performance", "CA1812:An internal (assembly-level) type is never instantiated.", Justification = "Analysis does not understand Dependency Injection.", Scope = "module" )]
+[assembly: SuppressMessage( "Security", "CA5394:Do not use insecure randomness", Justification = "Pseudo-random is just fine for our needs.", Scope = "module" )]
