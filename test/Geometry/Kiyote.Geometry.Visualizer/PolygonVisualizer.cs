@@ -1,8 +1,5 @@
 ﻿using Kiyote.Geometry.Randomization;
-using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
 namespace Kiyote.Geometry.Visualizer;
 

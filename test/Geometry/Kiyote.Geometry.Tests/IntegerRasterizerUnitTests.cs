@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using Kiyote.Geometry.DelaunayVoronoi;
+﻿using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
 using Kiyote.Geometry.Rasterizers;
 

@@ -4,16 +4,13 @@ namespace Kiyote.Geometry.Visualizer;
 
 public sealed class IntegerRasterizerVisualizer {
 
-	private readonly ISize _bounds;
 	private readonly string _outputFolder;
 	private readonly IRasterizer _rasterizer;
 
 	public IntegerRasterizerVisualizer(
-		string outputFolder,
-		ISize bounds
+		string outputFolder
 	) {
 		_outputFolder = outputFolder;
-		_bounds = bounds;
 		_rasterizer = new IntegerRasterizer();
 	}
 

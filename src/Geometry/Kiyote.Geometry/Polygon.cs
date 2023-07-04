@@ -3,7 +3,7 @@
 public sealed record Polygon(
 	IReadOnlyList<Point> Points
 ) {
-	private readonly static Point NoPoint = new Point( int.MinValue, int.MinValue );
+	private readonly static Point _noPoint = new Point( int.MinValue, int.MinValue );
 	public readonly static Polygon None = new Polygon( Array.Empty<Point>() );
 
 	public IReadOnlyList<Point> Intersections(
@@ -130,7 +130,7 @@ public sealed record Polygon(
 		if( ( aX1 == bX1 && aY1 == bY1 )
 			|| ( aX2 == bX2 && aY2 == bY2 )
 		) {
-			intersection = NoPoint;
+			intersection = _noPoint;
 			return false;
 		}
 
@@ -139,7 +139,7 @@ public sealed record Polygon(
 
 		// If this is zero then the lines are parallel
 		if( denominator == 0.0 ) {
-			intersection = NoPoint;
+			intersection = _noPoint;
 			return false;
 		}
 
@@ -151,7 +151,7 @@ public sealed record Polygon(
 
 		// Is the intersection somewhere along actual line segments?
 		if( ua < 0 || ua > 1 || ub < 0 || ub > 1 ) {
-			intersection = NoPoint;
+			intersection = _noPoint;
 			return false;
 		}
 

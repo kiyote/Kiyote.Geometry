@@ -50,8 +50,7 @@ public static class Program {
 
 		// Rasterizer
 		var rasterizer = new IntegerRasterizerVisualizer(
-			outputFolder,
-			bounds
+			outputFolder
 		);
 		rasterizer.Visualize();
 	}

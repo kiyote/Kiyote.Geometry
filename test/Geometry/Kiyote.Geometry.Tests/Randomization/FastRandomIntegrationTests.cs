@@ -36,17 +36,17 @@ public sealed class FastRandomIntegrationTests {
 
 	[Test]
 	public void NextIntUpperBound_NegativeUpperBound_ThrowsException() {
-		Assert.Throws<ArgumentOutOfRangeException>( () => _random.NextInt( -1 ) );
+		_ = Assert.Throws<ArgumentOutOfRangeException>( () => _random.NextInt( -1 ) );
 	}
 
 	[Test]
 	public void NextIntUpperBoundLowerBound_NegativeUpperBound_ThrowsException() {
-		Assert.Throws<ArgumentOutOfRangeException>( () => _random.NextInt( -2, -1 ) );
+		_ = Assert.Throws<ArgumentOutOfRangeException>( () => _random.NextInt( -2, -1 ) );
 	}
 
 	[Test]
 	public void NextIntUpperBoundLowerBound_LowerBoundAboveUpperBound_ThrowsException() {
-		Assert.Throws<ArgumentOutOfRangeException>( () => _random.NextInt( 2, 1 ) );
+		_ = Assert.Throws<ArgumentOutOfRangeException>( () => _random.NextInt( 2, 1 ) );
 	}
 
 	[Test]
@@ -96,12 +96,12 @@ public sealed class FastRandomIntegrationTests {
 
 	[Test]
 	public void NextFloatUpperBoundLowerBound_NegativeUpperBound_ThrowsException() {
-		Assert.Throws<ArgumentOutOfRangeException>( () => _random.NextFloat( -2, -1 ) );
+		_ = Assert.Throws<ArgumentOutOfRangeException>( () => _random.NextFloat( -2, -1 ) );
 	}
 
 	[Test]
 	public void NextFloatUpperBoundLowerBound_LowerBoundAboveUpperBound_ThrowsException() {
-		Assert.Throws<ArgumentOutOfRangeException>( () => _random.NextFloat( 2, 1 ) );
+		_ = Assert.Throws<ArgumentOutOfRangeException>( () => _random.NextFloat( 2, 1 ) );
 	}
 
 	[Test]
