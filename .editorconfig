@@ -311,3 +311,7 @@ dotnet_analyzer_diagnostic.category-Assertion.severity = none
 dotnet_diagnostic.NUnit2045.severity = none
 # Draw attention to potentially unsafe discards
 dotnet_diagnostic.IDE0058.severity = suggestion
+# Use primary constructor
+dotnet_diagnostic.IDE0290.severity = none
+# Return concrete types
+dotnet_diagnostic.CA1859.severity = none

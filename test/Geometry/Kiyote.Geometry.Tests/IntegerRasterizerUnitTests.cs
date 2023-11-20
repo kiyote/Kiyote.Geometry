@@ -18,10 +18,10 @@ public sealed class IntegerRasterizerUnitTests {
 	[Test]
 	public void Rasterize_HorizontalLine_PointsMatch() {
 
-		List<Point> points = new List<Point>() {
+		List<Point> points = [
 			new Point( 1, 5 ),
 			new Point( 8, 5 ),
-		};
+		];
 
 		bool[,] poly = new bool[10, 10];
 		_rasterizer.Rasterize( points, ( int x, int y ) => {
@@ -43,10 +43,10 @@ public sealed class IntegerRasterizerUnitTests {
 	[Test]
 	public void Rasterize_VerticalLine_PointsMatch() {
 
-		List<Point> points = new List<Point>() {
+		List<Point> points = [
 			new Point( 5, 1 ),
 			new Point( 5, 8 ),
-		};
+		];
 
 		bool[,] poly = new bool[10, 10];
 		_rasterizer.Rasterize( points, ( int x, int y ) => {
@@ -68,12 +68,12 @@ public sealed class IntegerRasterizerUnitTests {
 	[Test]
 	public void Rasterize_Box_PointsMatch() {
 
-		List<Point> points = new List<Point>() {
+		List<Point> points = [
 			new Point( 1, 1 ),
 			new Point( 8, 1 ),
 			new Point( 8, 8 ),
 			new Point( 1, 8 ),
-		};
+		];
 
 		bool[,] poly = new bool[10, 10];
 		_rasterizer.Rasterize( points, ( int x, int y ) => {
@@ -105,7 +105,8 @@ public sealed class IntegerRasterizerUnitTests {
 		IReadOnlyList<Point> voronoiPoints = pointFactory.Fill( size, 5 );
 		IVoronoiFactory voronoiFactory = new D3VoronoiFactory();
 		IVoronoi voronoi = voronoiFactory.Create( new Rect( 0, 0, size.Width, size.Height ), voronoiPoints, false );
-		foreach (Cell cell in voronoi.Cells) {
+		bool mismatch = false;
+		foreach( Cell cell in voronoi.Cells) {
 			int cellWidth = cell.BoundingBox.Width;
 			int cellHeight = cell.BoundingBox.Height;
 			IReadOnlyList<Point> points = cell.Polygon.Points;
@@ -147,6 +148,10 @@ public sealed class IntegerRasterizerUnitTests {
 					}
 				}
 
+				if (maxX < minX) {
+					throw new InvalidOperationException();
+				}
+
 				for( int x = minX; x <= maxX; x++ ) {
 					line[x, y] = true;
 				}
@@ -157,12 +162,32 @@ public sealed class IntegerRasterizerUnitTests {
 				poly[x - cell.BoundingBox.X1, y - cell.BoundingBox.Y1] = true;
 			} );
 
+
 			for( int y = 0; y < cellHeight; y++ ) {
 				for( int x = 0; x < cellWidth; x++ ) {
-					Assert.AreEqual( poly[x, y], line[x, y], $"Polygon does not match at {x},{y}: poly {poly[x, y]} vs line {line[x, y]}." );
+
+					if( poly[x,y] != line[x,y]) {
+						using Image<Rgb24> imgLine = new Image<Rgb24>( cell.BoundingBox.Width, cell.BoundingBox.Height );
+						using Image<Rgb24> imgPoly = new Image<Rgb24>( cell.BoundingBox.Width, cell.BoundingBox.Height );
+						for( int sy = 0; sy < cellHeight; sy++ ) {
+							for( int sx = 0; sx < cellWidth; sx++ ) {
+								imgLine[sx, sy] = line[sx, sy] ? Color.White : Color.Black;
+								imgPoly[sx, sy] = poly[sx, sy] ? Color.White : Color.Black;
+							}
+						}
+						imgLine.SaveAsPng( Path.Combine( "C:\\temp\\Kiyote.Geometry.Visualizer", $"D3DelaunayFactory_Line_{x}-{y}.png" ) );
+						imgPoly.SaveAsPng( Path.Combine( "C:\\temp\\Kiyote.Geometry.Visualizer", $"D3DelaunayFactory_Poly_{x}-{y}.png" ) );
+						mismatch = true;
+						goto next;
+					}
+					//Assert.AreEqual( poly[x, y], line[x, y], $"Polygon does not match at {x},{y}: poly {poly[x, y]} vs line {line[x, y]}." );
 				}
 			}
+			next:
+			poly = null;
+			line = null;
 		}
+		Assert.IsFalse( mismatch, "Cell mismatches" );
 	}
 
 	[Test]
@@ -170,12 +195,12 @@ public sealed class IntegerRasterizerUnitTests {
 
 		const int size = 50;
 
-		List<Point> points = new List<Point>() {
+		List<Point> points = [
 			new Point( 0, 0 ),
 			new Point( size-1, 0 ),
 			new Point( size-1, size-1 ),
 			new Point( 0, size-1 ),
-		};
+		];
 
 		for( int j = 0; j < size; j++ ) {
 			bool[,] line = new bool[size, size];
@@ -232,12 +257,12 @@ public sealed class IntegerRasterizerUnitTests {
 				}
 			}
 
-			points = new List<Point>() {
+			points = [
 				new Point( points[0].X + 1, points[0].Y ),
 				new Point( points[1].X, points[1].Y + 1 ),
 				new Point( points[2].X - 1, points[2].Y ),
 				new Point( points[3].X, points[3].Y - 1 ),
-			};
+			];
 		}
 	}
 

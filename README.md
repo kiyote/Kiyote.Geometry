@@ -59,14 +59,13 @@ how much of the cost of the routine came simply from randomizing points and cons
 The surface is filled with a separation of 5.
 </sub>
 
-|              Method |          Mean |      Error |     StdDev | Ratio | RatioSD |  Allocated | Alloc Ratio |
-|-------------------- |--------------:|-----------:|-----------:|------:|--------:|-----------:|------------:|
-|        Fill_100x100 |    216.607 us |  1.3626 us |  1.2079 us | 81.08 |    0.87 |   15.96 KB |        1.94 |
-|   Fill_100x100_Base |      2.672 us |  0.0262 us |  0.0245 us |  1.00 |    0.00 |    8.21 KB |        1.00 |
-|        Fill_500x500 |  5,457.190 us | 75.1963 us | 62.7923 us | 97.65 |    1.40 |   294.1 KB |        2.29 |
-|   Fill_500x500_Base |     55.955 us |  0.6339 us |  0.5930 us |  1.00 |    0.00 |   128.3 KB |        1.00 |
-|      Fill_1000x1000 | 21,685.149 us | 95.3074 us | 89.1506 us | 60.93 |    0.78 | 1154.76 KB |        2.25 |
-| Fill_1000x1000_Base |    355.969 us |  4.2217 us |  3.9490 us |  1.00 |    0.00 |  512.39 KB |        1.00 |
+|-------------------- |--------------:|------------:|------------:|-------:|--------:|-----------:|------------:|
+| Fill_100x100        |    198.468 us |   1.7281 us |   1.5319 us | 106.50 |    0.88 |   15.96 KB |        1.94 |
+| Fill_100x100_Base   |      1.864 us |   0.0034 us |   0.0026 us |   1.00 |    0.00 |    8.21 KB |        1.00 |
+| Fill_500x500        |  5,013.463 us | 128.3168 us | 113.7495 us | 135.50 |    3.06 |  294.12 KB |        2.29 |
+| Fill_500x500_Base   |     37.089 us |   0.3359 us |   0.2623 us |   1.00 |    0.00 |   128.3 KB |        1.00 |
+| Fill_1000x1000      | 20,054.706 us | 346.6646 us | 289.4806 us |  71.01 |    3.00 | 1154.51 KB |        2.25 |
+| Fill_1000x1000_Base |    282.249 us |  12.1863 us |  11.3991 us |   1.00 |    0.00 |  512.43 KB |        1.00 |
 
 All of the following benchmarks fill a surface of the specified size with a poisson disc set of random values with a separation of 5.
 

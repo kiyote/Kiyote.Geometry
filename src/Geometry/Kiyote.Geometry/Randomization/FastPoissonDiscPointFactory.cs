@@ -23,14 +23,14 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		ISize size,
 		int distanceApart
 	) {
-		List<Point> result = new List<Point>();
+		List<Point> result = [];
 
 		int radius2 = distanceApart * distanceApart;
 		float cellSize = distanceApart * Sqrt1_2;
 		int gridWidth = (int)Math.Ceiling( size.Width / cellSize );
 		int gridHeight = (int)Math.Ceiling( size.Height / cellSize );
 		float[] grid = new float[ gridWidth * gridHeight * 2 ];
-		List<int> candidates = new List<int>();
+		List<int> candidates = [];
 		float rotx = (float)Math.Cos( 2 * Math.PI * M / K );
 		float roty = (float)Math.Sin( 2 * Math.PI * M / K );
 
@@ -45,7 +45,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 			)
 		);
 
-		while( candidates.Any() ) {
+		while( candidates.Count != 0 ) {
 			int i = _random.NextInt( candidates.Count );
 			int parent = candidates[i];
 			float t = TanPi2( ( 2.0F * _random.NextFloat() ) - 1.0F );

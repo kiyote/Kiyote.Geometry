@@ -144,7 +144,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 				}
 				lines[index].X = neighbour.Polygon.Points[0].X;
 				lines[index].Y = neighbour.Polygon.Points[0].Y;
-				_ = context.DrawLines( Color.Red, 1.0f, lines );
+				_ = context.DrawLine( Color.Red, 1.0f, lines );
 			} );
 		}
 
@@ -174,7 +174,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 				}
 				lines[index].X = cell.Polygon.Points[0].X;
 				lines[index].Y = cell.Polygon.Points[0].Y;
-				_ = context.DrawLines( cell.IsOpen ? Color.Red : Color.DarkGray, 1.0f, lines );
+				_ = context.DrawLine( cell.IsOpen ? Color.Red : Color.DarkGray, 1.0f, lines );
 			}
 		} );
 
@@ -196,7 +196,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 				}
 				lines[index].X = cell.Polygon.Points[0].X;
 				lines[index].Y = cell.Polygon.Points[0].Y;
-				_ = context.DrawLines( Color.DarkGray, 1.0f, lines );
+				_ = context.DrawLine( Color.DarkGray, 1.0f, lines );
 			}
 		} );
 

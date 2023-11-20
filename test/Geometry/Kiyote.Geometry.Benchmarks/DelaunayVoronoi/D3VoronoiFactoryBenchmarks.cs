@@ -1,5 +1,4 @@
 ﻿using Kiyote.Geometry.DelaunayVoronoi;
-using Kiyote.Geometry.Randomization;
 
 namespace Kiyote.Geometry.Benchmarks.DelaunayVoronoi;
 
