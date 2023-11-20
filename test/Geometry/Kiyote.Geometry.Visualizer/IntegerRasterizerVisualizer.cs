@@ -23,12 +23,12 @@ public sealed class IntegerRasterizerVisualizer {
 		const int size = 10;
 
 
-		List<Point> points = new List<Point>() {
+		List<Point> points = [
 			new Point( 0, 0 ),
 			new Point( size-1, 0 ),
 			new Point( size-1, size-1 ),
 			new Point( 0, size-1 ),
-		};
+		];
 
 		for( int j = 0; j < size; j++ ) {
 			using Image<Rgb24> image = new Image<Rgb24>( size, size );

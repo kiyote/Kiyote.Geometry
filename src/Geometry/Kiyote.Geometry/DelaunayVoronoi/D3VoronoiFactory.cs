@@ -77,7 +77,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				ref isOpen
 			);
 
-			if( !cellCoords.Any() ) {
+			if( cellCoords.Count == 0 ) {
 				throw new InvalidOperationException( "Clipped cell contains no points." );
 			}
 
@@ -85,7 +85,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			int minY = int.MaxValue;
 			int maxX = int.MinValue;
 			int maxY = int.MinValue;
-			List<Point> cellPoints = new List<Point>();
+			List<Point> cellPoints = [];
 			for( int j = 0; j < cellCoords.Count / 2; j++ ) {
 				int x = (int)cellCoords[( j * 2 ) + 0];
 				int y = (int)cellCoords[( j * 2 ) + 1];
@@ -148,7 +148,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			neighbours.Clear();
 		}
 
-		HashSet<Edge> edges = new HashSet<Edge>();
+		HashSet<Edge> edges = [];
 		for( int i = 0; i < delaunator.Triangles.Length; i++ ) {
 			if( i < delaunator.HalfEdges[i] ) {
 				int t1 = i / 3;
@@ -297,7 +297,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				cellCoords,
 				ref isOpen
 			);
-		if( cellCoords.Any() ) {
+		if( cellCoords.Count != 0 ) {
 			int n = cellCoords.Count;
 			int c0;
 			int c1 = EdgeCode( bounds, cellCoords[^2], cellCoords[^1] );
@@ -441,7 +441,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				cellCoords.Add( sy1 );
 			}
 		}
-		if( cellCoords.Any() ) {
+		if( cellCoords.Count != 0 ) {
 			e0 = e1;
 			e1 = EdgeCode( bounds, cellCoords[0], cellCoords[1] );
 			if( e0 != 0
