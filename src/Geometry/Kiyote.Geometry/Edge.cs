@@ -17,8 +17,10 @@ public readonly struct Edge: IEquatable<Edge> {
 	public bool Equals(
 		Edge other
 	) {
-		return other.A == A
-			&& other.B == B;
+		return (other.A == A
+			&& other.B == B)
+			|| (other.A == B
+			&& other.B == A);
 	}
 
 	public override bool Equals( object? obj ) {

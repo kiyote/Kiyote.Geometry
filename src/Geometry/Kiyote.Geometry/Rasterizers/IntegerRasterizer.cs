@@ -104,6 +104,12 @@ internal sealed class IntegerRasterizer : IRasterizer {
 		Point p2,
 		Action<int, int> pixelAction
 	) {
+		// The "error" accumulates differently depending on whether you draw
+		// left-to-right or right-to-left, so we'll prefer drawing left-to-right
+		// for consistency.
+		if (p1.X > p2.X) {
+			(p2, p1) = (p1, p2);
+		}
 		int x0 = p1.X;
 		int y0 = p1.Y;
 		int x1 = p2.X;
