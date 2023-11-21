@@ -108,7 +108,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 	private void VisualizeRandom() {
 		IRandom random = new FastRandom();
 		IPointFactory pointFactory = new FastPoissonDiscPointFactory( random );
-		IReadOnlyList<Point> points = pointFactory.Fill( _size, 25 );
+		IReadOnlyList<Point> points = pointFactory.Fill( _size, 25, false );
 
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
@@ -123,7 +123,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 	private void VisualizeNeighbours() {
 		IRandom random = new FastRandom();
 		IPointFactory pointFactory = new FastPoissonDiscPointFactory( random );
-		IReadOnlyList<Point> points = pointFactory.Fill( _size, 25 );
+		IReadOnlyList<Point> points = pointFactory.Fill( _size, 25, false );
 
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
@@ -154,7 +154,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 	private void VisualizeOpen() {
 		IRandom random = new FastRandom();
 		IPointFactory pointFactory = new FastPoissonDiscPointFactory( random );
-		IReadOnlyList<Point> points = pointFactory.Fill( _size, 25 );
+		IReadOnlyList<Point> points = pointFactory.Fill( _size, 25, false );
 
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );

@@ -4,7 +4,13 @@ public interface IPointFactory {
 
 	IReadOnlyList<Point> Fill(
 		ISize size,
-		int distanceApart
+		int distanceApart		
+	);
+
+	IReadOnlyList<Point> Fill(
+		ISize size,
+		int distanceApart,
+		bool inclusive
 	);
 
 }

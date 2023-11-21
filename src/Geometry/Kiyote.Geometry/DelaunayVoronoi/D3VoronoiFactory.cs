@@ -149,21 +149,10 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		}
 
 		HashSet<Edge> edges = [];
-		for( int i = 0; i < delaunator.Triangles.Length; i++ ) {
-			if( i < delaunator.HalfEdges[i] ) {
-				int t1 = i / 3;
-				Point c1 = new Point(
-					(int)circumcenters[(t1 * 2) + 0],
-					(int)circumcenters[(t1 * 2) + 1]
-				);
-
-				int t2 = delaunator.HalfEdges[i] / 3;
-				Point c2 = new Point(
-					(int)circumcenters[(t2 * 2) + 0],
-					(int)circumcenters[(t2 * 2) + 1]
-				);
-
-				Edge edge = new Edge( c1, c2 );
+		foreach( Cell cell in cells ) {
+			for( int i = 0; i < cell.Polygon.Points.Count; i++ ) {
+				int ind = ( i + 1 ) % cell.Polygon.Points.Count;
+				Edge edge = new Edge( cell.Polygon.Points[i], cell.Polygon.Points[ind] );
 				if( !edges.Contains( edge ) ) {
 					_ = edges.Add( edge );
 				}

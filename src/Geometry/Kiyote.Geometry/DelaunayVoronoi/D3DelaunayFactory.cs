@@ -47,7 +47,7 @@ internal sealed class D3DelaunayFactory : IDelaunayFactory {
 			);
 		}
 
-		List<Point> hull = new List<Point>();
+		List<Point> hull = [];
 		for( int i = 0; i < delaunator.Hull.Length; i++ ) {
 			int c = delaunator.Hull[i];
 			if( c >= 0 ) {

@@ -1,5 +1,6 @@
 ﻿using Kiyote.Geometry.Visualizer.Randomization;
 using Kiyote.Geometry.Visualizer.DelaunayVoronoi;
+using Kiyote.Geometry.Visualizer.Rasterizers;
 
 namespace Kiyote.Geometry.Visualizer;
 
@@ -50,7 +51,8 @@ public static class Program {
 
 		// Rasterizer
 		var rasterizer = new IntegerRasterizerVisualizer(
-			outputFolder
+			outputFolder,
+			bounds
 		);
 		rasterizer.Visualize();
 	}
