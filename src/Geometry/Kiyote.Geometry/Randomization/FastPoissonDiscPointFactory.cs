@@ -23,13 +23,21 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		ISize size,
 		int distanceApart
 	) {
+		return ( this as IPointFactory ).Fill( size, distanceApart, true );
+	}
+
+	IReadOnlyList<Point> IPointFactory.Fill(
+		ISize size,
+		int distanceApart,
+		bool inclusive
+	) {
 		List<Point> result = [];
 
 		int radius2 = distanceApart * distanceApart;
 		float cellSize = distanceApart * Sqrt1_2;
 		int gridWidth = (int)Math.Ceiling( size.Width / cellSize );
 		int gridHeight = (int)Math.Ceiling( size.Height / cellSize );
-		float[] grid = new float[ gridWidth * gridHeight * 2 ];
+		float[] grid = new float[gridWidth * gridHeight * 2];
 		List<int> candidates = [];
 		float rotx = (float)Math.Cos( 2 * Math.PI * M / K );
 		float roty = (float)Math.Sin( 2 * Math.PI * M / K );
@@ -77,9 +85,21 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 							grid,
 							candidates
 						);
-					result.Add( p );
-					added = true;
-					break;
+					if( inclusive ) {
+						result.Add( p );
+						added = true;
+						break;
+					} else {
+						if( p.X > 0
+							&& p.X < size.Width - 1
+							&& p.Y > 0
+							&& p.Y < size.Height - 1
+						) {
+							result.Add( p );
+							added = true;
+							break;
+						}
+					}
 				}
 			}
 			if( !added ) {
@@ -94,6 +114,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 
 		return result;
 	}
+
 
 	private static bool Far(
 		float x,
@@ -113,7 +134,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		for( int j = j0; j < j1; j++ ) {
 			int o = j * gridWidth;
 			for( int i = i0; i < i1; i++ ) {
-				int index = (o + i) << 1;
+				int index = ( o + i ) << 1;
 				float dx = grid[index + 0] - x;
 				float dy = grid[index + 1] - y;
 				if( ( dx * dx ) + ( dy * dy ) < radius2 ) {
@@ -140,7 +161,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		List<int> candidates
 	) {
 		Point s = new Point( (int)x, (int)y );
-		int index = (( gridWidth * (int)( y / cellSize ) ) + (int)( x / cellSize )) * 2;
+		int index = ( ( gridWidth * (int)( y / cellSize ) ) + (int)( x / cellSize ) ) * 2;
 		grid[index + 0] = x;
 		grid[index + 1] = y;
 		candidates.Add( index );

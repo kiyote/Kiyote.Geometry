@@ -14,7 +14,7 @@ internal sealed class QuadTreeSearchableVoronoi : ISearchableVoronoi {
 	) {
 		_voronoi = voronoi;
 		_quadTree = quadTree;
-		_bounds = new Dictionary<Rect, Cell>();
+		_bounds = [];
 		foreach( Cell cell in voronoi.Cells ) {
 			_quadTree.Insert( cell.BoundingBox );
 			_bounds[cell.BoundingBox] = cell;
@@ -37,7 +37,7 @@ internal sealed class QuadTreeSearchableVoronoi : ISearchableVoronoi {
 			return result.Select( r => _bounds[r] ).ToList();
 		}
 
-		return Array.Empty<Cell>();
+		return [];
 	}
 
 	IReadOnlyList<Cell> ISearchableVoronoi.Search( int x, int y, int w, int h ) {
