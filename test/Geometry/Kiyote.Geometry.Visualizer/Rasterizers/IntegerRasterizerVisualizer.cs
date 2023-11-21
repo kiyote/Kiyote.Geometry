@@ -22,6 +22,28 @@ public sealed class IntegerRasterizerVisualizer {
 	public void Visualize() {
 		VisualizeRotation();
 		VisualizeVoronoiEdges();
+		VisualizeLines();
+	}
+
+	public void VisualizeLines() {
+		using Image<Rgb24> image = new Image<Rgb24>( 50, 50 );
+
+		Point p1 = new Point( 632, 537 );
+		Point p2 = new Point( 648, 551 );
+
+		Point n1 = p1.Subtract( p1 ).Add( 25, 25 );
+		Point n2 = p2.Subtract( p1 ).Add( 25, 25 );
+
+		_rasterizer.Rasterize( n1, n2, ( int x, int y ) => {
+			image[x, y] = Color.White;
+		} );
+
+		_rasterizer.Rasterize( n2, n1, ( int x, int y ) => {
+			image[x, y] = Color.White;
+		} );
+
+		image.SaveAsPng( Path.Combine( _outputFolder, "IntegerRasterizer_Lines.png" ) );
+
 	}
 
 	public void VisualizeRotation() {
@@ -91,14 +113,15 @@ public sealed class IntegerRasterizerVisualizer {
 
 		foreach( Edge edge in voronoi.Edges ) {
 			_rasterizer.Rasterize( edge.A, edge.B, ( int x, int y ) => {
-				image[x, y] = Color.DarkGray;
+				image[x, y] = Color.DarkRed;
 			} );
 		}
 
 		foreach( Cell cell in voronoi.Cells ) {
 			foreach( Point p in cell.Polygon.Points ) {
-				image[p.X, p.Y] = Color.Black;
+				image[p.X, p.Y] = Color.Fuchsia;
 			}
+			image[cell.Center.X, cell.Center.Y] = Color.Goldenrod;
 		}
 
 		image.SaveAsPng( Path.Combine( _outputFolder, "IntegerRasterizer_Voronoi.png" ) );

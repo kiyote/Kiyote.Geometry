@@ -87,8 +87,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			int maxY = int.MinValue;
 			List<Point> cellPoints = [];
 			for( int j = 0; j < cellCoords.Count / 2; j++ ) {
-				int x = (int)cellCoords[( j * 2 ) + 0];
-				int y = (int)cellCoords[( j * 2 ) + 1];
+				int x = (int)Math.Floor(cellCoords[( j * 2 ) + 0]);
+				int y = (int)Math.Floor(cellCoords[( j * 2 ) + 1]);
 				if( x < minX ) {
 					minX = x;
 				}
@@ -881,8 +881,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			double c1 = ( ex * ex ) + ( ey * ey );
 			double x = x1 + ( ( ( ey * b1 ) - ( dy * c1 ) ) * d );
 			double y = y1 + ( ( ( dx * c1 ) - ( ex * b1 ) ) * d );
-			circumcenters[j + 0] = x;
-			circumcenters[j + 1] = y;
+			circumcenters[j + 0] = Math.Floor(x); // Probably not correct or wise
+			circumcenters[j + 1] = Math.Floor(y); // but close points suck
 			j += 2;
 		}
 		return circumcenters;

@@ -1,8 +1,7 @@
 ﻿using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
-using Kiyote.Geometry.Rasterizers;
 
-namespace Kiyote.Geometry.Tests;
+namespace Kiyote.Geometry.Rasterizers.Tests;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage( "Performance", "CA1814:Prefer jagged arrays over multidimensional", Justification = "Simplicity for test" )]
 [TestFixture]
@@ -16,6 +15,28 @@ public sealed class IntegerRasterizerUnitTests {
 	}
 
 	[Test]
+	public void Rasterize_LineAlternatingDirections_PointsMatch() {
+		Point p1 = new Point( 3, 2 );
+		Point p2 = new Point( 8, 8 );
+
+		bool[,] ltr = new bool[10, 10];
+		_rasterizer.Rasterize( p1, p2, ( x, y ) => {
+			ltr[x, y] = true;
+		} );
+
+		bool[,] rtl = new bool[10, 10];
+		_rasterizer.Rasterize( p2, p1, ( x, y ) => {
+			rtl[x, y] = true;
+		} );
+
+		for( int i = 0; i < 10; i++ ) {
+			for( int j = 0; j < 10; j++ ) {
+				Assert.AreEqual( ltr[i, j], rtl[i, j], $"Rasterize mismatch: {i},{j}, ltr: {ltr[i, j]}, rtl: {rtl[i, j]}" );
+			}
+		}
+	}
+
+	[Test]
 	public void Rasterize_HorizontalLine_PointsMatch() {
 
 		List<Point> points = [
@@ -24,12 +45,12 @@ public sealed class IntegerRasterizerUnitTests {
 		];
 
 		bool[,] poly = new bool[10, 10];
-		_rasterizer.Rasterize( points, ( int x, int y ) => {
+		_rasterizer.Rasterize( points, ( x, y ) => {
 			poly[x, y] = true;
 		} );
 
 		bool[,] line = new bool[10, 10];
-		_rasterizer.Rasterize( points[0], points[1], ( int x, int y ) => {
+		_rasterizer.Rasterize( points[0], points[1], ( x, y ) => {
 			line[x, y] = true;
 		} );
 
@@ -49,12 +70,12 @@ public sealed class IntegerRasterizerUnitTests {
 		];
 
 		bool[,] poly = new bool[10, 10];
-		_rasterizer.Rasterize( points, ( int x, int y ) => {
+		_rasterizer.Rasterize( points, ( x, y ) => {
 			poly[x, y] = true;
 		} );
 
 		bool[,] line = new bool[10, 10];
-		_rasterizer.Rasterize( points[0], points[1], ( int x, int y ) => {
+		_rasterizer.Rasterize( points[0], points[1], ( x, y ) => {
 			line[x, y] = true;
 		} );
 
@@ -76,7 +97,7 @@ public sealed class IntegerRasterizerUnitTests {
 		];
 
 		bool[,] poly = new bool[10, 10];
-		_rasterizer.Rasterize( points, ( int x, int y ) => {
+		_rasterizer.Rasterize( points, ( x, y ) => {
 			poly[x, y] = true;
 		} );
 
@@ -85,7 +106,7 @@ public sealed class IntegerRasterizerUnitTests {
 			_rasterizer.Rasterize(
 				new Point( 1, i ),
 				new Point( 8, i ),
-				( int x, int y ) => {
+				( x, y ) => {
 					line[x, y] = true;
 				}
 			);
@@ -106,7 +127,7 @@ public sealed class IntegerRasterizerUnitTests {
 		IVoronoiFactory voronoiFactory = new D3VoronoiFactory();
 		IVoronoi voronoi = voronoiFactory.Create( new Rect( 0, 0, size.Width, size.Height ), voronoiPoints, false );
 		bool mismatch = false;
-		foreach( Cell cell in voronoi.Cells) {
+		foreach( Cell cell in voronoi.Cells ) {
 			int cellWidth = cell.BoundingBox.Width;
 			int cellHeight = cell.BoundingBox.Height;
 			IReadOnlyList<Point> points = cell.Polygon.Points;
@@ -116,7 +137,7 @@ public sealed class IntegerRasterizerUnitTests {
 				_rasterizer.Rasterize(
 					points[i],
 					points[i + 1],
-					( int x, int y ) => {
+					( x, y ) => {
 						line[x - cell.BoundingBox.X1, y - cell.BoundingBox.Y1] = true;
 					}
 				);
@@ -124,7 +145,7 @@ public sealed class IntegerRasterizerUnitTests {
 			_rasterizer.Rasterize(
 				points[^1],
 				points[0],
-				( int x, int y ) => {
+				( x, y ) => {
 					line[x - cell.BoundingBox.X1, y - cell.BoundingBox.Y1] = true;
 				}
 			);
@@ -141,14 +162,14 @@ public sealed class IntegerRasterizerUnitTests {
 				}
 				// Find the largest X
 				int maxX = int.MinValue;
-				for( int x = ( cellWidth - 1 ); x >= 0; x-- ) {
+				for( int x =  cellWidth - 1 ; x >= 0; x-- ) {
 					if( line[x, y] ) {
 						maxX = x;
 						break;
 					}
 				}
 
-				if (maxX < minX) {
+				if( maxX < minX ) {
 					throw new InvalidOperationException();
 				}
 
@@ -158,7 +179,7 @@ public sealed class IntegerRasterizerUnitTests {
 			}
 
 			bool[,] poly = new bool[cellWidth, cellHeight];
-			_rasterizer.Rasterize( points, ( int x, int y ) => {
+			_rasterizer.Rasterize( points, ( x, y ) => {
 				poly[x - cell.BoundingBox.X1, y - cell.BoundingBox.Y1] = true;
 			} );
 
@@ -166,7 +187,7 @@ public sealed class IntegerRasterizerUnitTests {
 			for( int y = 0; y < cellHeight; y++ ) {
 				for( int x = 0; x < cellWidth; x++ ) {
 
-					if( poly[x,y] != line[x,y]) {
+					if( poly[x, y] != line[x, y] ) {
 						using Image<Rgb24> imgLine = new Image<Rgb24>( cell.BoundingBox.Width, cell.BoundingBox.Height );
 						using Image<Rgb24> imgPoly = new Image<Rgb24>( cell.BoundingBox.Width, cell.BoundingBox.Height );
 						for( int sy = 0; sy < cellHeight; sy++ ) {
@@ -197,9 +218,9 @@ public sealed class IntegerRasterizerUnitTests {
 
 		List<Point> points = [
 			new Point( 0, 0 ),
-			new Point( size-1, 0 ),
-			new Point( size-1, size-1 ),
-			new Point( 0, size-1 ),
+			new Point( size - 1, 0 ),
+			new Point( size - 1, size - 1 ),
+			new Point( 0, size - 1 ),
 		];
 
 		for( int j = 0; j < size; j++ ) {
@@ -209,7 +230,7 @@ public sealed class IntegerRasterizerUnitTests {
 				_rasterizer.Rasterize(
 					points[i],
 					points[i + 1],
-					( int x, int y ) => {
+					( x, y ) => {
 						line[x, y] = true;
 					}
 				);
@@ -217,7 +238,7 @@ public sealed class IntegerRasterizerUnitTests {
 			_rasterizer.Rasterize(
 				points[^1],
 				points[0],
-				( int x, int y ) => {
+				( x, y ) => {
 					line[x, y] = true;
 				}
 			);
@@ -234,7 +255,7 @@ public sealed class IntegerRasterizerUnitTests {
 				}
 				// Find the largest X
 				int maxX = int.MinValue;
-				for( int x = ( size - 1 ); x >= 0; x-- ) {
+				for( int x =  size - 1 ; x >= 0; x-- ) {
 					if( line[x, y] ) {
 						maxX = x;
 						break;
@@ -247,7 +268,7 @@ public sealed class IntegerRasterizerUnitTests {
 			}
 
 			bool[,] poly = new bool[size, size];
-			_rasterizer.Rasterize( points, ( int x, int y ) => {
+			_rasterizer.Rasterize( points, ( x, y ) => {
 				poly[x, y] = true;
 			} );
 

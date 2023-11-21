@@ -19,6 +19,28 @@ public readonly struct Point : IEquatable<Point>, ISize, IEquatable<ISize> {
 
 	int ISize.Height => Y;
 
+	public Point Subtract( Point other ) {
+		return Subtract( other.X, other.Y );
+	}
+
+	public Point Subtract(
+		int x,
+		int y
+	) {
+		return new Point( X - x, Y - y );
+	}
+
+	public Point Add( Point other ) {
+		return Add( other.X, other.Y );
+	}
+
+	public Point Add(
+		int x,
+		int y
+	) {
+		return new Point( X + x, Y + y );
+	}
+
 	[MethodImpl( MethodImplOptions.AggressiveInlining )]
 	public bool Equals(
 		Point other
