@@ -50,7 +50,7 @@ jobs:
         run: dotnet test /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=cobertura
 
       - name: Generate coverage file
-        run: dotnet dotnet-coverage merge -r -o coverage.xml coverage.cobertura.xml -f cobertura
+        run: dotnet dotnet-coverage merge -o coverage.xml **/coverage.cobertura.xml -f cobertura
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
 
       - name: Create Orphan Branch
