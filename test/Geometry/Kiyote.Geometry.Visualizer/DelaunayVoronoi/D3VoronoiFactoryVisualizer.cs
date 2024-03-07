@@ -1,6 +1,9 @@
 ﻿using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace Kiyote.Geometry.Visualizer.DelaunayVoronoi;
 
@@ -32,12 +35,12 @@ public sealed class D3VoronoiFactoryVisualizer {
 	private void VisualizeSquare() {
 		int width = _size.Width;
 		int height = _size.Height;
-		List<Point> points = new List<Point>(4) {
+		List<Point> points = [
 			new Point( width / 4, height / 4 ),
 			new Point( width / 4 * 3, height / 4 ),
 			new Point( width / 4, height / 4 * 3 ),
 			new Point( width / 4 * 3, height / 4 * 3 )
-		};
+		];
 
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
@@ -56,7 +59,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 		int widthOffset = widthSlice / 2;
 		int heightSlice = height / 3;
 		int heightOffset = heightSlice / 2;
-		List<Point> points = new List<Point>( 9 ) {
+		List<Point> points = [
 			new Point(
 				(widthSlice * 0) + widthOffset,
 				(heightSlice * 0) + heightOffset
@@ -93,7 +96,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 				(widthSlice * 2) + widthOffset,
 				(heightSlice * 2) + heightOffset
 			)
-		};
+		];
 
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
@@ -133,7 +136,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Render( image, voronoi );
 
 		Cell cell = voronoi.Cells[0];
-		foreach (Cell neighbour in voronoi.Neighbours[cell]) {
+		foreach( Cell neighbour in voronoi.Neighbours[cell] ) {
 			image.Mutate( ( context ) => {
 				PointF[] lines = new PointF[neighbour.Polygon.Points.Count + 1];
 				int index = 0;

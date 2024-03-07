@@ -1,5 +1,8 @@
 ﻿using Kiyote.Geometry.Randomization;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace Kiyote.Geometry.Visualizer;
 
@@ -28,19 +31,19 @@ public sealed class PolygonVisualizer {
 		Console.WriteLine( "Polygon.Clip" );
 		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
 
-		Polygon polygon1 = new Polygon( new List<Point>() {
+		Polygon polygon1 = new Polygon( [
 			new Point( 200, 200 ),
 			new Point( _bounds.Width - 200, 200 ),
 			new Point( _bounds.Width - 200, _bounds.Height - 200 ),
 			new Point( 200, _bounds.Height - 200 )
-		} );
+		] );
 
-		Polygon polygon2 = new Polygon( new List<Point>() {
+		Polygon polygon2 = new Polygon( [
 			new Point( 250, 250 ),
 			new Point( _bounds.Width - 250, 350 ),
 			new Point( _bounds.Width - 350, _bounds.Height - 150 ),
 			new Point( 150, _bounds.Height - 300 )
-		} );
+		] );
 
 		image.Mutate( ( context ) => {
 			PointF[] lines = new PointF[polygon1.Points.Count + 1];
@@ -80,19 +83,19 @@ public sealed class PolygonVisualizer {
 		Console.WriteLine( "Polygon.Intersections" );
 		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
 
-		Polygon polygon1 = new Polygon( new List<Point>() {
+		Polygon polygon1 = new Polygon( [
 			new Point( 200, 200 ),
 			new Point( _bounds.Width - 200, 200 ),
 			new Point( _bounds.Width - 200, _bounds.Height - 200 ),
 			new Point( 200, _bounds.Height - 200 )
-		} );
+		] );
 
-		Polygon polygon2 = new Polygon( new List<Point>() {
+		Polygon polygon2 = new Polygon( [
 			new Point( 250, 250 ),
 			new Point( _bounds.Width - 250, 350 ),
 			new Point( _bounds.Width - 350, _bounds.Height - 150 ),
 			new Point( 150, _bounds.Height - 300 )
-		} );
+		] );
 
 		image.Mutate( ( context ) => {
 			PointF[] lines = new PointF[polygon1.Points.Count + 1];
@@ -126,13 +129,12 @@ public sealed class PolygonVisualizer {
 		Console.WriteLine( "Polygon.Contains" );
 		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
 
-		Polygon polygon = new Polygon(
-			new List<Point>() {
+		Polygon polygon = new Polygon( [
 			new Point( 200, 200 ),
 			new Point( _bounds.Width - 200, 200 ),
 			new Point( _bounds.Width - 200, _bounds.Height - 200 ),
 			new Point( 200, _bounds.Height - 200 )
-		} );
+		] );
 
 		image.Mutate( ( context ) => {
 			PointF[] lines = new PointF[polygon.Points.Count + 1];

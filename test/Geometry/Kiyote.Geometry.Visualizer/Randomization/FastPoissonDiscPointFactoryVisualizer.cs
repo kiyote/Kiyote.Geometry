@@ -1,4 +1,6 @@
 ﻿using Kiyote.Geometry.Randomization;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Kiyote.Geometry.Visualizer.Randomization;
 

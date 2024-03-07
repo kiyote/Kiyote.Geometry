@@ -14,76 +14,76 @@ public sealed class PolygonUnitTests {
 	public void Contains_PointInside_ReturnsTrue() {
 		Point point = new Point( 10, 10 );
 
-		Assert.IsTrue( _polygon.Contains( point ) );
+		Assert.That( _polygon.Contains( point ), Is.True );
 	}
 
 	[Test]
 	public void Contains_PointOutside_ReturnsFalse() {
 		Point point = new Point( 30, 30 );
 
-		Assert.IsFalse( _polygon.Contains( point ) );
+		Assert.That( _polygon.Contains( point ), Is.False );
 	}
 
 	[Test]
 	public void TryFindIntersection_Overlapping_ReturnsClippedShape() {
 		Polygon p1 = new Polygon(
-			new List<Point>() {
+			[
 				new Point( 200, 200 ),
 				new Point( 800, 200 ),
 				new Point( 800, 800 ),
 				new Point( 200, 800 )
-			} );
+			] );
 
 		Polygon p2 = new Polygon(
-			new List<Point>() {
+			[
 				new Point( 250, 250 ),
 				new Point( 750, 350 ),
 				new Point( 650, 850 ),
 				new Point( 150, 700 )
-			} );
+			] );
 
 		bool result = p1.TryFindIntersection( p2, out Polygon clipped );
-		Assert.IsTrue( result );
-		Assert.AreEqual( 6, clipped.Points.Count );
-		Assert.AreEqual( 660, clipped.Points[0].X );
-		Assert.AreEqual( 800, clipped.Points[0].Y );
-		Assert.AreEqual( 483, clipped.Points[1].X );
-		Assert.AreEqual( 800, clipped.Points[1].Y );
-		Assert.AreEqual( 200, clipped.Points[2].X );
-		Assert.AreEqual( 715, clipped.Points[2].Y );
-		Assert.AreEqual( 200, clipped.Points[3].X );
-		Assert.AreEqual( 475, clipped.Points[3].Y );
-		Assert.AreEqual( 250, clipped.Points[4].X );
-		Assert.AreEqual( 250, clipped.Points[4].Y );
-		Assert.AreEqual( 750, clipped.Points[5].X );
-		Assert.AreEqual( 350, clipped.Points[5].Y );
+		Assert.That( result, Is.True );
+		Assert.That( clipped.Points.Count, Is.EqualTo( 6 ) );
+		Assert.That(clipped.Points[0].X, Is.EqualTo(660));
+		Assert.That(clipped.Points[0].Y, Is.EqualTo(800));
+		Assert.That(clipped.Points[1].X, Is.EqualTo(483));
+		Assert.That(clipped.Points[1].Y, Is.EqualTo(800));
+		Assert.That(clipped.Points[2].X, Is.EqualTo(200));
+		Assert.That(clipped.Points[2].Y, Is.EqualTo(715));
+		Assert.That(clipped.Points[3].X, Is.EqualTo(200));
+		Assert.That(clipped.Points[3].Y, Is.EqualTo(475));
+		Assert.That(clipped.Points[4].X, Is.EqualTo(250));
+		Assert.That(clipped.Points[4].Y, Is.EqualTo(250));
+		Assert.That(clipped.Points[5].X, Is.EqualTo(750));
+		Assert.That(clipped.Points[5].Y, Is.EqualTo(350));
 	}
 
 	[Test]
 	public void Intersections_Overlapping_ReturnsPoints() {
 		Polygon other = new Polygon(
-			new List<Point>() {
+			[
 				new Point( 5, 5 ),
 				new Point( 10, 10 ),
 				new Point( 5, 15 ),
 				new Point( -5, 10 )
-			} );
+			] );
 
 		IReadOnlyList<Point> intersections = _polygon.Intersections( other.Points );
-		Assert.IsNotNull( intersections );
-		Assert.AreEqual( 0, intersections[0].X );
-		Assert.AreEqual( 12, intersections[0].Y );
-		Assert.AreEqual( 0, intersections[1].X );
-		Assert.AreEqual( 8, intersections[1].Y );
+		Assert.That( intersections, Is.Not.Null );
+		Assert.That(intersections[0].X, Is.EqualTo(0));
+		Assert.That(intersections[0].Y, Is.EqualTo(12));
+		Assert.That(intersections[1].X, Is.EqualTo(0));
+		Assert.That(intersections[1].Y, Is.EqualTo(8));
 	}
 
 	private static Polygon CreatePolygon() {
-		IReadOnlyList<Point> polygon = new List<Point>() {
+		IReadOnlyList<Point> polygon = [
 			new Point( 0, 0 ),
 			new Point( 20, 0 ),
 			new Point( 20, 20 ),
 			new Point( 0, 20 )
-		};
+		];
 
 		return new Polygon( polygon );
 	}

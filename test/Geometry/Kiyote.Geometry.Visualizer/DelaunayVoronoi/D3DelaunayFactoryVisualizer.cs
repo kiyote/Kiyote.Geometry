@@ -1,6 +1,9 @@
 ﻿using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace Kiyote.Geometry.Visualizer.DelaunayVoronoi;
 
@@ -29,12 +32,12 @@ public sealed class D3DelaunayFactoryVisualizer {
 		int width = _size.Width;
 		int height = _size.Height;
 
-		List<Point> points = new List<Point>( 4 ) {
+		List<Point> points = [
 			new Point( width / 4, height / 4 ),
 			new Point( width / 4 * 3, height / 4 ),
 			new Point( width / 4, height / 4 * 3 ),
 			new Point( width / 4 * 3, height / 4 * 3 )
-		};
+		];
 		IDelaunay delaunay = _delaunayFactory.Create( points );
 
 		using Image<Rgb24> image = new Image<Rgb24>( _size.Width, _size.Height );

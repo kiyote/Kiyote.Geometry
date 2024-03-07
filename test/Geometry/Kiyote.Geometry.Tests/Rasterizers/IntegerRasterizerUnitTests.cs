@@ -1,5 +1,7 @@
 ﻿using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Kiyote.Geometry.Rasterizers.Tests;
 
@@ -31,7 +33,7 @@ public sealed class IntegerRasterizerUnitTests {
 
 		for( int i = 0; i < 10; i++ ) {
 			for( int j = 0; j < 10; j++ ) {
-				Assert.AreEqual( ltr[i, j], rtl[i, j], $"Rasterize mismatch: {i},{j}, ltr: {ltr[i, j]}, rtl: {rtl[i, j]}" );
+				Assert.That( ltr[i, j], Is.EqualTo( rtl[i, j] ), $"Rasterize mismatch: {i},{j}, ltr: {ltr[i, j]}, rtl: {rtl[i, j]}" );
 			}
 		}
 	}
@@ -56,7 +58,7 @@ public sealed class IntegerRasterizerUnitTests {
 
 		for( int i = 0; i < 10; i++ ) {
 			for( int j = 0; j < 10; j++ ) {
-				Assert.AreEqual( poly[i, j], line[i, j], $"Rasterize mismatch: {i},{j}, poly: {poly[i, j]}, line: {line[i, j]}" );
+				Assert.That( poly[i, j], Is.EqualTo( line[i, j] ), $"Rasterize mismatch: {i},{j}, poly: {poly[i, j]}, line: {line[i, j]}" );
 			}
 		}
 	}
@@ -81,7 +83,7 @@ public sealed class IntegerRasterizerUnitTests {
 
 		for( int i = 0; i < 10; i++ ) {
 			for( int j = 0; j < 10; j++ ) {
-				Assert.AreEqual( poly[i, j], line[i, j], $"Rasterize mismatch: {i},{j}, poly: {poly[i, j]}, line: {line[i, j]}" );
+				Assert.That( poly[i, j], Is.EqualTo( line[i, j] ), $"Rasterize mismatch: {i},{j}, poly: {poly[i, j]}, line: {line[i, j]}" );
 			}
 		}
 	}
@@ -114,7 +116,7 @@ public sealed class IntegerRasterizerUnitTests {
 
 		for( int i = 0; i < 10; i++ ) {
 			for( int j = 0; j < 10; j++ ) {
-				Assert.AreEqual( poly[i, j], line[i, j], $"Rasterize mismatch: {i},{j}, poly: {poly[i, j]}, line: {line[i, j]}" );
+				Assert.That( poly[i, j], Is.EqualTo( line[i, j] ), $"Rasterize mismatch: {i},{j}, poly: {poly[i, j]}, line: {line[i, j]}" );
 			}
 		}
 	}
@@ -162,7 +164,7 @@ public sealed class IntegerRasterizerUnitTests {
 				}
 				// Find the largest X
 				int maxX = int.MinValue;
-				for( int x =  cellWidth - 1 ; x >= 0; x-- ) {
+				for( int x = cellWidth - 1; x >= 0; x-- ) {
 					if( line[x, y] ) {
 						maxX = x;
 						break;
@@ -208,7 +210,7 @@ public sealed class IntegerRasterizerUnitTests {
 			poly = null;
 			line = null;
 		}
-		Assert.IsFalse( mismatch, "Cell mismatches" );
+		Assert.That( mismatch, Is.False, "Cell mismatches" );
 	}
 
 	[Test]
@@ -255,7 +257,7 @@ public sealed class IntegerRasterizerUnitTests {
 				}
 				// Find the largest X
 				int maxX = int.MinValue;
-				for( int x =  size - 1 ; x >= 0; x-- ) {
+				for( int x = size - 1; x >= 0; x-- ) {
 					if( line[x, y] ) {
 						maxX = x;
 						break;
@@ -274,7 +276,7 @@ public sealed class IntegerRasterizerUnitTests {
 
 			for( int y = 0; y < size; y++ ) {
 				for( int x = 0; x < size; x++ ) {
-					Assert.AreEqual( poly[x, y], line[x, y], $"Polygon does not match at {x},{y}: poly {poly[x, y]} vs line {line[x, y]} - iteration {j}." );
+					Assert.That( poly[x, y], Is.EqualTo( line[x, y] ), $"Polygon does not match at {x},{y}: poly {poly[x, y]} vs line {line[x, y]} - iteration {j}." );
 				}
 			}
 

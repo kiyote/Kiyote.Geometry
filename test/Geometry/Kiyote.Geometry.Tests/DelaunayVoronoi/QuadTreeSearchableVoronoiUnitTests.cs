@@ -1,4 +1,5 @@
-﻿using Kiyote.Geometry.Trees;
+﻿using System.Linq;
+using Kiyote.Geometry.Trees;
 
 namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
 
@@ -13,12 +14,12 @@ public sealed class QuadTreeSearchableVoronoiUnitTests {
 	public void OneTimeSetUp() {
 		ISize size = new Point( 100, 100 );
 		_area = new Rect( 0, 0, size );
-		IReadOnlyList<Point> points = new List<Point>() {
+		IReadOnlyList<Point> points = [
 			new Point( 25, 25 ),
 			new Point( 75, 25 ),
 			new Point( 25, 75 ),
 			new Point( 75, 75 )
-		};
+		];
 		IVoronoiFactory voronoiFactory = new D3VoronoiFactory();
 		_voronoi = voronoiFactory.Create( _area, points );
 	}
@@ -42,10 +43,10 @@ public sealed class QuadTreeSearchableVoronoiUnitTests {
 		int cy
 	) {
 		IReadOnlyList<Cell> results = _searchableVoronoi.Search( x, y, w, h );
-		Assert.AreEqual( 1, results.Count );
+		Assert.That( results.Count, Is.EqualTo( 1 ) );
 		Cell cell = results[0];
-		Assert.AreEqual( cx, cell.Center.X );
-		Assert.AreEqual( cy, cell.Center.Y );
+		Assert.That( cell.Center.X, Is.EqualTo( cx ) );
+		Assert.That( cell.Center.Y, Is.EqualTo( cy ) );
 	}
 
 	[TestCase( 1, 1, 48, 98, 25, 25, 25, 75 )]
@@ -63,13 +64,13 @@ public sealed class QuadTreeSearchableVoronoiUnitTests {
 		int cy2
 	) {
 		IReadOnlyList<Cell> results = _searchableVoronoi.Search( x, y, w, h );
-		Assert.AreEqual( 2, results.Count );
+		Assert.That( results.Count, Is.EqualTo( 2 ) );
 		Cell cell = results[0];
-		Assert.AreEqual( cx1, cell.Center.X );
-		Assert.AreEqual( cy1, cell.Center.Y );
+		Assert.That( cell.Center.X, Is.EqualTo( cx1 ) );
+		Assert.That( cell.Center.Y, Is.EqualTo( cy1 ) );
 		cell = results[1];
-		Assert.AreEqual( cx2, cell.Center.X );
-		Assert.AreEqual( cy2, cell.Center.Y );
+		Assert.That( cell.Center.X, Is.EqualTo( cx2 ) );
+		Assert.That( cell.Center.Y, Is.EqualTo( cy2 ) );
 	}
 }
 

@@ -21,6 +21,6 @@ public sealed class D3DelaunayFactoryIntegrationTests {
 		IReadOnlyList<Point> points = _pointFactory.Fill( bounds, 25 );
 		IDelaunay delaunay = _delaunayFactory.Create( points );
 
-		Assert.IsNotNull( delaunay );
+		Assert.That( delaunay, Is.Not.Null );
 	}
 }
