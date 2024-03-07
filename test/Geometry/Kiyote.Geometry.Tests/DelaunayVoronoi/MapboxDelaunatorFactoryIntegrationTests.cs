@@ -7,10 +7,10 @@ public sealed class MapboxDelaunatorFactoryIntegrationTests {
 	public void Test_InsufficientPoints_ThrowsException() {
 		Point topLeft = new Point( 0, 0 );
 		Point topRight = new Point( 10, 0 );
-		List<Point> points = new List<Point>() {
+		List<Point> points = [
 			topLeft,
 			topRight
-		};
+		];
 
 		_ = Assert.Throws<InvalidOperationException>( () => MapboxDelaunatorFactory.Create( points.ToCoords() ) );
 	}
@@ -19,12 +19,12 @@ public sealed class MapboxDelaunatorFactoryIntegrationTests {
 	public void Test_DuplicatePointsAreInsufficient_ThrowsException() {
 		Point topLeft = new Point( 0, 0 );
 		Point topRight = new Point( 10, 0 );
-		List<Point> points = new List<Point>() {
+		List<Point> points = [
 			topLeft,
 			topRight,
 			topLeft,
 			topRight
-		};
+		];
 
 		_ = Assert.Throws<InvalidOperationException>( () => MapboxDelaunatorFactory.Create( points.Distinct().ToList().ToCoords() ) );
 	}
@@ -45,35 +45,35 @@ public sealed class MapboxDelaunatorFactoryIntegrationTests {
 		Point topRight = new Point( x2, y2 );
 		Point bottomLeft = new Point( x3, y3 );
 		Point bottomRight = new Point( x4, y4 );
-		List<Point> points = new List<Point>() {
+		List<Point> points = [
 			topLeft,
 			topRight,
 			bottomLeft,
 			bottomRight
-		};
+		];
 
 		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( points.ToCoords() );
 
-		Assert.NotNull( delaunator );
+		Assert.That( delaunator, Is.Not.Null );
 		// The 4 points of the hull
-		Assert.AreEqual( points[delaunator.Hull[0]], bottomLeft, nameof( bottomLeft ) );
-		Assert.AreEqual( points[delaunator.Hull[1]], bottomRight, nameof( bottomRight ) );
-		Assert.AreEqual( points[delaunator.Hull[2]], topRight, nameof( topRight ) );
-		Assert.AreEqual( points[delaunator.Hull[3]], topLeft, nameof( topLeft ) );
+		Assert.That( points[delaunator.Hull[0]], Is.EqualTo( bottomLeft ), nameof( bottomLeft ) );
+		Assert.That( points[delaunator.Hull[1]], Is.EqualTo( bottomRight ), nameof( bottomRight ) );
+		Assert.That( points[delaunator.Hull[2]], Is.EqualTo( topRight ), nameof( topRight ) );
+		Assert.That( points[delaunator.Hull[3]], Is.EqualTo( topLeft ), nameof( topLeft ) );
 		// The two triangles
-		Assert.AreEqual( points[delaunator.Triangles[0]], topLeft, nameof( topLeft ) );
-		Assert.AreEqual( points[delaunator.Triangles[1]], bottomLeft, nameof( bottomLeft ) );
-		Assert.AreEqual( points[delaunator.Triangles[2]], topRight, nameof( topRight ) );
-		Assert.AreEqual( points[delaunator.Triangles[3]], bottomLeft, nameof( bottomLeft ) );
-		Assert.AreEqual( points[delaunator.Triangles[4]], bottomRight, nameof( bottomRight ) );
-		Assert.AreEqual( points[delaunator.Triangles[5]], topRight, nameof( topRight ) );
+		Assert.That( points[delaunator.Triangles[0]], Is.EqualTo( topLeft ), nameof( topLeft ) );
+		Assert.That( points[delaunator.Triangles[1]], Is.EqualTo( bottomLeft ), nameof( bottomLeft ) );
+		Assert.That( points[delaunator.Triangles[2]], Is.EqualTo( topRight ), nameof( topRight ) );
+		Assert.That( points[delaunator.Triangles[3]], Is.EqualTo( bottomLeft ), nameof( bottomLeft ) );
+		Assert.That( points[delaunator.Triangles[4]], Is.EqualTo( bottomRight ), nameof( bottomRight ) );
+		Assert.That( points[delaunator.Triangles[5]], Is.EqualTo( topRight ), nameof( topRight ) );
 		// Half-edges
-		Assert.AreEqual( delaunator.HalfEdges[0], -1 );
-		Assert.AreEqual( delaunator.HalfEdges[1], 5 );
-		Assert.AreEqual( delaunator.HalfEdges[2], -1 );
-		Assert.AreEqual( delaunator.HalfEdges[3], -1 );
-		Assert.AreEqual( delaunator.HalfEdges[4], -1 );
-		Assert.AreEqual( delaunator.HalfEdges[5], 1 );
+		Assert.That( delaunator.HalfEdges[0], Is.EqualTo( -1 ) );
+		Assert.That( delaunator.HalfEdges[1], Is.EqualTo( 5 ) );
+		Assert.That( delaunator.HalfEdges[2], Is.EqualTo( -1 ) );
+		Assert.That( delaunator.HalfEdges[3], Is.EqualTo( -1 ) );
+		Assert.That( delaunator.HalfEdges[4], Is.EqualTo( -1 ) );
+		Assert.That( delaunator.HalfEdges[5], Is.EqualTo( 1 ) );
 	}
 
 	[Test]
@@ -83,35 +83,35 @@ public sealed class MapboxDelaunatorFactoryIntegrationTests {
 		Point bottomLeft = new Point( 0, 10 );
 		Point bottomRight = new Point( 10, 10 );
 		Point center = new Point( 5, 5 );
-		List<Point> points = new List<Point>() {
+		List<Point> points = [
 			topLeft,
 			topRight,
 			bottomLeft,
 			bottomRight,
 			center
-		};
+		];
 
 		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( points.ToCoords() );
 
-		Assert.NotNull( delaunator );
+		Assert.That( delaunator, Is.Not.Null );
 		// Four points for the hull
-		Assert.AreEqual( points[delaunator.Hull[0]], bottomLeft );
-		Assert.AreEqual( points[delaunator.Hull[1]], bottomRight );
-		Assert.AreEqual( points[delaunator.Hull[2]], topRight );
-		Assert.AreEqual( points[delaunator.Hull[3]], topLeft );
+		Assert.That( points[delaunator.Hull[0]], Is.EqualTo( bottomLeft ), nameof( bottomLeft ) );
+		Assert.That( points[delaunator.Hull[1]], Is.EqualTo( bottomRight ), nameof( bottomRight ) );
+		Assert.That( points[delaunator.Hull[2]], Is.EqualTo( topRight ), nameof( topRight ) );
+		Assert.That( points[delaunator.Hull[3]], Is.EqualTo( topLeft ), nameof( topLeft ) );
 		// Four triangles
-		Assert.AreEqual( points[delaunator.Triangles[0]], center );
-		Assert.AreEqual( points[delaunator.Triangles[1]], topRight );
-		Assert.AreEqual( points[delaunator.Triangles[2]], topLeft );
-		Assert.AreEqual( points[delaunator.Triangles[3]], topLeft );
-		Assert.AreEqual( points[delaunator.Triangles[4]], bottomLeft );
-		Assert.AreEqual( points[delaunator.Triangles[5]], center );
-		Assert.AreEqual( points[delaunator.Triangles[6]], bottomLeft );
-		Assert.AreEqual( points[delaunator.Triangles[7]], bottomRight );
-		Assert.AreEqual( points[delaunator.Triangles[8]], center );
-		Assert.AreEqual( points[delaunator.Triangles[9]], center );
-		Assert.AreEqual( points[delaunator.Triangles[10]], bottomRight );
-		Assert.AreEqual( points[delaunator.Triangles[11]], topRight );
+		Assert.That( points[delaunator.Triangles[0]], Is.EqualTo( center ), nameof( center ) );
+		Assert.That( points[delaunator.Triangles[1]], Is.EqualTo( topRight ), nameof( topRight ) );
+		Assert.That( points[delaunator.Triangles[2]], Is.EqualTo( topLeft ), nameof( topLeft ) );
+		Assert.That( points[delaunator.Triangles[3]], Is.EqualTo( topLeft ), nameof( topLeft ) );
+		Assert.That( points[delaunator.Triangles[4]], Is.EqualTo( bottomLeft ), nameof( bottomLeft ) );
+		Assert.That( points[delaunator.Triangles[5]], Is.EqualTo( center ), nameof( center ) );
+		Assert.That( points[delaunator.Triangles[6]], Is.EqualTo( bottomLeft ), nameof( bottomLeft ) );
+		Assert.That( points[delaunator.Triangles[7]], Is.EqualTo( bottomRight ), nameof( bottomRight ) );
+		Assert.That( points[delaunator.Triangles[8]], Is.EqualTo( center ), nameof( center ) );
+		Assert.That( points[delaunator.Triangles[9]], Is.EqualTo( center ), nameof( center ) );
+		Assert.That( points[delaunator.Triangles[10]], Is.EqualTo( bottomRight ), nameof( bottomRight ) );
+		Assert.That( points[delaunator.Triangles[11]], Is.EqualTo( topRight ), nameof( topRight ) );
 	}
 
 	[Test]
@@ -119,23 +119,23 @@ public sealed class MapboxDelaunatorFactoryIntegrationTests {
 		Point p1 = new Point( 0, 0 );
 		Point p2 = new Point( 10, 0 );
 		Point p3 = new Point( 0, 5 );
-		List<Point> points = new List<Point>() {
+		List<Point> points = [
 			p1,
 			p2,
 			p3
-		};
+		];
 
 		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( points.ToCoords() );
 
-		Assert.NotNull( delaunator );
+		Assert.That( delaunator, Is.Not.Null );
 		// The 3 points of the hull
-		Assert.AreEqual( points[delaunator.Hull[0]], p1 );
-		Assert.AreEqual( points[delaunator.Hull[1]], p3 );
-		Assert.AreEqual( points[delaunator.Hull[2]], p2 );
+		Assert.That( points[delaunator.Hull[0]], Is.EqualTo( p1 ), nameof( p1 ) );
+		Assert.That( points[delaunator.Hull[1]], Is.EqualTo( p3 ), nameof( p3 ) );
+		Assert.That( points[delaunator.Hull[2]], Is.EqualTo( p2 ), nameof( p2 ) );
 		// The two triangles
-		Assert.AreEqual( points[delaunator.Triangles[0]], p1 );
-		Assert.AreEqual( points[delaunator.Triangles[1]], p3 );
-		Assert.AreEqual( points[delaunator.Triangles[2]], p2 );
+		Assert.That( points[delaunator.Triangles[0]], Is.EqualTo( p1 ), nameof( p1 ) );
+		Assert.That( points[delaunator.Triangles[1]], Is.EqualTo( p3 ), nameof( p3 ) );
+		Assert.That( points[delaunator.Triangles[2]], Is.EqualTo( p2 ), nameof( p2 ) );
 	}
 
 	[Test]
@@ -143,23 +143,23 @@ public sealed class MapboxDelaunatorFactoryIntegrationTests {
 		Point p1 = new Point( 0, 0 );
 		Point p2 = new Point( 5, 0 );
 		Point p3 = new Point( 0, 10 );
-		List<Point> points = new List<Point>() {
+		List<Point> points = [
 			p1,
 			p2,
 			p3
-		};
+		];
 
 		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( points.ToCoords() );
 
-		Assert.NotNull( delaunator );
+		Assert.That( delaunator, Is.Not.Null );
 		// The 3 points of the hull
-		Assert.AreEqual( points[delaunator.Hull[0]], p2 );
-		Assert.AreEqual( points[delaunator.Hull[1]], p1 );
-		Assert.AreEqual( points[delaunator.Hull[2]], p3 );
+		Assert.That( points[delaunator.Hull[0]], Is.EqualTo( p2 ), nameof( p2 ) );
+		Assert.That( points[delaunator.Hull[1]], Is.EqualTo( p1 ), nameof( p1 ) );
+		Assert.That( points[delaunator.Hull[2]], Is.EqualTo( p3 ), nameof( p3 ) );
 		// The two triangles
-		Assert.AreEqual( points[delaunator.Triangles[0]], p2 );
-		Assert.AreEqual( points[delaunator.Triangles[1]], p1 );
-		Assert.AreEqual( points[delaunator.Triangles[2]], p3 );
+		Assert.That( points[delaunator.Triangles[0]], Is.EqualTo( p2 ), nameof( p2 ) );
+		Assert.That( points[delaunator.Triangles[1]], Is.EqualTo( p1 ), nameof( p1 ) );
+		Assert.That( points[delaunator.Triangles[2]], Is.EqualTo( p3 ), nameof( p3 ) );
 	}
 
 	[TestCase( 0, 0, 10, 0, 0, 10, false )]
@@ -180,7 +180,7 @@ public sealed class MapboxDelaunatorFactoryIntegrationTests {
 		bool positive
 	) {
 		double result = MapboxDelaunatorFactory.Orient( x1, y1, x2, y2, x3, y3 );
-		Assert.AreNotEqual( 0.0D, result );
-		Assert.AreEqual( positive, result > 0.0D );
+		Assert.That( result, Is.Not.EqualTo( 0.0D ) );
+		Assert.That( result > 0.0D, Is.EqualTo( positive ) );
 	}
 }

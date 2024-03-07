@@ -14,7 +14,7 @@ public sealed class FastRandomIntegrationTests {
 	public void NextInt_FixedSeed_ValueMatches() {
 		int value = _random.NextInt();
 
-		Assert.AreEqual( 1585680410, value );
+		Assert.That( value, Is.EqualTo( 1585680410 ) );
 	}
 
 	[Test]
@@ -22,7 +22,7 @@ public sealed class FastRandomIntegrationTests {
 		// Expected value is 516872986
 		int value = _random.NextInt( 700000000 );
 
-		Assert.Less( value, 700000000 );
+		Assert.That( value, Is.LessThan( 700000000 ) );
 	}
 
 	[Test]
@@ -30,8 +30,8 @@ public sealed class FastRandomIntegrationTests {
 		// Expected value is 543033988
 		int value = _random.NextInt( 100000000, 700000000 );
 
-		Assert.Less( value, 700000000 );
-		Assert.Greater( value, 100000000 );
+		Assert.That( value, Is.LessThan( 700000000 ) );
+		Assert.That( value, Is.GreaterThan( 100000000 ) );
 	}
 
 	[Test]
@@ -53,14 +53,14 @@ public sealed class FastRandomIntegrationTests {
 	public void NextUInt_FixedSeed_ValueMatches() {
 		uint value = _random.NextUInt();
 
-		Assert.AreEqual( 3733164058, value );
+		Assert.That( value, Is.EqualTo( 3733164058 ) );
 	}
 
 	[Test]
 	public void NextBool_FixedSeed_ValueMatches() {
 		bool value = _random.NextBool();
 
-		Assert.AreEqual( true, value );
+		Assert.That( value, Is.EqualTo( true ) );
 	}
 
 	[Test]
@@ -68,21 +68,21 @@ public sealed class FastRandomIntegrationTests {
 		_ = _random.NextBool();
 		bool value = _random.NextBool();
 
-		Assert.AreEqual( false, value );
+		Assert.That( value, Is.False );
 	}
 
 	[Test]
 	public void NextDouble_FixedSeed_ValueMatches() {
 		double value = _random.NextDouble();
 
-		Assert.AreEqual( 0.73838998097926378d, value );
+		Assert.That( value, Is.EqualTo( 0.73838998097926378d ) );
 	}
 
 	[Test]
 	public void NextFloat_FixedSeed_ValueMatches() {
 		float value = _random.NextFloat();
 
-		Assert.AreEqual( 0.738389969f, value );
+		Assert.That( value, Is.EqualTo( 0.738389969f ) );
 	}
 
 	[Test]
@@ -90,8 +90,8 @@ public sealed class FastRandomIntegrationTests {
 		// expected value 0.690712
 		float value = _random.NextFloat( 0.1f, 0.9f );
 
-		Assert.Less( value, 0.9f );
-		Assert.Greater( value, 0.1f );
+		Assert.That( value, Is.LessThan( 0.9f ) );
+		Assert.That( value, Is.GreaterThan( 0.1f ) );
 	}
 
 	[Test]
@@ -109,8 +109,8 @@ public sealed class FastRandomIntegrationTests {
 		byte[] buffer = new byte[2];
 		_random.NextBytes( buffer );
 
-		Assert.AreEqual( 26, buffer[0] );
-		Assert.AreEqual( 144, buffer[1] );
+		Assert.That( buffer[0], Is.EqualTo( 26 ) );
+		Assert.That( buffer[1], Is.EqualTo( 144 ) );
 	}
 
 	[Test]
@@ -118,13 +118,13 @@ public sealed class FastRandomIntegrationTests {
 		byte[] buffer = new byte[7];
 		_random.NextBytes( buffer );
 
-		Assert.AreEqual( 26, buffer[0] );
-		Assert.AreEqual( 144, buffer[1] );
-		Assert.AreEqual( 131, buffer[2] );
-		Assert.AreEqual( 222, buffer[3] );
-		Assert.AreEqual( 186, buffer[4] );
-		Assert.AreEqual( 117, buffer[5] );
-		Assert.AreEqual( 68, buffer[6] );
+		Assert.That( buffer[0], Is.EqualTo( 26 ) );
+		Assert.That( buffer[1], Is.EqualTo( 144 ) );
+		Assert.That( buffer[2], Is.EqualTo( 131 ) );
+		Assert.That( buffer[3], Is.EqualTo( 222 ) );
+		Assert.That( buffer[4], Is.EqualTo( 186 ) );
+		Assert.That( buffer[5], Is.EqualTo( 117 ) );
+		Assert.That( buffer[6], Is.EqualTo( 68 ) );
 	}
 }
 

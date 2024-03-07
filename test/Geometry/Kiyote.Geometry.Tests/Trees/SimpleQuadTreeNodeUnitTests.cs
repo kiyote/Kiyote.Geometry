@@ -1,4 +1,6 @@
-﻿namespace Kiyote.Geometry.Trees.Tests;
+﻿using System.Linq;
+
+namespace Kiyote.Geometry.Trees.Tests;
 
 [TestFixture]
 internal sealed class SimpleQuadTreeNodeUnitTests {
@@ -14,22 +16,22 @@ internal sealed class SimpleQuadTreeNodeUnitTests {
 
 	[Test]
 	public void Bounds_DefaultTestNode_BoundsMatch() {
-		Assert.AreEqual( _bounds, _node.Bounds );
+		Assert.That( _bounds, Is.EqualTo( _node.Bounds ) );
 	}
 
 	[Test]
 	public void Contents_DefaultTestNode_ReturnsEmpty() {
-		CollectionAssert.IsEmpty( _node.Contents );
+		Assert.That( _node.Contents, Is.Empty );
 	}
 
 	[Test]
 	public void Count_DefaultTestNode_ReturnsZero() {
-		Assert.AreEqual( 0, _node.Count );
+		Assert.That( _node.Count, Is.EqualTo( 0 ) );
 	}
 
 	[Test]
 	public void IsEmpty_DefaultTestNode_ReturnsTrue() {
-		Assert.IsTrue( _node.IsEmpty );
+		Assert.That( _node.IsEmpty, Is.True );
 	}
 
 	[Test]
@@ -43,7 +45,7 @@ internal sealed class SimpleQuadTreeNodeUnitTests {
 		Rect item = SmallerBy( _bounds, 10 );
 		_node.Insert( item );
 
-		Assert.IsFalse( _node.IsEmpty );
+		Assert.That( _node.IsEmpty, Is.False );
 	}
 
 	[Test]
@@ -52,8 +54,8 @@ internal sealed class SimpleQuadTreeNodeUnitTests {
 
 		_node.Insert( item );
 
-		Assert.AreEqual( 1, _node.Count );
-		CollectionAssert.AreEquivalent( new List<Rect> { item }, _node.Contents );
+		Assert.That( _node.Count, Is.EqualTo( 1 ) );
+		Assert.That( _node.Contents, Is.EquivalentTo( new List<Rect> { item } ) );
 	}
 
 	[Test]
@@ -62,7 +64,7 @@ internal sealed class SimpleQuadTreeNodeUnitTests {
 
 		_node.Insert( item );
 
-		Assert.AreEqual( 0, _node.Count );
+		Assert.That( _node.Count, Is.EqualTo( 0 ) );
 	}
 
 	[Test]
@@ -73,8 +75,8 @@ internal sealed class SimpleQuadTreeNodeUnitTests {
 
 		node.Insert( item );
 
-		Assert.AreEqual( 1, node.Count );
-		CollectionAssert.AreEquivalent( new List<Rect> { item }, node.SubTreeContents );
+		Assert.That( node.Count, Is.EqualTo( 1 ) );
+		Assert.That( node.SubTreeContents, Is.EquivalentTo( new List<Rect> { item } ) );
 	}
 
 	[Test]
@@ -85,9 +87,9 @@ internal sealed class SimpleQuadTreeNodeUnitTests {
 		_node.Insert( item );
 		_node.Insert( subItem );
 
-		Assert.AreEqual( 2, _node.Count, "Count does not match" );
-		CollectionAssert.AreEquivalent( new List<Rect> { item }, _node.Contents, "Contents do not match" );
-		CollectionAssert.AreEquivalent( new List<Rect> { item, subItem }, _node.SubTreeContents, "SubTreeContents do not match" );
+		Assert.That( _node.Count, Is.EqualTo( 2 ), "Count does not match" );
+		Assert.That( _node.Contents, Is.EquivalentTo( new List<Rect> { item } ), "Contents do not match" );
+		Assert.That( _node.SubTreeContents, Is.EquivalentTo( new List<Rect> { item, subItem } ), "SubTreeContents do not match" );
 	}
 
 	[Test]
@@ -97,7 +99,7 @@ internal sealed class SimpleQuadTreeNodeUnitTests {
 
 		IReadOnlyList<Rect> result = _node.Query( item );
 
-		CollectionAssert.AreEquivalent( new List<Rect> { item }, result );
+		Assert.That( result, Is.EquivalentTo( new List<Rect> { item } ) );
 	}
 
 	[Test]
@@ -109,7 +111,7 @@ internal sealed class SimpleQuadTreeNodeUnitTests {
 
 		IReadOnlyList<Rect> result = _node.Query( query );
 
-		CollectionAssert.IsEmpty( result );
+		Assert.That( result, Is.Empty );
 	}
 
 	[Test]
@@ -122,7 +124,7 @@ internal sealed class SimpleQuadTreeNodeUnitTests {
 		Rect query = SmallerBy( item1, 10 );
 		IReadOnlyList<Rect> result = _node.Query( query );
 
-		CollectionAssert.AreEquivalent( new List<Rect> { item1, item2 }, result, $"Querying: {query}" );
+		Assert.That( result, Is.EquivalentTo( new List<Rect> { item1, item2 } ), $"Querying: {query}" );
 	}
 
 	[TestCase( 10, 10, 20, 20, 0, 0, 49, 49 )]
@@ -152,12 +154,12 @@ internal sealed class SimpleQuadTreeNodeUnitTests {
 		Rect query = new Rect( x, y, width, height );
 		IReadOnlyList<Rect> result = _node.Query( query );
 
-		Assert.AreEqual( 1, result.Count, $"Querying: {x},{y} {width}x{height}" );
+		Assert.That( result.Count, Is.EqualTo( 1 ), $"Querying: {x},{y} {width}x{height}" );
 		Rect r = result[0];
-		Assert.AreEqual( r.X1, ex1, $"Querying: {r.X1},{r.Y1},{r.X2},{r.Y2}" );
-		Assert.AreEqual( r.Y1, ey1, $"Querying: {r.X1},{r.Y1},{r.X2},{r.Y2}" );
-		Assert.AreEqual( r.X2, ex2, $"Querying: {r.X1},{r.Y1},{r.X2},{r.Y2}" );
-		Assert.AreEqual( r.Y2, ey2, $"Querying: {r.X1},{r.Y1},{r.X2},{r.Y2}" );
+		Assert.That( r.X1, Is.EqualTo( ex1 ), $"Querying: {r.X1},{r.Y1},{r.X2},{r.Y2}" );
+		Assert.That( r.Y1, Is.EqualTo( ey1 ), $"Querying: {r.X1},{r.Y1},{r.X2},{r.Y2}" );
+		Assert.That( r.X2, Is.EqualTo( ex2 ), $"Querying: {r.X1},{r.Y1},{r.X2},{r.Y2}" );
+		Assert.That( r.Y2, Is.EqualTo( ey2 ), $"Querying: {r.X1},{r.Y1},{r.X2},{r.Y2}" );
 	}
 
 	[Test]
@@ -170,7 +172,7 @@ internal sealed class SimpleQuadTreeNodeUnitTests {
 		Rect query = new Rect( -1, -1, 52, 52 );
 
 		IReadOnlyList<Rect> items = _node.Query( query );
-		CollectionAssert.AreEquivalent( new List<Rect> { item1, item2 }, items );
+		Assert.That( items, Is.EquivalentTo( new List<Rect> { item1, item2 } ) );
 	}
 
 	[Test]
@@ -183,7 +185,7 @@ internal sealed class SimpleQuadTreeNodeUnitTests {
 		Rect query = new Rect( -5, -5, 15, 15 );
 
 		IReadOnlyList<Rect> items = _node.Query( query );
-		CollectionAssert.AreEquivalent( new List<Rect> { item1, item2 }, items );
+		Assert.That( items, Is.EquivalentTo( new List<Rect> { item1, item2 } ) );
 	}
 
 	private static Rect SmallerBy(

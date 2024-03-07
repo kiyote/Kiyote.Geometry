@@ -16,12 +16,12 @@ internal sealed class RectUnitTests {
 	) {
 		Rect r = new Rect( x, y, width, height );
 
-		Assert.AreEqual( x, r.X1, "X1 does not match" );
-		Assert.AreEqual( y, r.Y1, "Y1 does not match" );
-		Assert.AreEqual( width, r.Width, "Width does not match" );
-		Assert.AreEqual( height, r.Height, "Height does not match" );
-		Assert.AreEqual( expectedX2, r.X2, "X2 does not match" );
-		Assert.AreEqual( expectedY2, r.Y2, "Y2 does not match" );
+		Assert.That( r.X1, Is.EqualTo( x ), "X1 does not match" );
+		Assert.That( r.Y1, Is.EqualTo( y ), "Y1 does not match" );
+		Assert.That( r.Width, Is.EqualTo( width ), "Width does not match" );
+		Assert.That( r.Height, Is.EqualTo( height ), "Height does not match" );
+		Assert.That( r.X2, Is.EqualTo( expectedX2 ), "X2 does not match" );
+		Assert.That( r.Y2, Is.EqualTo( expectedY2 ), "Y2 does not match" );
 	}
 
 	[TestCase( 0, 10, 20, 40, 21, 31 )]
@@ -36,11 +36,11 @@ internal sealed class RectUnitTests {
 	) {
 		Rect r = new Rect( new Point( x1, y1 ), new Point( x2, y2 ) );
 
-		Assert.AreEqual( x1, r.X1, "X1 does not match" );
-		Assert.AreEqual( y1, r.Y1, "Y1 does not match" );
-		Assert.AreEqual( x2, r.X2, "X2 does not match" );
-		Assert.AreEqual( y2, r.Y2, "Y2 does not match" );
-		Assert.AreEqual( expectedWidth, r.Width, "Width does not match" );
-		Assert.AreEqual( expectedHeight, r.Height, "Height does not match" );
+		Assert.That( r.X1, Is.EqualTo( x1 ), "X1 does not match" );
+		Assert.That( r.Y1, Is.EqualTo( y1 ), "Y1 does not match" );
+		Assert.That( r.X2, Is.EqualTo( x2 ), "X2 does not match" );
+		Assert.That( r.Y2, Is.EqualTo( y2 ), "Y2 does not match" );
+		Assert.That( r.Width, Is.EqualTo( expectedWidth ), "Width does not match" );
+		Assert.That( r.Height, Is.EqualTo( expectedHeight ), "Height does not match" );
 	}
 }

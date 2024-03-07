@@ -19,6 +19,6 @@ public sealed class FastPoissonDiscPointFactoryIntegrationTests {
 		ISize size = new Point( 100, 100 );
 		IReadOnlyList<Point> points = _pointFactory.Fill( size, 5 );
 
-		Assert.IsNotEmpty( points );
+		Assert.That( points, Is.Not.Empty );
 	}
 }

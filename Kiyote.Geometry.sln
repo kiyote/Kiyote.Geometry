@@ -33,6 +33,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kiyote.Geometry.Visualizer"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kiyote.Geometry.Profiler", "test\Geometry\Kiyote.Geometry.Profiler\Kiyote.Geometry.Profiler.csproj", "{A72BFC80-44A3-445C-BDDB-51592F8D4FC3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{2A0D871D-B238-44AB-8BF0-4F5FB3AD43F8}"
+	ProjectSection(SolutionItems) = preProject
+		.github\dependabot.yaml = .github\dependabot.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{0BD37F39-559A-444E-8C40-C8885A219F0D}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\ci.yml = .github\workflows\ci.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +81,7 @@ Global
 		{C16CDE71-1F2C-4B50-B891-E2FE367B358D} = {E0DE70F0-2E6C-4E6A-A710-DE8D73764AC5}
 		{4162602C-B52A-420B-B7C9-F8E27AD3291C} = {E0DE70F0-2E6C-4E6A-A710-DE8D73764AC5}
 		{A72BFC80-44A3-445C-BDDB-51592F8D4FC3} = {E0DE70F0-2E6C-4E6A-A710-DE8D73764AC5}
+		{0BD37F39-559A-444E-8C40-C8885A219F0D} = {2A0D871D-B238-44AB-8BF0-4F5FB3AD43F8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2BC3C0E9-3ECD-4276-B787-7089DC63C56F}

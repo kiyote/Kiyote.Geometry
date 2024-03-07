@@ -22,22 +22,22 @@ public sealed class D3VoronoiFactoryIntegrationTests {
 		IReadOnlyList<Point> points = _pointFactory.Fill( size, 25 );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		Assert.IsNotNull( voronoi );
+		Assert.That( voronoi, Is.Not.Null );
 	}
 
 	[Test]
 	public void Create_FixedPoints_ReferenceDiagramCreated() {
 		ISize size = new Point( 30, 30 );
 		Rect bounds = new Rect( 0, 0, size );
-		IReadOnlyList<Point> points = new List<Point>() {
+		IReadOnlyList<Point> points = [
 			new Point(10, 10),
 			new Point(20, 10),
 			new Point(10, 20),
 			new Point(20, 20)
-		};
+		];
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		Assert.IsNotNull( voronoi );
+		Assert.That( voronoi, Is.Not.Null );
 	}
 }
 
