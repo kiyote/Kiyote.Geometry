@@ -1,4 +1,4 @@
-﻿namespace Kiyote.Geometry.Tests;
+﻿namespace Kiyote.Geometry.UnitTests;
 
 [TestFixture]
 internal sealed class RectUnitTests {

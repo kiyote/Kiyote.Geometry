@@ -6,7 +6,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="$(SolutionDir)src\Geometry\Kiyote.Geometry\Kiyote.Geometry.csproj" />
+		<ProjectReference Include="..\..\..\..\src\Kiyote\Geometry\Kiyote.Geometry\Kiyote.Geometry.csproj" />
 	</ItemGroup>
 
 </Project>

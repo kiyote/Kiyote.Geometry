@@ -1,6 +1,5 @@
-﻿using System.Linq;
-
-namespace Kiyote.Geometry.Trees.Tests;
+﻿
+namespace Kiyote.Geometry.Trees.UnitTests;
 
 [TestFixture]
 internal sealed class SimpleQuadTreeNodeUnitTests {
