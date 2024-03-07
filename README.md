@@ -1,5 +1,5 @@
-![CI](https://github.com/kiyote/Geometry/actions/workflows/ci.yml/badge.svg?branch=main)
-![coverage](https://github.com/kiyote/Geometry/blob/badges/.badges/main/coverage.svg?raw=true)
+![CI](https://github.com/kiyote/Kiyote.Geometry/actions/workflows/ci.yml/badge.svg?branch=main)
+![coverage](https://github.com/kiyote/Kiyote.Geometry/blob/badges/.badges/main/coverage.svg?raw=true)
 
 # Edge
 |              Method |     Mean |    Error |   StdDev | Allocated |
