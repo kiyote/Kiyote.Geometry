@@ -88,3 +88,14 @@ All of the following benchmarks fill a surface of the specified size with a pois
 | Create_1000x1000 | 61,192.8 us | 5,057.99 us | 4,731.25 us | 30640.84 KB |
 
 
+# Notes
+
+Github action failing with permission denied?
+```
+git update-index --chmod=+x ./create-orphan-branch.sh
+```
+
+Still failing?  Try running the `./create-orphan-branch.sh` locally once.
+
+Coverage badge failing to be pushed?
+Give the workflow the `contents: write` permission.
