@@ -1,3 +1,5 @@
+![CI](https://github.com/kiyote/Geometry/actions/workflows/ci.yml/badge.svg?branch=main)
+![coverage](https://github.com/kiyote/Geometry/blob/badges/.badges/main/coverage.svg?raw=true)
 
 # Edge
 |              Method |     Mean |    Error |   StdDev | Allocated |
@@ -59,6 +61,7 @@ how much of the cost of the routine came simply from randomizing points and cons
 The surface is filled with a separation of 5.
 </sub>
 
+|              Method |          Mean |       Error |      StdDev |  Ratio | RatioSD |  Allocated | Alloc Ratio |
 |-------------------- |--------------:|------------:|------------:|-------:|--------:|-----------:|------------:|
 | Fill_100x100        |    198.468 us |   1.7281 us |   1.5319 us | 106.50 |    0.88 |   15.96 KB |        1.94 |
 | Fill_100x100_Base   |      1.864 us |   0.0034 us |   0.0026 us |   1.00 |    0.00 |    8.21 KB |        1.00 |
