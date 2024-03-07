@@ -1,6 +1,6 @@
 ﻿using Kiyote.Geometry.Randomization;
 
-namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
+namespace Kiyote.Geometry.DelaunayVoronoi.UnitTests;
 
 [TestFixture]
 public sealed class D3VoronoiFactoryIntegrationTests {

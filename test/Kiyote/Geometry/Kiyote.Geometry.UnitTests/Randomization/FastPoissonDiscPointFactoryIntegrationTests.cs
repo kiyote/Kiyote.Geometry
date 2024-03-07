@@ -1,4 +1,4 @@
-﻿namespace Kiyote.Geometry.Randomization.Tests;
+﻿namespace Kiyote.Geometry.Randomization.UnitTests;
 
 [TestFixture]
 public sealed class FastPoissonDiscPointFactoryIntegrationTests {

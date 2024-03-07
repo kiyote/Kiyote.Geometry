@@ -3,7 +3,7 @@ using Kiyote.Geometry.Randomization;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace Kiyote.Geometry.Rasterizers.Tests;
+namespace Kiyote.Geometry.Rasterizers.UnitTests;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage( "Performance", "CA1814:Prefer jagged arrays over multidimensional", Justification = "Simplicity for test" )]
 [TestFixture]
