@@ -40,6 +40,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{0BD37F39-559A-444E-8C40-C8885A219F0D}"
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\ci.yml = .github\workflows\ci.yml
+		.github\workflows\release.yml = .github\workflows\release.yml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kiyote.Geometry.UnitTests", "test\Kiyote\Geometry\Kiyote.Geometry.UnitTests\Kiyote.Geometry.UnitTests.csproj", "{486C443B-E804-4B6A-9597-26D26C780F34}"
