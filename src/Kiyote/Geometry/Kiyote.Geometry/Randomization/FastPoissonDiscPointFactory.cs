@@ -7,8 +7,8 @@
 
 internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 
-	public const int K = 13;
-	public const int M = 5;
+	public const int K = 5;
+	public const int M = 3;
 	public const float Sqrt1_2 = 0.7071067811865476F;
 	public const float Epsilon = 0.0000001F;
 	private readonly IRandom _random;
@@ -38,14 +38,18 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		int gridWidth = (int)Math.Ceiling( size.Width / cellSize );
 		int gridHeight = (int)Math.Ceiling( size.Height / cellSize );
 		float[] grid = new float[gridWidth * gridHeight * 2];
+		Array.Fill( grid, -1 );
 		List<int> candidates = [];
 		float rotx = (float)Math.Cos( 2 * Math.PI * M / K );
 		float roty = (float)Math.Sin( 2 * Math.PI * M / K );
 
+		float startX = ( ( size.Width / 2 ) + ( ( _random.NextFloat() * distanceApart * 2 ) - distanceApart ) );
+		float startY = ( ( size.Height / 2 ) + ( ( _random.NextFloat() * distanceApart * 2 ) - distanceApart ) );
+
 		result.Add(
 			Sample(
-				size.Width / 2,
-				size.Height / 2,
+				startX,
+				startY,
 				gridWidth,
 				cellSize,
 				grid,
@@ -53,21 +57,21 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 			)
 		);
 
-		while( candidates.Count != 0 ) {
+		while( candidates.Count > 0 ) {
 			int i = _random.NextInt( candidates.Count );
 			int parent = candidates[i];
 			float t = TanPi2( ( 2.0F * _random.NextFloat() ) - 1.0F );
-			float q = 1.0F / ( 1.0F + ( t * t ) );
+			float q = 1.0F / ( 1.0F + ( t * t ) );  // arctan(t) ?
 
-			float dx = ( 1.0F - ( t * t ) ) * q;
-			float dy = 2.0F * t * q;
+			float dx = q != 0 ? ( 1.0F - ( t * t ) ) * q : -1;
+			float dy = q != 0 ? 2.0F * t * q : 0;
 
 			bool added = false;
 			for( int j = 0; j < K; j++ ) {
 				float dw = ( dx * rotx ) - ( dy * roty );
 				dy = ( dx * roty ) + ( dy * rotx );
 				dx = dw;
-				float r = distanceApart * ( 1.0F + ( Epsilon + ( 0.65F * _random.NextFloat() * _random.NextFloat() ) ) );
+				float r = distanceApart * ( 1.0F + Epsilon +  (0.65F * _random.NextFloat()  * _random.NextFloat()) );
 				float x = ( grid[parent + 0] + ( r * dx ) );
 				float y = ( grid[parent + 1] + ( r * dy ) );
 
@@ -134,11 +138,14 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		for( int j = j0; j < j1; j++ ) {
 			int o = j * gridWidth;
 			for( int i = i0; i < i1; i++ ) {
-				int index = ( o + i ) << 1;
-				float dx = grid[index + 0] - x;
-				float dy = grid[index + 1] - y;
-				if( ( dx * dx ) + ( dy * dy ) < radius2 ) {
-					return false;
+				int index = ( o + i ) * 2;
+
+				if( grid[index + 0] != -1 ) {
+					float dx = grid[index + 0] - x;
+					float dy = grid[index + 1] - y;
+					if( ( ( dx * dx ) + ( dy * dy ) ) < radius2 ) {
+						return false;
+					}
 				}
 			}
 		}
