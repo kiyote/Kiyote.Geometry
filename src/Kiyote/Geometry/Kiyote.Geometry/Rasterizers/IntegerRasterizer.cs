@@ -1,7 +1,4 @@
-﻿using System.Reflection.Metadata;
-using Kiyote.Geometry.Randomization;
-
-namespace Kiyote.Geometry.Rasterizers;
+﻿namespace Kiyote.Geometry.Rasterizers;
 
 // Polygon rasterization ported from here: https://www.angelfire.com/linux/myp/ConvexPolRas/ConvexPolRas.cpp
 
