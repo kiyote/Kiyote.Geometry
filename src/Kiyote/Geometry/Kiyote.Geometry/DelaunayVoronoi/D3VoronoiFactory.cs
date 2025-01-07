@@ -144,7 +144,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				}
 
 			} while( e != e0 );
-			cellNeighbours[cells[i]] = neighbours.ToList(); // Make a copy
+			cellNeighbours[cells[i]] = [.. neighbours]; // Make a copy
 			neighbours.Clear();
 		}
 
@@ -153,13 +153,11 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			for( int i = 0; i < cell.Polygon.Points.Count; i++ ) {
 				int ind = ( i + 1 ) % cell.Polygon.Points.Count;
 				Edge edge = new Edge( cell.Polygon.Points[i], cell.Polygon.Points[ind] );
-				if( !edges.Contains( edge ) ) {
-					_ = edges.Add( edge );
-				}
+				edges.Add( edge );
 			}
 		}
 
-		return new Voronoi( points, cells, cellNeighbours, edges.ToList() );
+		return new Voronoi( points, cells, cellNeighbours, [.. edges] );
 	}
 
 	private static void Clip(
@@ -321,16 +319,18 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				( bounds.Y1 + bounds.Y2 ) / 2
 		) ) {
 			cellCoords.Clear();
-			cellCoords.AddRange( new double[] {
-				bounds.X1,
-				bounds.Y1,
-				bounds.X2,
-				bounds.Y1,
-				bounds.X2,
-				bounds.Y2,
-				bounds.X1,
-				bounds.Y2
-			} );
+			cellCoords.AddRange(
+				[
+					bounds.X1,
+					bounds.Y1,
+					bounds.X2,
+					bounds.Y1,
+					bounds.X2,
+					bounds.Y2,
+					bounds.X1,
+					bounds.Y2
+				]
+			);
 		}
 	}
 
@@ -393,7 +393,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 					if( e0 != 0
 						&& e1 != 0
 					) {
-						_ = Edge(
+						 Edge(
 							bounds,
 							coords,
 							delaunator,
@@ -414,7 +414,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 					&& e1 != 0
 				) {
 					isOpen = true;
-					_ = Edge(
+					 Edge(
 						bounds,
 						coords,
 						delaunator,
@@ -437,7 +437,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				&& e1 != 0
 			) {
 				isOpen = true;
-				_ = Edge(
+				 Edge(
 					bounds,
 					coords,
 					delaunator,
@@ -459,16 +459,18 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				( bounds.Y1 + bounds.Y2 ) / 2
 		) ) {
 			cellCoords.Clear();
-			cellCoords.AddRange( new double[] {
-				bounds.X2,
-				bounds.Y1,
-				bounds.X2,
-				bounds.Y2,
-				bounds.X1,
-				bounds.Y2,
-				bounds.X1,
-				bounds.Y1
-			} );
+			cellCoords.AddRange(
+				[
+					bounds.X2,
+					bounds.Y1,
+					bounds.X2,
+					bounds.Y2,
+					bounds.X1,
+					bounds.Y2,
+					bounds.X1,
+					bounds.Y1
+				]
+			);
 		}
 	}
 

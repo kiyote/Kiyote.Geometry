@@ -24,7 +24,7 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 		Bounds = bounds;
 		_width = bounds.X2 - bounds.X1;
 		_height = bounds.Y2 - bounds.Y1;
-		_contents = new List<T>();
+		_contents = [];
 		_nodes = new List<SimpleQuadTreeNode<T>>( 4 );
 	}
 
@@ -60,7 +60,7 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 	/// </summary>
 	public IReadOnlyList<T> SubTreeContents {
 		get {
-			List<T> results = new List<T>();
+			List<T> results = [];
 
 			foreach( SimpleQuadTreeNode<T> node in _nodes ) {
 				results.AddRange( node.SubTreeContents );
@@ -80,7 +80,7 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 	/// <returns></returns>
 	public IReadOnlyList<T> Query( IRect queryArea ) {
 		// create a list of the items that are found
-		List<T> results = new List<T>();
+		List<T> results = [];
 
 		// this quad contains items that are not entirely contained by
 		// its four sub-quads. Iterate through the items in this quad 

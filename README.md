@@ -1,58 +1,45 @@
 ![CI](https://github.com/kiyote/Kiyote.Geometry/actions/workflows/ci.yml/badge.svg?branch=main)
 ![coverage](https://github.com/kiyote/Kiyote.Geometry/blob/badges/.badges/main/coverage.svg?raw=true)
 
-# Edge
-|              Method |     Mean |    Error |   StdDev | Allocated |
-|-------------------- |---------:|---------:|---------:|----------:|
-| TryFindIntersection | 13.10 ns | 0.174 ns | 0.154 ns |         - |
+```
+BenchmarkDotNet v0.14.0, Windows 10 (10.0.19045.5247/22H2/2022Update)
+Intel Core i7-9700K CPU 3.60GHz (Coffee Lake), 1 CPU, 8 logical and 8 physical cores
+.NET SDK 8.0.404
+  [Host] : .NET 8.0.11 (8.0.1124.51707), X64 RyuJIT AVX2
+```
 
 # Polygon
-|              Method |            Mean |        Error |       StdDev | Allocated |
-|-------------------- |----------------:|-------------:|-------------:|----------:|
-| TryFindIntersection |     1,372.21 ns |    15.803 ns |    14.009 ns |    1712 B |
-|            Contains |        66.90 ns |     0.674 ns |     0.597 ns |         - |
-|  Contains_1000x1000 | 1,243,724.41 ns | 8,193.126 ns | 6,841.632 ns |       1 B |
-|       Intersections |       280.64 ns |     4.764 ns |     3.978 ns |      88 B |
-
-# FastRandom
-|                                    Method |      Mean |     Error |    StdDev | Allocated |
-|------------------------------------------ |----------:|----------:|----------:|----------:|
-|                        FastRandom_NextInt |  1.968 ns | 0.1981 ns | 0.1756 ns |         - |
-|             FastRandom_NextInt_UpperBound |  2.171 ns | 0.0382 ns | 0.0358 ns |         - |
-|   FastRandom_NextInt_LowerBoundUpperBound |  2.248 ns | 0.0299 ns | 0.0279 ns |         - |
-|                       FastRandom_NextBool |  1.551 ns | 0.0187 ns | 0.0146 ns |         - |
-|                       FastRandom_NextUInt |  1.825 ns | 0.0316 ns | 0.0296 ns |         - |
-|                     FastRandom_NextDouble |  1.804 ns | 0.0296 ns | 0.0277 ns |         - |
-|                      FastRandom_NextFloat |  1.668 ns | 0.0382 ns | 0.0357 ns |         - |
-| FastRandom_NextFloat_LowerBoundUpperBound |  2.594 ns | 0.0825 ns | 0.0689 ns |         - |
-|                      FastRandom_NextBytes | 57.480 ns | 0.3992 ns | 0.3538 ns |         - |
-
-# FastRandom Benchmarks vs System.Random
-|                  Method |      Mean |     Error |    StdDev | Ratio | RatioSD | Allocated | Alloc Ratio |
-|------------------------ |----------:|----------:|----------:|------:|--------:|----------:|------------:|
-|    FastRandom_NextBytes | 56.185 ns | 0.3779 ns | 0.3535 ns |  3.11 |    0.02 |         - |          NA |
-|  SystemRandom_NextBytes | 18.065 ns | 0.1179 ns | 0.1103 ns |  1.00 |    0.00 |         - |          NA |
-|   FastRandom_NextDouble |  1.783 ns | 0.0075 ns | 0.0070 ns |  0.69 |    0.01 |         - |          NA |
-| SystemRandom_NextDouble |  2.586 ns | 0.0293 ns | 0.0274 ns |  1.00 |    0.00 |         - |          NA |
-|    FastRandom_NextFloat |  2.565 ns | 0.0256 ns | 0.0227 ns |  0.95 |    0.01 |         - |          NA |
-|  SystemRandom_NextFloat |  2.698 ns | 0.0204 ns | 0.0190 ns |  1.00 |    0.00 |         - |          NA |
-|      FastRandom_NextInt |  1.540 ns | 0.0182 ns | 0.0170 ns |  0.68 |    0.01 |         - |          NA |
-|    SystemRandom_NextInt |  2.268 ns | 0.0140 ns | 0.0131 ns |  1.00 |    0.00 |         - |          NA |
+| Method              | Mean          | Error        | StdDev       | Allocated |
+|-------------------- |--------------:|-------------:|-------------:|----------:|
+| TryFindIntersection |     949.39 ns |     7.404 ns |     6.563 ns |    1712 B |
+| Contains            |      44.16 ns |     1.713 ns |     1.602 ns |         - |
+| Contains_1000x1000  | 796,306.07 ns | 9,612.120 ns | 8,520.894 ns |       1 B |
+| Intersections       |     208.09 ns |     5.550 ns |     5.192 ns |      88 B |
 
 # FastRandom Benchmarks
-|                                    Method |      Mean |     Error |    StdDev | Allocated |
+| Method                                    | Mean      | Error     | StdDev    | Allocated |
 |------------------------------------------ |----------:|----------:|----------:|----------:|
-|                        FastRandom_NextInt |  1.556 ns | 0.0188 ns | 0.0167 ns |         - |
-|             FastRandom_NextInt_UpperBound |  2.417 ns | 0.0191 ns | 0.0169 ns |         - |
-|   FastRandom_NextInt_LowerBoundUpperBound |  2.680 ns | 0.0086 ns | 0.0076 ns |         - |
-|                       FastRandom_NextByte |  1.615 ns | 0.0112 ns | 0.0100 ns |         - |
-|                       FastRandom_NextBool |  1.938 ns | 0.0076 ns | 0.0072 ns |         - |
-|                       FastRandom_NextUInt |  1.751 ns | 0.0099 ns | 0.0088 ns |         - |
-|                     FastRandom_NextDouble |  1.772 ns | 0.0104 ns | 0.0097 ns |         - |
-|                      FastRandom_NextFloat |  1.820 ns | 0.0174 ns | 0.0136 ns |         - |
-| FastRandom_NextFloat_LowerBoundUpperBound |  2.977 ns | 0.0304 ns | 0.0284 ns |         - |
-|                      FastRandom_NextBytes | 55.924 ns | 0.2913 ns | 0.2725 ns |         - |
+| FastRandom_NextInt                        |  1.842 ns | 0.4487 ns | 0.4197 ns |         - |
+| FastRandom_NextInt_UpperBound             |  2.933 ns | 0.0324 ns | 0.0303 ns |         - |
+| FastRandom_NextInt_LowerBoundUpperBound   |  3.714 ns | 0.0464 ns | 0.0388 ns |         - |
+| FastRandom_NextBool                       |  1.897 ns | 0.0094 ns | 0.0073 ns |         - |
+| FastRandom_NextUInt                       |  1.340 ns | 0.0049 ns | 0.0046 ns |         - |
+| FastRandom_NextDouble                     |  1.511 ns | 0.0187 ns | 0.0156 ns |         - |
+| FastRandom_NextFloat                      |  2.416 ns | 0.0159 ns | 0.0133 ns |         - |
+| FastRandom_NextFloat_LowerBoundUpperBound |  3.093 ns | 0.0085 ns | 0.0066 ns |         - |
+| FastRandom_NextBytes                      | 66.925 ns | 0.5067 ns | 0.4492 ns |         - |
 
+# FastRandom Benchmarks vs System.Random
+| Method                  | Mean      | Error     | StdDev    | Ratio | RatioSD | Allocated | Alloc Ratio |
+|------------------------ |----------:|----------:|----------:|------:|--------:|----------:|------------:|
+| FastRandom_NextBytes    | 57.411 ns | 1.3711 ns | 1.2155 ns |  3.29 |    0.16 |         - |          NA |
+| SystemRandom_NextBytes  | 17.486 ns | 0.8653 ns | 0.8094 ns |  1.00 |    0.06 |         - |          NA |
+| FastRandom_NextDouble   |  1.909 ns | 0.1365 ns | 0.1277 ns |  1.00 |    0.06 |         - |          NA |
+| SystemRandom_NextDouble |  1.909 ns | 0.0107 ns | 0.0089 ns |  1.00 |    0.01 |         - |          NA |
+| FastRandom_NextFloat    |  1.811 ns | 0.0529 ns | 0.0469 ns |  0.82 |    0.02 |         - |          NA |
+| SystemRandom_NextFloat  |  2.197 ns | 0.0091 ns | 0.0071 ns |  1.00 |    0.00 |         - |          NA |
+| FastRandom_NextInt      |  1.275 ns | 0.0108 ns | 0.0101 ns |  0.59 |    0.00 |         - |          NA |
+| SystemRandom_NextInt    |  2.145 ns | 0.0065 ns | 0.0061 ns |  1.00 |    0.00 |         - |          NA |
 
 # FastPoissonDiscPointFactory Benchmarks
 <sub>
@@ -61,32 +48,31 @@ how much of the cost of the routine came simply from randomizing points and cons
 The surface is filled with a separation of 5.
 </sub>
 
-|              Method |          Mean |       Error |      StdDev |  Ratio | RatioSD |  Allocated | Alloc Ratio |
-|-------------------- |--------------:|------------:|------------:|-------:|--------:|-----------:|------------:|
-| Fill_100x100        |    198.468 us |   1.7281 us |   1.5319 us | 106.50 |    0.88 |   15.96 KB |        1.94 |
-| Fill_100x100_Base   |      1.864 us |   0.0034 us |   0.0026 us |   1.00 |    0.00 |    8.21 KB |        1.00 |
-| Fill_500x500        |  5,013.463 us | 128.3168 us | 113.7495 us | 135.50 |    3.06 |  294.12 KB |        2.29 |
-| Fill_500x500_Base   |     37.089 us |   0.3359 us |   0.2623 us |   1.00 |    0.00 |   128.3 KB |        1.00 |
-| Fill_1000x1000      | 20,054.706 us | 346.6646 us | 289.4806 us |  71.01 |    3.00 | 1154.51 KB |        2.25 |
-| Fill_1000x1000_Base |    282.249 us |  12.1863 us |  11.3991 us |   1.00 |    0.00 |  512.43 KB |        1.00 |
+| Method              | Mean          | Error      | StdDev     | Ratio | RatioSD | Allocated  | Alloc Ratio |
+|-------------------- |--------------:|-----------:|-----------:|------:|--------:|-----------:|------------:|
+| Fill_100x100        |    136.684 us |  0.9002 us |  0.8421 us | 77.79 |    0.63 |   15.95 KB |        1.94 |
+| Fill_100x100_Base   |      1.757 us |  0.0113 us |  0.0100 us |  1.00 |    0.01 |    8.21 KB |        1.00 |
+| Fill_500x500        |  3,508.666 us | 29.2334 us | 27.3449 us | 98.69 |    0.93 |  293.35 KB |        2.29 |
+| Fill_500x500_Base   |     35.552 us |  0.2458 us |  0.2053 us |  1.00 |    0.01 |   128.3 KB |        1.00 |
+| Fill_1000x1000      | 14,250.438 us | 95.6436 us | 89.4650 us | 53.21 |    0.48 | 1154.39 KB |        2.25 |
+| Fill_1000x1000_Base |    267.810 us |  2.3522 us |  1.8365 us |  1.00 |    0.01 |  512.43 KB |        1.00 |
 
 All of the following benchmarks fill a surface of the specified size with a poisson disc set of random values with a separation of 5.
 
 # D3DelaunayFactory Benchmarks
-|           Method |         Mean |      Error |     StdDev |  Allocated |
+| Method           | Mean         | Error      | StdDev     | Allocated  |
 |----------------- |-------------:|-----------:|-----------:|-----------:|
-|   Create_100x100 |     89.95 us |   0.681 us |   0.604 us |   73.06 KB |
-|   Create_500x500 |  4,025.99 us |  64.720 us |  57.373 us |  1790.8 KB |
-| Create_1000x1000 | 17,113.73 us | 197.587 us | 184.823 us |  7173.9 KB |
+| Create_100x100   |     66.84 us |   0.670 us |   0.627 us |   73.06 KB |
+| Create_500x500   |  3,520.56 us |  36.546 us |  34.185 us | 1790.98 KB |
+| Create_1000x1000 | 14,597.12 us | 138.340 us | 129.403 us | 7176.54 KB |
 
 
 # D3VoronoiFactory Benchmarks
-|           Method |        Mean |       Error |      StdDev |   Allocated |
+| Method           | Mean        | Error       | StdDev      | Allocated   |
 |----------------- |------------:|------------:|------------:|------------:|
-|   Create_100x100 |    332.6 us |     6.60 us |     6.18 us |   321.88 KB |
-|   Create_500x500 | 10,961.3 us |   123.76 us |   115.77 us |  7480.06 KB |
-| Create_1000x1000 | 61,192.8 us | 5,057.99 us | 4,731.25 us | 30640.84 KB |
-
+| Create_100x100   |    297.0 us |     1.81 us |     1.42 us |   327.42 KB |
+| Create_500x500   | 11,444.7 us |   170.96 us |   159.92 us |  9633.56 KB |
+| Create_1000x1000 | 59,514.2 us | 1,877.80 us | 1,664.62 us | 39851.02 KB |
 
 # Notes
 

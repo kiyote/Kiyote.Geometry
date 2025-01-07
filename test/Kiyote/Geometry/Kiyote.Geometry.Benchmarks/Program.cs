@@ -18,7 +18,7 @@ ManualConfig config = DefaultConfig.Instance
 		 .WithLaunchCount( 1 )
 		 .WithToolchain( InProcessNoEmitToolchain.Instance ) );
 
-BenchmarkRunner.Run<FastPoissonDiscPointFactoryBenchmarks>( config );
+BenchmarkRunner.Run<PolygonBenchmarks>( config );
 
 #pragma warning restore CA1852
 

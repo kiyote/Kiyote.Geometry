@@ -7,8 +7,20 @@ public interface IRect {
 	int Y1 { get; }
 	int Y2 { get; }
 
-	bool Contains( int x, int y );
-	bool Contains( Point point );
-	bool Contains( IRect rect );
-	bool Intersects( IRect rect );
+	bool Contains(
+		int x,
+		int y
+	);
+
+	bool Contains(
+		Point point
+	);
+
+	bool Contains(
+		IRect rect
+	);
+
+	bool Intersects(
+		IRect rect
+	);
 }

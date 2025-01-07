@@ -52,16 +52,16 @@ public class D3VoronoiFactoryBenchmarks {
 
 	[BenchmarkCategory( "100x100" ), Benchmark]
 	public void Create_100x100() {
-		_ = _voronoiFactory.Create( _100bounds, _100points );
+		 _voronoiFactory.Create( _100bounds, _100points );
 	}
 
 	[BenchmarkCategory( "500x500" ), Benchmark]
 	public void Create_500x500() {
-		_ = _voronoiFactory.Create( _500bounds, _500points );
+		 _voronoiFactory.Create( _500bounds, _500points );
 	}
 
 	[BenchmarkCategory( "1000x1000" ), Benchmark]
 	public void Create_1000x1000() {
-		_ = _voronoiFactory.Create( _1000bounds, _1000points );
+		 _voronoiFactory.Create( _1000bounds, _1000points );
 	}
 }

@@ -18,7 +18,9 @@ public interface IRandom {
 	/// <returns>
 	/// Returns a value from [0, upperBound]
 	/// </returns>
-	int NextInt( int upperBound );
+	int NextInt(
+		int upperBound
+	);
 
 	/// <summary>
 	/// Generates a random value in the range [lowerBound, upperBound]
@@ -28,7 +30,10 @@ public interface IRandom {
 	/// <returns>
 	/// Returns a value from [lowerBound, upperBound]
 	/// </returns>
-	int NextInt( int lowerBound, int upperBound );
+	int NextInt(
+		int lowerBound,
+		int upperBound
+	);
 
 	bool NextBool();
 
@@ -71,7 +76,12 @@ public interface IRandom {
 	/// <returns>
 	/// A random value: upperBound > value > lowerBound.
 	/// </returns>
-	float NextFloat( float lowerBound, float upperBound );
+	float NextFloat(
+		float lowerBound,
+		float upperBound
+	);
 
-	void NextBytes( Span<byte> buffer );
+	void NextBytes(
+		Span<byte> buffer
+	);
 }
