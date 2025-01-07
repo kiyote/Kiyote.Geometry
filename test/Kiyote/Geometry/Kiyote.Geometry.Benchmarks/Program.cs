@@ -8,17 +8,11 @@ using Kiyote.Geometry.Benchmarks.Randomization;
 using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
 
-
-#pragma warning disable CA1852 // Until https://github.com/dotnet/roslyn-analyzers/issues/6141 is fixed
-
-
 ManualConfig config = DefaultConfig.Instance
 	.AddJob( Job
 		 .MediumRun
 		 .WithLaunchCount( 1 )
 		 .WithToolchain( InProcessNoEmitToolchain.Instance ) );
 
-BenchmarkRunner.Run<PolygonBenchmarks>( config );
-
-#pragma warning restore CA1852
+BenchmarkRunner.Run<MapboxDelaunatorFactoryBenchmarks>( config );
 

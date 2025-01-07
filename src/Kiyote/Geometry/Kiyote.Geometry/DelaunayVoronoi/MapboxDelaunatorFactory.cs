@@ -172,7 +172,7 @@ internal sealed class MapboxDelaunatorFactory {
 		hullHash[HashKey( i2x, i2y, hashSize, circumcenterX, circumcenterY )] = i2;
 
 		int trianglesLen = 0;
-		 AddTriangle( i0, i1, i2, -1, -1, -1, ref trianglesLen, triangles, halfEdges );
+		AddTriangle( i0, i1, i2, -1, -1, -1, ref trianglesLen, triangles, halfEdges );
 
 		for( int k = 0; k < ids.Length; k++ ) {
 			int i = ids[k];
