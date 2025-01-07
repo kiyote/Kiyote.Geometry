@@ -42,16 +42,16 @@ public class D3DelaunayFactoryBenchmarks {
 
 	[BenchmarkCategory( "100x100" ), Benchmark]
 	public void Create_100x100() {
-		_ = _delaunayFactory.Create( _100points );
+		 _delaunayFactory.Create( _100points );
 	}
 
 	[BenchmarkCategory( "500x500" ), Benchmark]
 	public void Create_500x500() {
-		_ = _delaunayFactory.Create( _500points );
+		 _delaunayFactory.Create( _500points );
 	}
 
 	[BenchmarkCategory( "1000x1000" ), Benchmark]
 	public void Create_1000x1000() {
-		_ = _delaunayFactory.Create( _1000points );
+		 _delaunayFactory.Create( _1000points );
 	}
 }

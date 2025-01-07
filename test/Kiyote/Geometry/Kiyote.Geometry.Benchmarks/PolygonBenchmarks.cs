@@ -18,43 +18,43 @@ public class PolygonBenchmarks {
 
 
 		_polygon = new Polygon(
-			new List<Point>() {
+			[
 				new Point( 200, 200 ),
 				new Point( size.Width - 200, 200 ),
 				new Point( size.Width - 200, size.Height - 200 ),
 				new Point( 200, size.Height - 200 )
-			}
+			]
 		);
 
 		_other = new Polygon(
-			new List<Point>() {
+			[
 				new Point( 250, 250 ),
 				new Point( size.Width - 250, 350 ),
 				new Point( size.Width - 350, size.Height - 150 ),
 				new Point( 150, size.Height - 300 )
-			}
+			]
 		);
 	}
 
 	[Benchmark]
 	public void TryFindIntersection() {
-		_ = _polygon.TryFindIntersection( _other, out Polygon _ );
+		 _polygon.TryFindIntersection( _other, out Polygon _ );
 	}
 
 	[Benchmark]
 	public void Contains() {
-		_ = _polygon.Contains( _points[0] );
+		 _polygon.Contains( _points[0] );
 	}
 
 	[Benchmark]
 	public void Contains_1000x1000() {
 		for (int i = 0; i < _points.Count; i++) {
-			_ = _polygon.Contains( _points[i] );
+			 _polygon.Contains( _points[i] );
 		}
 	}
 
 	[Benchmark]
 	public void Intersections() {
-		_ = _polygon.Intersections( _other.Points );
+		 _polygon.Intersections( _other.Points );
 	}
 }

@@ -36,7 +36,7 @@ internal sealed class SimpleQuadTreeNodeUnitTests {
 	[Test]
 	public void IsEmpty_ZeroAreaBounds_ThrowsException() {
 		Rect bounds = new Rect( 0, 0, 0, 0 );
-		_ = Assert.Throws<InvalidOperationException>( () => new SimpleQuadTreeNode<Rect>( bounds ) );
+		 Assert.Throws<InvalidOperationException>( () => new SimpleQuadTreeNode<Rect>( bounds ) );
 	}
 
 	[Test]

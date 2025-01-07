@@ -12,7 +12,7 @@ public sealed class MapboxDelaunatorFactoryIntegrationTests {
 			topRight
 		];
 
-		_ = Assert.Throws<InvalidOperationException>( () => MapboxDelaunatorFactory.Create( points.ToCoords() ) );
+		 Assert.Throws<InvalidOperationException>( () => MapboxDelaunatorFactory.Create( points.ToCoords() ) );
 	}
 
 	[Test]
@@ -26,7 +26,7 @@ public sealed class MapboxDelaunatorFactoryIntegrationTests {
 			topRight
 		];
 
-		_ = Assert.Throws<InvalidOperationException>( () => MapboxDelaunatorFactory.Create( points.Distinct().ToList().ToCoords() ) );
+		 Assert.Throws<InvalidOperationException>( () => MapboxDelaunatorFactory.Create( points.Distinct().ToList().ToCoords() ) );
 	}
 
 	[TestCase( 0, 0, 10, 0, 0, 10, 10, 10 )]

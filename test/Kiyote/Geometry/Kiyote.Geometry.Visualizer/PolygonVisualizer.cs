@@ -52,7 +52,7 @@ public sealed class PolygonVisualizer {
 				lines[i].Y = polygon1.Points[i % polygon1.Points.Count].Y;
 			}
 
-			_ = context.DrawLine( Color.Yellow, 1.0f, lines );
+			 context.DrawLine( Color.Yellow, 1.0f, lines );
 		} );
 
 		image.Mutate( ( context ) => {
@@ -62,10 +62,10 @@ public sealed class PolygonVisualizer {
 				lines[i].Y = polygon2.Points[i % polygon2.Points.Count].Y;
 			}
 
-			_ = context.DrawLine( Color.Orange, 1.0f, lines );
+			 context.DrawLine( Color.Orange, 1.0f, lines );
 		} );
 
-		_ = polygon1.TryFindIntersection( polygon2, out Polygon polygon3 );
+		 polygon1.TryFindIntersection( polygon2, out Polygon polygon3 );
 		image.Mutate( ( context ) => {
 			PointF[] lines = new PointF[polygon3.Points.Count + 1];
 			for( int i = 0; i < polygon3.Points.Count + 1; i++ ) {
@@ -73,7 +73,7 @@ public sealed class PolygonVisualizer {
 				lines[i].Y = polygon3.Points[i % polygon3.Points.Count].Y;
 			}
 
-			_ = context.DrawLine( Color.White, 2.0f, lines );
+			 context.DrawLine( Color.White, 2.0f, lines );
 		} );
 
 		image.SaveAsPng( Path.Combine( _outputFolder, "PolygonClip.png" ) );
@@ -104,7 +104,7 @@ public sealed class PolygonVisualizer {
 				lines[i].Y = polygon1.Points[i % polygon1.Points.Count].Y;
 			}
 
-			_ = context.DrawLine( Color.Yellow, 1.0f, lines );
+			 context.DrawLine( Color.Yellow, 1.0f, lines );
 		} );
 
 		image.Mutate( ( context ) => {
@@ -114,7 +114,7 @@ public sealed class PolygonVisualizer {
 				lines[i].Y = polygon2.Points[i % polygon2.Points.Count].Y;
 			}
 
-			_ = context.DrawLine( Color.White, 1.0f, lines );
+			 context.DrawLine( Color.White, 1.0f, lines );
 		} );
 
 		IReadOnlyList<Point> intersections = polygon1.Intersections( polygon2.Points );
@@ -143,7 +143,7 @@ public sealed class PolygonVisualizer {
 				lines[i].Y = polygon.Points[i % polygon.Points.Count].Y;
 			}
 
-			_ = context.DrawLine(Color.Yellow, 1.0f, lines);
+			 context.DrawLine(Color.Yellow, 1.0f, lines);
 		} );
 
 		for( int i = 0; i < 5000; i++ ) {

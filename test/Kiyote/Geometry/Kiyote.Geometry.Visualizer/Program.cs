@@ -9,7 +9,7 @@ public static class Program {
 	public static void Main() {
 		string outputFolder = Path.Combine( Path.GetTempPath(), "Kiyote.Geometry.Visualizer" );
 		if (!Directory.Exists( outputFolder )) {
-			_ = Directory.CreateDirectory( outputFolder );
+			 Directory.CreateDirectory( outputFolder );
 		}
 		ISize bounds = new Point( 1000, 1000 );
 		

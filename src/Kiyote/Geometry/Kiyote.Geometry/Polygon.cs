@@ -4,12 +4,12 @@ public sealed record Polygon(
 	IReadOnlyList<Point> Points
 ) {
 	private readonly static Point _noPoint = new Point( int.MinValue, int.MinValue );
-	public readonly static Polygon None = new Polygon( Array.Empty<Point>() );
+	public readonly static Polygon None = new Polygon( [] );
 
 	public IReadOnlyList<Point> Intersections(
 		IReadOnlyList<Point> polygon
 	) {
-		List<Point> intersections = new List<Point>();
+		List<Point> intersections = [];
 		for( int i = 0; i < Points.Count; i++ ) {
 			Point p1 = Points[i];
 			Point p2 = Points[( i + 1 ) % Points.Count];

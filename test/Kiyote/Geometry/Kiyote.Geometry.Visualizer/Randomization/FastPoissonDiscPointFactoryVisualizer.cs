@@ -62,8 +62,6 @@ public sealed class FastPoissonDiscPointFactoryVisualizer {
 		}
 		float actualRange = Math.Abs( maxValue - minValue );
 		float scale = 1.0f / actualRange;
-
-		L8 white = new L8( 255 );
 		using Image<L8> image = new Image<L8>( _size.Width, _size.Height );
 		for( int r = 0; r < _size.Height; r++ ) {
 			for( int c = 0; c < _size.Width; c++ ) {

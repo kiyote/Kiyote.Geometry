@@ -4,7 +4,11 @@ public interface IQuadTree<T> where T : IRect {
 
 	int Count { get; }
 
-	void Insert( T item );
+	void Insert(
+		T item
+	);
 
-	IReadOnlyList<T> Query( IRect area );
+	IReadOnlyList<T> Query(
+		IRect area
+	);
 }

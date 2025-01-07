@@ -172,7 +172,7 @@ internal sealed class MapboxDelaunatorFactory {
 		hullHash[HashKey( i2x, i2y, hashSize, circumcenterX, circumcenterY )] = i2;
 
 		int trianglesLen = 0;
-		_ = AddTriangle( i0, i1, i2, -1, -1, -1, ref trianglesLen, triangles, halfEdges );
+		 AddTriangle( i0, i1, i2, -1, -1, -1, ref trianglesLen, triangles, halfEdges );
 
 		for( int k = 0; k < ids.Length; k++ ) {
 			int i = ids[k];
@@ -243,7 +243,7 @@ internal sealed class MapboxDelaunatorFactory {
 				q = hullPrev[e];
 				while( Orient( x, y, coords[2 * q], coords[( 2 * q ) + 1], coords[2 * e], coords[( 2 * e ) + 1] ) < 0.0D ) {
 					t = AddTriangle( q, i, e, -1, hullTri[e], hullTri[q], ref trianglesLen, triangles, halfEdges );
-					_ = Legalize( t + 2, hullStart, halfEdges, edgeStack, triangles, coords, hullTri, hullPrev );
+					 Legalize( t + 2, hullStart, halfEdges, edgeStack, triangles, coords, hullTri, hullPrev );
 					hullTri[q] = t;
 					hullNext[e] = e; // mark as removed
 					hullSize--;

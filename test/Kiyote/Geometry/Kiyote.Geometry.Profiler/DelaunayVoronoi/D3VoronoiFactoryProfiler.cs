@@ -23,7 +23,7 @@ public sealed class D3VoronoiFactoryProfiler {
 
 	public void Profile() {
 		for( int i = 0; i < Iterations; i++ ) {
-			_ = _voronoiFactory.Create( _bounds, _points );
+			 _voronoiFactory.Create( _bounds, _points );
 		}
 	}
 }

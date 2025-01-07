@@ -2,8 +2,13 @@
 
 public interface IDelaunayFactory {
 
-	public IDelaunay Create( IReadOnlyList<Point> points );
+	public IDelaunay Create(
+		IReadOnlyList<Point> points
+	);
 
-	public IDelaunay Create( IReadOnlyList<Point> points, bool sanitizePoints );
+	public IDelaunay Create(
+		IReadOnlyList<Point> points,
+		bool sanitizePoints
+	);
 
 }

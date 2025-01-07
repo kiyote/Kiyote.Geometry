@@ -16,7 +16,7 @@ public sealed class FastPoissonDiscPointFactoryProfiler {
 
 	public void Profile() {
 		for (int i = 0; i < Iterations;i++ ) {
-			_ = _pointFactory.Fill( _bounds, Separation );
+			 _pointFactory.Fill( _bounds, Separation );
 		}
 	}
 }

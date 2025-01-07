@@ -77,7 +77,7 @@ public sealed class D3DelaunayFactoryVisualizer {
 				lines[2].Y = delaunay.Triangles[i].P3.Y;
 				lines[3].X = delaunay.Triangles[i].P1.X;
 				lines[3].Y = delaunay.Triangles[i].P1.Y;
-				_ = context.DrawLine( Color.DarkGray, 1.0f, lines );
+				 context.DrawLine( Color.DarkGray, 1.0f, lines );
 			}
 		} );
 
@@ -90,7 +90,7 @@ public sealed class D3DelaunayFactoryVisualizer {
 			}
 			lines[^1].X = delaunay.Hull[0].X;
 			lines[^1].Y = delaunay.Hull[0].Y;
-			_ = context.DrawLine( Color.Yellow, 1.0f, lines );
+			 context.DrawLine( Color.Yellow, 1.0f, lines );
 		} );
 
 		// Draw the points

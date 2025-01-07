@@ -12,7 +12,7 @@ public static class ExtensionMethods {
 	public static IServiceCollection AddRasterizer(
 		this IServiceCollection services
 	) {
-		_ = services.AddScoped<IRasterizer, IntegerRasterizer>();
+		 services.AddScoped<IRasterizer, IntegerRasterizer>();
 
 		return services;
 	}
@@ -20,8 +20,8 @@ public static class ExtensionMethods {
 	public static IServiceCollection AddRandomization(
 		this IServiceCollection services
 	) {
-		_ = services.AddScoped<IPointFactory, FastPoissonDiscPointFactory>();
-		_ = services.AddScoped<IRandom, FastRandom>();
+		 services.AddScoped<IPointFactory, FastPoissonDiscPointFactory>();
+		 services.AddScoped<IRandom, FastRandom>();
 
 		return services;
 	}
@@ -29,10 +29,10 @@ public static class ExtensionMethods {
 	public static IServiceCollection AddDelaunayVoronoi(
 		this IServiceCollection services
 	) {
-		_ = services.AddSingleton<IVoronoiFactory, D3VoronoiFactory>();
-		_ = services.AddSingleton<IDelaunayFactory, D3DelaunayFactory>();
+		 services.AddSingleton<IVoronoiFactory, D3VoronoiFactory>();
+		 services.AddSingleton<IDelaunayFactory, D3DelaunayFactory>();
 		services.TryAddSingleton<IQuadTreeFactory, SimpleQuadTreeFactory>();
-		_ = services.AddSingleton<ISearchableVoronoiFactory, QuadTreeSearchableVoronoiFactory>();
+		 services.AddSingleton<ISearchableVoronoiFactory, QuadTreeSearchableVoronoiFactory>();
 
 		return services;
 	}
@@ -40,7 +40,7 @@ public static class ExtensionMethods {
 	public static IServiceCollection AddTrees(
 		this IServiceCollection services
 	) {
-		_ = services.AddSingleton<IQuadTreeFactory, SimpleQuadTreeFactory>();
+		 services.AddSingleton<IQuadTreeFactory, SimpleQuadTreeFactory>();
 
 		return services;
 	}
