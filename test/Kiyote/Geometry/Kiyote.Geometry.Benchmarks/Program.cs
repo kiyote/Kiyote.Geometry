@@ -7,6 +7,7 @@ using Kiyote.Geometry.Benchmarks.DelaunayVoronoi;
 using Kiyote.Geometry.Benchmarks.Randomization;
 using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
+using Kiyote.Geometry.Trees.Benchmarks;
 
 ManualConfig config = DefaultConfig.Instance
 	.AddJob( Job
@@ -14,5 +15,5 @@ ManualConfig config = DefaultConfig.Instance
 		 .WithLaunchCount( 1 )
 		 .WithToolchain( InProcessNoEmitToolchain.Instance ) );
 
-BenchmarkRunner.Run<MapboxDelaunatorFactoryBenchmarks>( config );
+BenchmarkRunner.Run<SimpleQuadTreeNodeBenchmarks>( config );
 
