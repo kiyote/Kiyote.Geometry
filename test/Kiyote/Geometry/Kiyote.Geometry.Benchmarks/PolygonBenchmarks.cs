@@ -37,8 +37,8 @@ public class PolygonBenchmarks {
 	}
 
 	[Benchmark]
-	public void TryFindIntersection() {
-		 _polygon.TryFindIntersection( _other, out Polygon _ );
+	public void TryFindOverlap() {
+		 _polygon.TryFindOverlap( _other, out Polygon _ );
 	}
 
 	[Benchmark]

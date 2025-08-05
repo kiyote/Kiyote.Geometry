@@ -3,7 +3,6 @@
 public sealed record Polygon(
 	IReadOnlyList<Point> Points
 ) {
-	private readonly static Point _noPoint = new Point( int.MinValue, int.MinValue );
 	public readonly static Polygon None = new Polygon( [] );
 
 	public IReadOnlyList<Point> Intersections(
@@ -18,7 +17,7 @@ public sealed record Polygon(
 				Point p3 = polygon[j];
 				Point p4 = polygon[( j + 1 ) % polygon.Count];
 
-				if( TryFindIntersection(
+				if( Intersect.TryFindIntersection(
 					p1.X,
 					p1.Y,
 					p2.X,
@@ -27,14 +26,65 @@ public sealed record Polygon(
 					p3.Y,
 					p4.X,
 					p4.Y,
-					out Point intersection
+					out Point? intersection
 				) ) {
-					intersections.Add( intersection );
+					intersections.Add( intersection.Value );
 				}
 			}
 		}
 
 		return intersections;
+	}
+
+	public bool HasIntersection(
+		Edge edge
+	) {
+		for( int i = 0; i < Points.Count; i++ ) {
+			Point p1 = Points[i];
+			Point p2 = Points[( i + 1 ) % Points.Count];
+
+			if( Intersect.HasIntersection(
+				edge.A.X,
+				edge.A.Y,
+				edge.B.X,
+				edge.B.Y,
+				p1.X,
+				p1.Y,
+				p2.X,
+				p2.Y
+			) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public bool TryFindIntersections(
+		Edge edge,
+		out IReadOnlyList<Point> intersections
+	) {
+		List<Point> result = [];
+		for( int i = 0; i < Points.Count; i++ ) {
+			Point p1 = Points[i];
+			Point p2 = Points[( i + 1 ) % Points.Count];
+
+			if( Intersect.TryFindIntersection(
+				edge.A.X,
+				edge.A.Y,
+				edge.B.X,
+				edge.B.Y,
+				p1.X,
+				p1.Y,
+				p2.X,
+				p2.Y,
+				out Point? intersection
+			) ) {
+				result.Add( intersection.Value );
+			}
+		}
+		intersections = result;
+		return intersections.Count != 0;
 	}
 
 	public bool Contains(
@@ -85,21 +135,21 @@ public sealed record Polygon(
 		return inside;
 	}
 
-	public bool TryFindIntersection(
+	public bool TryFindOverlap(
 		Polygon polygon,
-		out Polygon clipped
+		out Polygon overlappingPolygon
 	) {
 		// https://gorillasun.de/blog/an-algorithm-for-polygon-intersections
 		IReadOnlyList<Point> intersections = Intersections( polygon.Points );
 		if( !intersections.Any() ) {
-			clipped = None;
+			overlappingPolygon = None;
 			return false;
 		}
-		IEnumerable<Point> otherPointsWithinThis = polygon.Points.Where( p => Contains( p ) );
-		IEnumerable<Point> thisPointsWithinOther = Points.Where( p => polygon.Contains( p ) );
+		IEnumerable<Point> otherPointsWithinThis = polygon.Points.Where( Contains );
+		IEnumerable<Point> thisPointsWithinOther = Points.Where( polygon.Contains );
 
-		// This may need a .Distinct() just before .ToList()?
-		List<Point> allPoints = intersections.Union( otherPointsWithinThis ).Union( thisPointsWithinOther ).ToList();
+		// This may need a .Distinct() just beforehand?
+		List<Point> allPoints = [.. intersections.Union( otherPointsWithinThis ).Union( thisPointsWithinOther )];
 
 		int centerX = allPoints[0].X;
 		int centerY = allPoints[0].Y;
@@ -111,54 +161,7 @@ public sealed record Polygon(
 		centerY /= allPoints.Count;
 
 		var sortedPoints = allPoints.OrderBy( p => Math.Atan2( centerY - p.Y, centerX - p.X ) ).ToList();
-		clipped = new Polygon( sortedPoints );
-		return true;
-	}
-
-	private static bool TryFindIntersection(
-		int aX1,
-		int aY1,
-		int bX1,
-		int bY1,
-		int aX2,
-		int aY2,
-		int bX2,
-		int bY2,
-		out Point intersection
-	) {
-		// Make sure none of the lines are zero length
-		if( ( aX1 == bX1 && aY1 == bY1 )
-			|| ( aX2 == bX2 && aY2 == bY2 )
-		) {
-			intersection = _noPoint;
-			return false;
-		}
-
-		double denominator = ( ( ( bY2 - aY2 ) * ( bX1 - aX1 ) )
-			- ( ( bX2 - aX2 ) * ( bY1 - aY1 ) ) );
-
-		// If this is zero then the lines are parallel
-		if( denominator == 0.0 ) {
-			intersection = _noPoint;
-			return false;
-		}
-
-		double ua = ( ( ( bX2 - aX2 ) * ( aY1 - aY2 ) )
-			- ( ( bY2 - aY2 ) * ( aX1 - aX2 ) ) ) / denominator;
-
-		double ub = ( ( ( bX1 - aX1 ) * ( aY1 - aY2 ) )
-			- ( ( bY1 - aY1 ) * ( aX1 - aX2 ) ) ) / denominator;
-
-		// Is the intersection somewhere along actual line segments?
-		if( ua < 0 || ua > 1 || ub < 0 || ub > 1 ) {
-			intersection = _noPoint;
-			return false;
-		}
-
-		double x = aX1 + ( ua * ( bX1 - aX1 ) );
-		double y = aY1 + ( ua * ( bY1 - aY1 ) );
-
-		intersection = new Point( (int)Math.Round( x ), (int)Math.Round( y ) );
+		overlappingPolygon = new Polygon( sortedPoints );
 		return true;
 	}
 }
