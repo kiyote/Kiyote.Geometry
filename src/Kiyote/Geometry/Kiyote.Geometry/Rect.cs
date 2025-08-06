@@ -1,6 +1,6 @@
 ﻿namespace Kiyote.Geometry;
 
-public readonly struct Rect : IEquatable<Rect>, ISize, IRect {
+public sealed record Rect : ISize, IRect {
 
 	public Rect(
 		Point topLeft,
@@ -42,15 +42,15 @@ public readonly struct Rect : IEquatable<Rect>, ISize, IRect {
 		Height = height;
 	}
 
-	public readonly int X1 { get; }
-	public readonly int Y1 { get; }
+	public int X1 { get; }
+	public int Y1 { get; }
 
-	public readonly int X2 { get; }
-	public readonly int Y2 { get; }
+	public int X2 { get; }
+	public int Y2 { get; }
 
-	public readonly int Width { get; }
+	public int Width { get; }
 
-	public readonly int Height { get; }
+	public int Height { get; }
 
 	public bool Equals(
 		Point topLeft,
@@ -62,20 +62,6 @@ public readonly struct Rect : IEquatable<Rect>, ISize, IRect {
 			&& Y2 == bottomRight.Y;
 	}
 
-	public bool Equals(
-		Rect other
-	) {
-		return other.X1 == X1
-			&& other.Y1 == Y1
-			&& other.X2 == X2
-			&& other.Y2 == Y2;
-	}
-
-	public override bool Equals(
-		object? obj
-	) {
-		return obj is Rect rect && Equals( rect );
-	}
 
 	public override int GetHashCode() {
 		return HashCode.Combine( X1, Y1, X2, Y2 );
@@ -124,12 +110,13 @@ public readonly struct Rect : IEquatable<Rect>, ISize, IRect {
 		return $"{X1},{Y1},{X2},{Y2}";
 	}
 
-	public static bool operator ==( Rect left, Rect right ) {
-		return left.Equals( right );
-	}
+	bool IEquatable<ISize>.Equals( ISize? other ) {
+		if( other is null ) {
+			return false;
+		}
 
-	public static bool operator !=( Rect left, Rect right ) {
-		return !( left == right );
+		return other.Width == Width
+			&& other.Height == Height;
 	}
 }
 

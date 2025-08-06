@@ -1,6 +1,6 @@
 ﻿namespace Kiyote.Geometry;
 
-public readonly struct Triangle : IEquatable<Triangle> {
+public sealed record Triangle {
 
 	public Triangle(
 		Point p1,
@@ -12,35 +12,9 @@ public readonly struct Triangle : IEquatable<Triangle> {
 		P3 = p3;
 	}
 
-	public readonly Point P1 { get; }
+	public Point P1 { get; }
 
-	public readonly Point P2 { get; }
+	public Point P2 { get; }
 
-	public readonly Point P3 { get; }
-
-	public bool Equals(
-		Triangle other
-	) {
-		return P1.Equals( other.P1 )
-			&& P2.Equals( other.P2 )
-			&& P3.Equals( other.P3 );
-	}
-
-	public override bool Equals(
-		object? obj
-	) {
-		return obj is Triangle triangle && Equals( triangle );
-	}
-
-	public override int GetHashCode() {
-		return HashCode.Combine( P1, P2, P3 );
-	}
-
-	public static bool operator ==( Triangle left, Triangle right ) {
-		return left.Equals( right );
-	}
-
-	public static bool operator !=( Triangle left, Triangle right ) {
-		return !( left == right );
-	}
+	public Point P3 { get; }
 }
