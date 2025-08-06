@@ -33,7 +33,7 @@ public sealed record Polygon {
 				Point p3 = polygon[j];
 				Point p4 = polygon[( j + 1 ) % polygon.Count];
 
-				if( Intersect.TryFindIntersection(
+				if( Geometry.Intersect.TryFindIntersection(
 					p1.X,
 					p1.Y,
 					p2.X,
@@ -53,13 +53,31 @@ public sealed record Polygon {
 	}
 
 	public bool HasIntersection(
+		Polygon polygon
+	) {
+		return HasIntersection( polygon.Edges );
+	}
+
+	public bool HasIntersection(
+		IReadOnlyList<Edge> edges
+	) {
+		foreach (Edge edge in edges) {
+			if (HasIntersection( edge)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public bool HasIntersection(
 		Edge edge
 	) {
 		for( int i = 0; i < Points.Count; i++ ) {
 			Point p1 = Points[i];
 			Point p2 = Points[( i + 1 ) % Points.Count];
 
-			if( Intersect.HasIntersection(
+			if( Geometry.Intersect.HasIntersection(
 				edge.A.X,
 				edge.A.Y,
 				edge.B.X,
@@ -85,7 +103,7 @@ public sealed record Polygon {
 			Point p1 = Points[i];
 			Point p2 = Points[( i + 1 ) % Points.Count];
 
-			if( Intersect.TryFindIntersection(
+			if( Geometry.Intersect.TryFindIntersection(
 				edge.A.X,
 				edge.A.Y,
 				edge.B.X,
@@ -151,14 +169,14 @@ public sealed record Polygon {
 		return inside;
 	}
 
-	public bool TryFindOverlap(
+	public bool Intersect(
 		Polygon polygon,
-		out Polygon overlappingPolygon
+		out Polygon intersectedPolygon
 	) {
 		// https://gorillasun.de/blog/an-algorithm-for-polygon-intersections
 		IReadOnlyList<Point> intersections = Intersections( polygon.Points );
 		if( !intersections.Any() ) {
-			overlappingPolygon = None;
+			intersectedPolygon = None;
 			return false;
 		}
 		IEnumerable<Point> otherPointsWithinThis = polygon.Points.Where( Contains );
@@ -177,7 +195,7 @@ public sealed record Polygon {
 		centerY /= allPoints.Count;
 
 		var sortedPoints = allPoints.OrderBy( p => Math.Atan2( centerY - p.Y, centerX - p.X ) ).ToList();
-		overlappingPolygon = new Polygon( sortedPoints );
+		intersectedPolygon = new Polygon( sortedPoints );
 		return true;
 	}
 }
