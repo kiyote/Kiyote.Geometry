@@ -4,6 +4,7 @@ namespace Kiyote.Geometry.Benchmarks.Randomization;
 
 [MemoryDiagnoser( false )]
 [GroupBenchmarksBy( BenchmarkLogicalGroupRule.ByCategory )]
+[MarkdownExporterAttribute.GitHub]
 public class FastPoissonDiscPointFactoryBenchmarks {
 
 	private readonly IRandom _random;
