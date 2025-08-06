@@ -38,15 +38,14 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		bool sanitizePoints
 	) {
 		if( sanitizePoints ) {
-			points = points
+			points = [.. points
 				.Where( p =>
 					p.X >= bounds.X1
 					&& p.X <= bounds.X2
 					&& p.Y >= bounds.Y1
 					&& p.Y <= bounds.Y2
 				)
-				.Distinct()
-				.ToList();
+				.Distinct()];
 		}
 		double[] coords = points.ToCoords();
 
@@ -87,8 +86,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			int maxY = int.MinValue;
 			List<Point> cellPoints = [];
 			for( int j = 0; j < cellCoords.Count / 2; j++ ) {
-				int x = (int)Math.Floor(cellCoords[( j * 2 ) + 0]);
-				int y = (int)Math.Floor(cellCoords[( j * 2 ) + 1]);
+				int x = (int)Math.Floor( cellCoords[( j * 2 ) + 0] );
+				int y = (int)Math.Floor( cellCoords[( j * 2 ) + 1] );
 				if( x < minX ) {
 					minX = x;
 				}
@@ -150,9 +149,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 
 		HashSet<Edge> edges = [];
 		foreach( Cell cell in cells ) {
-			for( int i = 0; i < cell.Polygon.Points.Count; i++ ) {
-				int ind = ( i + 1 ) % cell.Polygon.Points.Count;
-				Edge edge = new Edge( cell.Polygon.Points[i], cell.Polygon.Points[ind] );
+			foreach( Edge edge in cell.Polygon.Edges ) {
 				edges.Add( edge );
 			}
 		}
@@ -393,17 +390,17 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 					if( e0 != 0
 						&& e1 != 0
 					) {
-						 Edge(
-							bounds,
-							coords,
-							delaunator,
-							delaunay,
-							i,
-							e0,
-							e1,
-							cellCoords,
-							cellCoords.Count
-						);
+						Edge(
+						   bounds,
+						   coords,
+						   delaunator,
+						   delaunay,
+						   i,
+						   e0,
+						   e1,
+						   cellCoords,
+						   cellCoords.Count
+					   );
 					}
 					cellCoords.Add( sx0 );
 					cellCoords.Add( sy0 );
@@ -414,17 +411,17 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 					&& e1 != 0
 				) {
 					isOpen = true;
-					 Edge(
-						bounds,
-						coords,
-						delaunator,
-						delaunay,
-						i,
-						e0,
-						e1,
-						cellCoords,
-						cellCoords.Count
-					);
+					Edge(
+					   bounds,
+					   coords,
+					   delaunator,
+					   delaunay,
+					   i,
+					   e0,
+					   e1,
+					   cellCoords,
+					   cellCoords.Count
+				   );
 				}
 				cellCoords.Add( sx1 );
 				cellCoords.Add( sy1 );
@@ -437,17 +434,17 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				&& e1 != 0
 			) {
 				isOpen = true;
-				 Edge(
-					bounds,
-					coords,
-					delaunator,
-					delaunay,
-					i,
-					e0,
-					e1,
-					cellCoords,
-					cellCoords.Count
-				);
+				Edge(
+				   bounds,
+				   coords,
+				   delaunator,
+				   delaunay,
+				   i,
+				   e0,
+				   e1,
+				   cellCoords,
+				   cellCoords.Count
+			   );
 			}
 		} else if(
 			Contains(
@@ -883,8 +880,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			double c1 = ( ex * ex ) + ( ey * ey );
 			double x = x1 + ( ( ( ey * b1 ) - ( dy * c1 ) ) * d );
 			double y = y1 + ( ( ( dx * c1 ) - ( ex * b1 ) ) * d );
-			circumcenters[j + 0] = Math.Floor(x); // Probably not correct or wise
-			circumcenters[j + 1] = Math.Floor(y); // but close points suck
+			circumcenters[j + 0] = Math.Floor( x ); // Probably not correct or wise
+			circumcenters[j + 1] = Math.Floor( y ); // but close points suck
 			j += 2;
 		}
 		return circumcenters;

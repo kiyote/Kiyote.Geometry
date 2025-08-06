@@ -1,9 +1,25 @@
 ﻿namespace Kiyote.Geometry;
 
-public sealed record Polygon(
-	IReadOnlyList<Point> Points
-) {
+public sealed record Polygon {
 	public readonly static Polygon None = new Polygon( [] );
+
+	public Polygon(
+		IReadOnlyList<Point> points
+	) {
+		Points = points;
+
+		List<Edge> edges = [];
+		for( int i = 0; i < points.Count; i++ ) {
+			int ind = ( i + 1 ) % points.Count;
+			Edge edge = new Edge( points[i], points[ind] );
+			edges.Add( edge );
+		}
+		Edges = edges;
+	}
+
+	public IReadOnlyList<Point> Points { get; }
+
+	public IReadOnlyList<Edge> Edges { get; }
 
 	public IReadOnlyList<Point> Intersections(
 		IReadOnlyList<Point> polygon
@@ -28,7 +44,7 @@ public sealed record Polygon(
 					p4.Y,
 					out Point? intersection
 				) ) {
-					intersections.Add( intersection.Value );
+					intersections.Add( intersection );
 				}
 			}
 		}
@@ -80,7 +96,7 @@ public sealed record Polygon(
 				p2.Y,
 				out Point? intersection
 			) ) {
-				result.Add( intersection.Value );
+				result.Add( intersection );
 			}
 		}
 		intersections = result;

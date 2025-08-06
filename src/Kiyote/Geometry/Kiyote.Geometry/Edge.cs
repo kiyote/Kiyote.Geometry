@@ -2,7 +2,9 @@
 
 namespace Kiyote.Geometry;
 
-public readonly struct Edge : IEquatable<Edge> {
+public sealed record Edge {
+
+	public static readonly Edge None = new Edge( Point.None, Point.None );
 
 	public Edge(
 		Point a,
@@ -12,34 +14,9 @@ public readonly struct Edge : IEquatable<Edge> {
 		B = b;
 	}
 
-	public readonly Point A { get; }
+	public Point A { get; }
 
-	public readonly Point B { get; }
-
-	public bool Equals(
-		Edge other
-	) {
-		return ( other.A == A
-			&& other.B == B )
-			|| ( other.A == B
-			&& other.B == A );
-	}
-
-	public override bool Equals( object? obj ) {
-		return obj is Edge edge && Equals( edge );
-	}
-
-	public override int GetHashCode() {
-		return HashCode.Combine( A, B );
-	}
-
-	public static bool operator ==( Edge left, Edge right ) {
-		return left.Equals( right );
-	}
-
-	public static bool operator !=( Edge left, Edge right ) {
-		return !( left == right );
-	}
+	public Point B { get; }
 
 	public bool HasIntersection(
 		Edge other

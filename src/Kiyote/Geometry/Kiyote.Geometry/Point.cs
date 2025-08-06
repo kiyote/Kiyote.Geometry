@@ -1,8 +1,8 @@
-﻿using System.Runtime.CompilerServices;
+﻿namespace Kiyote.Geometry;
 
-namespace Kiyote.Geometry;
+public sealed record Point : ISize {
 
-public readonly struct Point : IEquatable<Point>, ISize, IEquatable<ISize> {
+	public static readonly Point None = new Point( int.MinValue, int.MaxValue );
 
 	public Point(
 		int x,
@@ -12,8 +12,8 @@ public readonly struct Point : IEquatable<Point>, ISize, IEquatable<ISize> {
 		Y = y;
 	}
 
-	public readonly int X { get; }
-	public readonly int Y { get; }
+	public int X { get; }
+	public int Y { get; }
 
 	int ISize.Width => X;
 
@@ -41,19 +41,6 @@ public readonly struct Point : IEquatable<Point>, ISize, IEquatable<ISize> {
 		return new Point( X + x, Y + y );
 	}
 
-	[MethodImpl( MethodImplOptions.AggressiveInlining )]
-	public bool Equals(
-		Point other
-	) {
-		return ( other.X == X && other.Y == Y );
-	}
-
-	public override bool Equals(
-		object? obj
-	) {
-		return obj is Point point && Equals( point );
-	}
-
 	public override int GetHashCode() {
 		return ( X << 16 ) ^ Y;
 	}
@@ -66,13 +53,5 @@ public readonly struct Point : IEquatable<Point>, ISize, IEquatable<ISize> {
 		}
 		return other.Width == X
 			&& other.Height == Y;
-	}
-
-	public static bool operator ==( Point left, Point right ) {
-		return left.Equals( right );
-	}
-
-	public static bool operator !=( Point left, Point right ) {
-		return !( left == right );
 	}
 }
