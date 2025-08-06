@@ -5,6 +5,7 @@ namespace Kiyote.Geometry.Benchmarks.Randomization;
 
 [MemoryDiagnoser( false )]
 [GroupBenchmarksBy( BenchmarkLogicalGroupRule.ByCategory )]
+[MarkdownExporterAttribute.GitHub]
 public class FastRandomVsSystemBenchmarks {
 
 	private readonly IRandom _fastRandom;

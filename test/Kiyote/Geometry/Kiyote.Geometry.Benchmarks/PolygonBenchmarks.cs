@@ -3,11 +3,13 @@
 namespace Kiyote.Geometry.Benchmarks;
 
 [MemoryDiagnoser( false )]
+[MarkdownExporterAttribute.GitHub]
 public class PolygonBenchmarks {
 
 	private readonly IReadOnlyList<Point> _points;
 	private readonly Polygon _polygon;
 	private readonly Polygon _other;
+	private readonly Edge _edge;
 
 	public PolygonBenchmarks() {
 		ISize size = new Point( 1000, 1000 );
@@ -34,6 +36,11 @@ public class PolygonBenchmarks {
 				new Point( 150, size.Height - 300 )
 			]
 		);
+
+		_edge = new Edge(
+			new Point( 200, 200 ),
+			new Point( size.Width - 200, size.Height - 200 )
+		);
 	}
 
 	[Benchmark]
@@ -56,5 +63,16 @@ public class PolygonBenchmarks {
 	[Benchmark]
 	public void Intersections() {
 		 _polygon.Intersections( _other.Points );
+	}
+
+
+	[Benchmark]
+	public void HasIntersection() {
+		_ = _polygon.HasIntersection( _edge );
+	}
+
+	[Benchmark]
+	public void TryFindIntersections() {
+		_polygon.TryFindIntersections( _edge, out _ );
 	}
 }
