@@ -42,7 +42,7 @@ public sealed class PolygonUnitTests {
 				new Point( 150, 700 )
 			] );
 
-		bool result = p1.TryFindOverlap( p2, out Polygon clipped );
+		bool result = p1.Intersect( p2, out Polygon clipped );
 		Assert.That( result, Is.True );
 		Assert.That( clipped.Points.Count, Is.EqualTo( 6 ) );
 		Assert.That(clipped.Points[0].X, Is.EqualTo(660));

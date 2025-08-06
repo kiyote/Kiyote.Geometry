@@ -65,7 +65,7 @@ public sealed class PolygonVisualizer {
 			 context.DrawLine( Color.Orange, 1.0f, lines );
 		} );
 
-		 polygon1.TryFindOverlap( polygon2, out Polygon polygon3 );
+		 polygon1.Intersect( polygon2, out Polygon polygon3 );
 		image.Mutate( ( context ) => {
 			PointF[] lines = new PointF[polygon3.Points.Count + 1];
 			for( int i = 0; i < polygon3.Points.Count + 1; i++ ) {
