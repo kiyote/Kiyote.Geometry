@@ -1,6 +1,6 @@
 ﻿namespace Kiyote.Geometry; 
 
-public interface IRect: IEquatable<IRect> {
+public interface IRect {
 
 	int Height { get; }
 	int Width { get; }
@@ -24,6 +24,10 @@ public interface IRect: IEquatable<IRect> {
 
 	bool Intersects(
 		IRect rect
+	);
+
+	bool IsEquivalentTo(
+		IRect other
 	);
 
 }

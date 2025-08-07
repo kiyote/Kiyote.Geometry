@@ -2,8 +2,6 @@
 
 public sealed class Rect : IRect, ISize {
 
-	private readonly int _hashCode;
-
 	public Rect(
 		Point topLeft,
 		Point bottomRight
@@ -15,8 +13,6 @@ public sealed class Rect : IRect, ISize {
 
 		Width = X2 - X1 + 1;
 		Height = Y2 - Y1 + 1;
-
-		_hashCode = HashCode.Combine( X1, Y1, X2, Y2 );
 	}
 
 	public Rect(
@@ -78,11 +74,6 @@ public sealed class Rect : IRect, ISize {
 			&& sy2 == ty2;
 	}
 
-
-	public override int GetHashCode() {
-		return _hashCode;
-	}
-
 	public bool Contains(
 		Point point
 	) {
@@ -126,41 +117,7 @@ public sealed class Rect : IRect, ISize {
 		return $"{X1},{Y1},{X2},{Y2}";
 	}
 
-	public override bool Equals(
-		object? obj
-	) {
-		if( obj is IRect rect ) {
-			return RectEquals( rect );
-		} else if( obj is ISize size ) {
-			return SizeEquals( size );
-		}
-		return false;
-	}
-
-	bool IEquatable<ISize>.Equals(
-		ISize? other
-	) {
-		return
-			other is not null
-			&& SizeEquals( other );
-	}
-
-	bool IEquatable<IRect>.Equals(
-		IRect? other
-	) {
-		return
-			other is not null
-			&& RectEquals( other );
-	}
-
-	private bool SizeEquals(
-		ISize other
-	) {
-		return other.Width == Width
-			&& other.Height == Height;
-	}
-
-	private bool RectEquals(
+	public bool IsEquivalentTo(
 		IRect other
 	) {
 		return other.X1 == X1

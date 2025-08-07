@@ -45,7 +45,7 @@ internal sealed class RectTests {
 	}
 
 	[Test]
-	public void EqualsIRect_SamePointsDifferentOrder_ReturnsTrue() {
+	public void IsEquivalentTo_SamePointsDifferentOrder_ReturnsTrue() {
 		Point p1 = new Point( 100, 200 );
 		Point p2 = new Point( 200, 300 );
 		Rect r1 = new Rect( p1, p2 );
@@ -53,6 +53,6 @@ internal sealed class RectTests {
 		Point p4 = new Point( 200, 200 );
 		Rect r2 = new Rect( p3, p4 );
 
-		Assert.That( r1.Equals( r2 ), Is.True );
+		Assert.That( r1.IsEquivalentTo( r2 ), Is.True );
 	}
 }
