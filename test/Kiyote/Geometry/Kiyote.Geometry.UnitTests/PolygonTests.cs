@@ -1,7 +1,7 @@
 ﻿namespace Kiyote.Geometry.UnitTests;
 
 [TestFixture]
-public sealed class PolygonUnitTests {
+public sealed class PolygonTests {
 
 	private Polygon _polygon;
 

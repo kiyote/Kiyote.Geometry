@@ -1,8 +1,10 @@
 ﻿namespace Kiyote.Geometry;
 
-public sealed record Point : ISize {
+public sealed class Point : IEquatable<Point>, ISize {
 
 	public static readonly Point None = new Point( int.MinValue, int.MaxValue );
+
+	private readonly int _hashCode;
 
 	public Point(
 		int x,
@@ -10,6 +12,7 @@ public sealed record Point : ISize {
 	) {
 		X = x;
 		Y = y;
+		_hashCode = ( X << 16 ) ^ Y;
 	}
 
 	public int X { get; }
@@ -42,16 +45,30 @@ public sealed record Point : ISize {
 	}
 
 	public override int GetHashCode() {
-		return ( X << 16 ) ^ Y;
+		return _hashCode;
+	}
+
+	public override bool Equals(
+		object? obj
+	) {
+		return obj is Point p
+			&& p.X == X
+			&& p.Y == Y;		
 	}
 
 	bool IEquatable<ISize>.Equals(
 		ISize? other
 	) {
-		if( other is null ) {
-			return false;
-		}
-		return other.Width == X
+		return other is not null
+			&& other.Width == X
 			&& other.Height == Y;
+	}
+
+	bool IEquatable<Point>.Equals(
+		Point? other
+	) {
+		return other is not null
+			&& other.X == X
+			&& other.Y == Y;
 	}
 }
