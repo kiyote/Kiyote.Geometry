@@ -1,17 +1,22 @@
 ﻿namespace Kiyote.Geometry;
 
-public sealed record Rect : ISize, IRect {
+public sealed class Rect : IRect, ISize {
+
+	private readonly int _hashCode;
 
 	public Rect(
 		Point topLeft,
 		Point bottomRight
 	) {
-		X1 = topLeft.X;
-		Y1 = topLeft.Y;
-		X2 = bottomRight.X;
-		Y2 = bottomRight.Y;
-		Width = bottomRight.X - topLeft.X + 1;
-		Height = bottomRight.Y - topLeft.Y + 1;
+		X1 = Math.Min( topLeft.X, bottomRight.X );
+		X2 = Math.Max( topLeft.X, bottomRight.X );
+		Y1 = Math.Min( topLeft.Y, bottomRight.Y );
+		Y2 = Math.Max( topLeft.Y, bottomRight.Y );
+
+		Width = X2 - X1 + 1;
+		Height = Y2 - Y1 + 1;
+
+		_hashCode = HashCode.Combine( X1, Y1, X2, Y2 );
 	}
 
 	public Rect(
@@ -56,15 +61,26 @@ public sealed record Rect : ISize, IRect {
 		Point topLeft,
 		Point bottomRight
 	) {
-		return X1 == topLeft.X
-			&& Y1 == topLeft.Y
-			&& X2 == bottomRight.X
-			&& Y2 == bottomRight.Y;
+		int sx1 = Math.Min( X1, X2 );
+		int sx2 = Math.Max( X1, X2 );
+		int sy1 = Math.Min( Y1, Y2 );
+		int sy2 = Math.Max( Y1, Y2 );
+
+		int tx1 = Math.Min( topLeft.X, bottomRight.X );
+		int tx2 = Math.Max( topLeft.X, bottomRight.X );
+		int ty1 = Math.Min( topLeft.Y, bottomRight.Y );
+		int ty2 = Math.Max( topLeft.Y, bottomRight.Y  );
+
+		return
+			sx1 == tx1
+			&& sy1 == ty1
+			&& sx2 == tx2
+			&& sy2 == ty2;
 	}
 
 
 	public override int GetHashCode() {
-		return HashCode.Combine( X1, Y1, X2, Y2 );
+		return _hashCode;
 	}
 
 	public bool Contains(
@@ -110,13 +126,47 @@ public sealed record Rect : ISize, IRect {
 		return $"{X1},{Y1},{X2},{Y2}";
 	}
 
-	bool IEquatable<ISize>.Equals( ISize? other ) {
-		if( other is null ) {
-			return false;
+	public override bool Equals(
+		object? obj
+	) {
+		if( obj is IRect rect ) {
+			return RectEquals( rect );
+		} else if( obj is ISize size ) {
+			return SizeEquals( size );
 		}
+		return false;
+	}
 
+	bool IEquatable<ISize>.Equals(
+		ISize? other
+	) {
+		return
+			other is not null
+			&& SizeEquals( other );
+	}
+
+	bool IEquatable<IRect>.Equals(
+		IRect? other
+	) {
+		return
+			other is not null
+			&& RectEquals( other );
+	}
+
+	private bool SizeEquals(
+		ISize other
+	) {
 		return other.Width == Width
 			&& other.Height == Height;
+	}
+
+	private bool RectEquals(
+		IRect other
+	) {
+		return other.X1 == X1
+			&& other.Y1 == Y1
+			&& other.X2 == X2
+			&& other.Y2 == Y2;
 	}
 }
 

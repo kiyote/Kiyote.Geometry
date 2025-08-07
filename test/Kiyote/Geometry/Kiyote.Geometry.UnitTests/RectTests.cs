@@ -1,7 +1,7 @@
 ﻿namespace Kiyote.Geometry.UnitTests;
 
 [TestFixture]
-internal sealed class RectUnitTests {
+internal sealed class RectTests {
 
 	[TestCase( 0, 0, 10, 10, 9, 9 )]
 	[TestCase( 0, 10, 20, 30, 19, 39 )]
@@ -42,5 +42,17 @@ internal sealed class RectUnitTests {
 		Assert.That( r.Y2, Is.EqualTo( y2 ), "Y2 does not match" );
 		Assert.That( r.Width, Is.EqualTo( expectedWidth ), "Width does not match" );
 		Assert.That( r.Height, Is.EqualTo( expectedHeight ), "Height does not match" );
+	}
+
+	[Test]
+	public void EqualsIRect_SamePointsDifferentOrder_ReturnsTrue() {
+		Point p1 = new Point( 100, 200 );
+		Point p2 = new Point( 200, 300 );
+		Rect r1 = new Rect( p1, p2 );
+		Point p3 = new Point( 100, 300 );
+		Point p4 = new Point( 200, 200 );
+		Rect r2 = new Rect( p3, p4 );
+
+		Assert.That( r1.Equals( r2 ), Is.True );
 	}
 }
