@@ -1,9 +1,7 @@
 ﻿namespace Kiyote.Geometry;
 
-public sealed class Polygon : IEquatable<Polygon> {
+public sealed class Polygon {
 	public readonly static Polygon None = new Polygon( [] );
-
-	private readonly int _hashCode;
 
 	public Polygon(
 		IReadOnlyList<Point> points
@@ -17,12 +15,6 @@ public sealed class Polygon : IEquatable<Polygon> {
 			edges.Add( edge );
 		}
 		Edges = edges;
-
-		HashCode hashCode = new HashCode();
-		foreach( Point p in Points ) {
-			hashCode.Add( p );
-		}
-		_hashCode = hashCode.ToHashCode();
 	}
 
 	public IReadOnlyList<Point> Points { get; }
@@ -135,13 +127,6 @@ public sealed class Polygon : IEquatable<Polygon> {
 		return Contains( target.X, target.Y );
 	}
 
-	public override bool Equals(
-		object? obj
-	) {
-		return obj is Polygon p
-			&& Equals( p );
-	}
-
 	public bool Contains(
 		int x,
 		int y
@@ -214,19 +199,11 @@ public sealed class Polygon : IEquatable<Polygon> {
 		return true;
 	}
 
-	public override int GetHashCode() {
-		return _hashCode;
-	}
-
-	bool IEquatable<Polygon>.Equals(
-		Polygon? other
+	public bool IsEquivalentTo(
+		Polygon other
 	) {
-		if (other is null
-			|| Points.Count != other.Points.Count
-		) {
-			return false;
-		}
-
-		return Points.OrderBy( p => p ).SequenceEqual( other.Points.OrderBy( p => p ) );
+		return
+			Points.Count != other.Points.Count
+			&& Points.OrderBy( p => p ).SequenceEqual( other.Points.OrderBy( p => p ) );
 	}
 }

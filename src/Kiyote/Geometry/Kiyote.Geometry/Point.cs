@@ -53,15 +53,7 @@ public sealed class Point : IEquatable<Point>, ISize {
 	) {
 		return obj is Point p
 			&& p.X == X
-			&& p.Y == Y;		
-	}
-
-	bool IEquatable<ISize>.Equals(
-		ISize? other
-	) {
-		return other is not null
-			&& other.Width == X
-			&& other.Height == Y;
+			&& p.Y == Y;
 	}
 
 	bool IEquatable<Point>.Equals(
