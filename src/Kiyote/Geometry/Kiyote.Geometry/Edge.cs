@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
 namespace Kiyote.Geometry;
 
@@ -49,6 +50,17 @@ public sealed record Edge {
 			other.B.X,
 			other.B.Y,
 			out intersection
+		);
+	}
+
+	public Rect GetBoundingBox() {
+		int minX = Math.Min( A.X, B.X );
+		int minY = Math.Min( A.Y, B.Y );
+		int maxX = Math.Max( A.X, B.X );
+		int maxY = Math.Max( A.Y, B.Y );
+		return new Rect(
+			new Point( minX, minY ),
+			new Point( maxX, maxY )
 		);
 	}
 }
