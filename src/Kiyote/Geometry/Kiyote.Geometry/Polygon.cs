@@ -169,6 +169,18 @@ public sealed class Polygon {
 		return inside;
 	}
 
+	public bool Contains(
+		Polygon polygon
+	) {
+		return Contains( polygon.Points );
+	}
+
+	public bool Contains(
+		IEnumerable<Point> points
+	) {
+		return points.All( Contains );
+	}
+
 	public bool Intersect(
 		Polygon polygon,
 		out Polygon intersectedPolygon
