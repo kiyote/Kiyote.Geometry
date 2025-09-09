@@ -1,9 +1,9 @@
 ﻿using Kiyote.Geometry.Randomization;
 
-namespace Kiyote.Geometry.DelaunayVoronoi.UnitTests;
+namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
 
 [TestFixture]
-public sealed class D3DelaunayFactoryIntegrationTests {
+public sealed class D3DelaunayFactoryTests {
 
 	private IDelaunayFactory _delaunayFactory;
 	private IPointFactory _pointFactory;

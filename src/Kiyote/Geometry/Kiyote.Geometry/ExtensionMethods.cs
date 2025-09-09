@@ -1,4 +1,5 @@
-﻿using Kiyote.Geometry.DelaunayVoronoi;
+﻿using System.Diagnostics.CodeAnalysis;
+using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
 using Kiyote.Geometry.Rasterizers;
 using Kiyote.Geometry.Trees;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Kiyote.Geometry;
 
+[ExcludeFromCodeCoverage]
 public static class ExtensionMethods {
 
 	public static IServiceCollection AddRasterizer(

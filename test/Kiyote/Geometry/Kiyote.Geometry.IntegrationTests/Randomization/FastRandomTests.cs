@@ -1,7 +1,7 @@
-﻿namespace Kiyote.Geometry.Randomization.UnitTests;
+﻿namespace Kiyote.Geometry.Randomization.Tests;
 
 [TestFixture]
-public sealed class FastRandomIntegrationTests {
+public sealed class FastRandomTests {
 
 	private IRandom _random;
 

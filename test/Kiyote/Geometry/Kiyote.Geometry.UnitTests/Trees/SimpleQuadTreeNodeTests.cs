@@ -2,7 +2,7 @@
 namespace Kiyote.Geometry.Trees.UnitTests;
 
 [TestFixture]
-internal sealed class SimpleQuadTreeNodeUnitTests {
+internal sealed class SimpleQuadTreeNodeTests {
 
 	private Rect _bounds;
 	private SimpleQuadTreeNode<Rect> _node;

@@ -1,7 +1,7 @@
-﻿namespace Kiyote.Geometry.DelaunayVoronoi.UnitTests;
+﻿namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
 
 [TestFixture]
-public sealed class MapboxDelaunatorFactoryIntegrationTests {
+public sealed class MapboxDelaunatorFactoryTests {
 
 	[Test]
 	public void Test_InsufficientPoints_ThrowsException() {
