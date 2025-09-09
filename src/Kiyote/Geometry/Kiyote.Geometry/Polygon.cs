@@ -61,8 +61,8 @@ public sealed class Polygon {
 	public bool HasIntersection(
 		IReadOnlyList<Edge> edges
 	) {
-		foreach (Edge edge in edges) {
-			if (HasIntersection( edge)) {
+		foreach( Edge edge in edges ) {
+			if( HasIntersection( edge ) ) {
 				return true;
 			}
 		}
@@ -179,6 +179,14 @@ public sealed class Polygon {
 		IEnumerable<Point> points
 	) {
 		return points.All( Contains );
+	}
+
+	public bool HasOverlap(
+		Polygon polygon
+	) {
+		return polygon.HasIntersection( this )
+			|| polygon.Contains( this )
+			|| this.Contains( polygon );
 	}
 
 	public bool Intersect(
