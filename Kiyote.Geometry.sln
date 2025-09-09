@@ -49,6 +49,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Kiyote", "Kiyote", "{22D1D9
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Kiyote", "Kiyote", "{5B29D2D0-FFEC-4C91-8BBD-3317E8252152}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kiyote.Geometry.IntegrationTests", "test\Kiyote\Geometry\Kiyote.Geometry.IntegrationTests\Kiyote.Geometry.IntegrationTests.csproj", "{54DB2270-8EB4-4A76-AA94-8BED899F7BA8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,10 @@ Global
 		{486C443B-E804-4B6A-9597-26D26C780F34}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{486C443B-E804-4B6A-9597-26D26C780F34}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{486C443B-E804-4B6A-9597-26D26C780F34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54DB2270-8EB4-4A76-AA94-8BED899F7BA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54DB2270-8EB4-4A76-AA94-8BED899F7BA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54DB2270-8EB4-4A76-AA94-8BED899F7BA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54DB2270-8EB4-4A76-AA94-8BED899F7BA8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -91,6 +97,7 @@ Global
 		{486C443B-E804-4B6A-9597-26D26C780F34} = {E0DE70F0-2E6C-4E6A-A710-DE8D73764AC5}
 		{22D1D938-88A5-4CA9-8287-F5E7A165E59E} = {EE2FCC58-75CC-4E8F-AFEC-CC481E662896}
 		{5B29D2D0-FFEC-4C91-8BBD-3317E8252152} = {4C4DAF84-3BAB-4940-B4AE-D6088DF1ACFD}
+		{54DB2270-8EB4-4A76-AA94-8BED899F7BA8} = {E0DE70F0-2E6C-4E6A-A710-DE8D73764AC5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2BC3C0E9-3ECD-4276-B787-7089DC63C56F}

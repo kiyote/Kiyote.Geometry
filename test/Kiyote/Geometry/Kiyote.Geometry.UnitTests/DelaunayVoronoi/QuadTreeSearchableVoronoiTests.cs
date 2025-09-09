@@ -1,9 +1,9 @@
 ﻿using Kiyote.Geometry.Trees;
 
-namespace Kiyote.Geometry.DelaunayVoronoi.UnitTests;
+namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
 
 [TestFixture]
-public sealed class QuadTreeSearchableVoronoiUnitTests {
+public sealed class QuadTreeSearchableVoronoiTests {
 
 	private Rect _area;
 	private IVoronoi _voronoi;
@@ -27,6 +27,16 @@ public sealed class QuadTreeSearchableVoronoiUnitTests {
 	public void SetUp() {
 		IQuadTree<Rect> quadTree = new SimpleQuadTree<Rect>( _area );
 		_searchableVoronoi = new QuadTreeSearchableVoronoi( quadTree, _voronoi );
+	}
+
+	[Test]
+	public void Ctor_ValidParameter_PropertiesSet() {
+		IVoronoi voronoi = _searchableVoronoi;
+
+		Assert.That( voronoi.Points, Is.SameAs( _searchableVoronoi.Points ) );
+		Assert.That( voronoi.Cells, Is.SameAs( _searchableVoronoi.Cells ) );
+		Assert.That( voronoi.Edges, Is.SameAs( _searchableVoronoi.Edges ) );
+		Assert.That( voronoi.Neighbours, Is.SameAs( _searchableVoronoi.Neighbours ) );
 	}
 
 	[TestCase( 1, 1, 48, 48, 25, 25 )]
