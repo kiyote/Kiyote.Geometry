@@ -1,4 +1,6 @@
-﻿namespace Kiyote.Geometry;
+﻿using System.Runtime.CompilerServices;
+
+namespace Kiyote.Geometry;
 
 public sealed class Polygon {
 	public readonly static Polygon None = new Polygon( [] );
@@ -131,42 +133,75 @@ public sealed class Polygon {
 		int x,
 		int y
 	) {
-		int minX = int.MaxValue;
-		int minY = int.MaxValue;
-		int maxX = int.MinValue;
-		int maxY = int.MinValue;
-		for( int i = 0; i < Points.Count; i++ ) {
-			Point point = Points[i];
-			if( point.X < minX ) {
-				minX = point.X;
-			}
-			if( point.X > maxX ) {
-				maxX = point.X;
+		// Refined from https://web.archive.org/web/20130126163405/http://geomalgorithms.com/a03-_inclusion.html
+		int pc = Points.Count;
+		int wn = 0;
+		for( int i = 0; i < pc; i++ ) {
+			int j = ( i + 1 ) % pc;
+
+			int ix = Points[i].X;
+			int iy = Points[i].Y;
+			int jx = Points[j].X;
+			int jy = Points[j].Y;
+
+			int isLeft = IsLeft( ix, iy, jx, jy, x, y );
+
+			if( IsOnEdge( isLeft, ix, iy, jx, jy, x, y ) ) {
+				return true;
 			}
 
-			if( point.Y < minY ) {
-				minY = point.Y;
-			}
-			if( point.Y > maxY ) {
-				maxY = point.Y;
+			if( iy <= y ) {
+				if( jy > y ) {
+					if( isLeft > 0 ) {
+						wn++;
+					}
+				}
+			} else {
+				if( jy <= y ) {
+					if( isLeft < 0 ) {
+						wn--;
+					}
+				}
 			}
 		}
-		if( x < minX || x > maxX || y < minY || y > maxY ) {
+
+		return wn != 0;
+
+	}
+
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
+	private static int IsLeft(
+		int p0x,
+		int p0y,
+		int p1x,
+		int p1y,
+		int p2x,
+		int p2y
+	) {
+		return ( ( ( p1x - p0x ) * ( p2y - p0y ) ) - ( ( p2x - p0x ) * ( p1y - p0y ) ) );
+	}
+
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
+	private static bool IsOnEdge(
+		int isLeft,
+		int p0x,
+		int p0y,
+		int p1x,
+		int p1y,
+		int p2x,
+		int p2y
+	) {
+		// Check for collinearity (cross-product is zero)
+		if( isLeft != 0 ) {
 			return false;
 		}
 
-		// https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html
-		bool inside = false;
-		for( int i = 0, j = Points.Count - 1; i < Points.Count; j = i++ ) {
-			if(
-				( Points[i].Y > y ) != ( Points[j].Y > y )
-				&& x < ( ( Points[j].X - Points[i].X ) * ( y - Points[i].Y ) / ( Points[j].Y - Points[i].Y ) ) + Points[i].X
-			) {
-				inside = !inside;
-			}
-		}
-
-		return inside;
+		// Check if the point is within the bounding box of the edge
+		return
+			p2x >= Math.Min( p0x, p1x )
+			&& p2x <= Math.Max( p0x, p1x )
+			&& p2y >= Math.Min( p0y, p1y )
+			&& p2y <= Math.Max( p0y, p1y );
 	}
 
 	public bool Contains(
@@ -184,18 +219,19 @@ public sealed class Polygon {
 	public bool HasOverlap(
 		Polygon polygon
 	) {
-		return polygon.HasIntersection( this )
+		return
+			this.Contains( polygon )
 			|| polygon.Contains( this )
-			|| this.Contains( polygon );
+			|| this.HasIntersection( polygon );
 	}
 
-	public bool Intersect(
+	public bool TryIntersect(
 		Polygon polygon,
 		out Polygon intersectedPolygon
 	) {
 		// https://gorillasun.de/blog/an-algorithm-for-polygon-intersections
 		IReadOnlyList<Point> intersections = Intersections( polygon.Points );
-		if( !intersections.Any() ) {
+		if( intersections.Count == 0 ) {
 			intersectedPolygon = None;
 			return false;
 		}
@@ -222,8 +258,13 @@ public sealed class Polygon {
 	public bool IsEquivalentTo(
 		Polygon other
 	) {
-		return
-			Points.Count != other.Points.Count
-			&& Points.OrderBy( p => p ).SequenceEqual( other.Points.OrderBy( p => p ) );
+		if (Points.Count != other.Points.Count) {
+			return false;
+		}
+
+		IEnumerable<Point> one = Points.OrderBy( p => p.X ).ThenBy( p => p.Y );
+		IEnumerable<Point> two = other.Points.OrderBy( p => p.X ).ThenBy( p => p.Y );
+
+		return one.SequenceEqual( two );
 	}
 }

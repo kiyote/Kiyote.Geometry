@@ -45,7 +45,7 @@ public class PolygonBenchmarks {
 
 	[Benchmark]
 	public void TryFindOverlap() {
-		 _polygon.Intersect( _other, out Polygon _ );
+		 _polygon.TryIntersect( _other, out Polygon _ );
 	}
 
 	[Benchmark]

@@ -19,14 +19,14 @@ LaunchCount=1  WarmupCount=10
 | TryFindIntersection | 13.635 ns | 0.4927 ns | 0.4608 ns |      24 B |
 
 # Polygon
-| Method               | Mean          | Error         | StdDev       | Allocated |
-|--------------------- |--------------:|--------------:|-------------:|----------:|
-| TryFindOverlap       |   1,454.40 ns |     58.185 ns |    54.426 ns |    2200 B |
-| Contains             |      34.18 ns |      0.939 ns |     0.785 ns |         - |
-| Contains_1000x1000   | 674,835.77 ns | 11,272.320 ns | 9,992.618 ns |       1 B |
-| Intersections        |     218.93 ns |      5.493 ns |     5.138 ns |     184 B |
-| HasIntersection      |      11.54 ns |      0.562 ns |     0.526 ns |         - |
-| TryFindIntersections |      94.73 ns |      1.443 ns |     1.279 ns |     184 B |
+| Method               | Mean           | Error         | StdDev        | Allocated |
+|--------------------- |---------------:|--------------:|--------------:|----------:|
+| TryFindOverlap       |   1,242.683 ns |    12.8698 ns |    11.4087 ns |    2232 B |
+| Contains             |      26.580 ns |     0.3306 ns |     0.3092 ns |         - |
+| Contains_1000x1000   | 865,219.182 ns | 3,705.4233 ns | 3,284.7613 ns |       1 B |
+| Intersections        |     173.365 ns |     0.9958 ns |     0.8316 ns |     216 B |
+| HasIntersection      |       9.443 ns |     0.2039 ns |     0.1808 ns |         - |
+| TryFindIntersections |      82.983 ns |     0.9793 ns |     0.9161 ns |     216 B |
 
 # FastRandom Benchmarks
 | Method                                    | Mean      | Error     | StdDev    | Allocated |

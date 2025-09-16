@@ -4,6 +4,11 @@
 		<Nullable>disable</Nullable>
 	</PropertyGroup>
 	<ItemGroup>
+	  <Compile Remove="Randomization\**" />
+	  <EmbeddedResource Remove="Randomization\**" />
+	  <None Remove="Randomization\**" />
+	</ItemGroup>
+	<ItemGroup>
 		<PackageReference Include="coverlet.collector">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -20,8 +25,5 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\..\src\Kiyote\Geometry\Kiyote.Geometry\Kiyote.Geometry.csproj" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="Randomization\" />
 	</ItemGroup>
 </Project>
