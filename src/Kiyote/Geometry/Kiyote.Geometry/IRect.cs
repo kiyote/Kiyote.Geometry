@@ -22,12 +22,24 @@ public interface IRect {
 		IRect rect
 	);
 
-	bool Intersects(
+	bool HasOverlap(
 		IRect rect
 	);
 
 	bool IsEquivalentTo(
 		IRect other
+	);
+
+	bool IsEquivalentTo(
+		Point topLeft,
+		Point bottomRight
+	);
+
+	bool IsEquivalentTo(
+		int x1,
+		int y1,
+		int x2,
+		int y2
 	);
 
 }
