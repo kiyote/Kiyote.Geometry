@@ -53,19 +53,44 @@ public sealed class Rect : IRect, ISize {
 
 	public int Height { get; }
 
-	public bool Equals(
+	public bool IsEquivalentTo(
+		IRect other
+	) {
+		return IsEquivalentTo(
+			other.X1,
+			other.Y1,
+			other.X2,
+			other.Y2
+		);
+	}
+
+	public bool IsEquivalentTo(
 		Point topLeft,
 		Point bottomRight
+	) {
+		return IsEquivalentTo(
+			topLeft.X,
+			topLeft.Y,
+			bottomRight.X,
+			bottomRight.Y
+		);
+	}
+
+	public bool IsEquivalentTo(
+		int x1,
+		int y1,
+		int x2,
+		int y2
 	) {
 		int sx1 = Math.Min( X1, X2 );
 		int sx2 = Math.Max( X1, X2 );
 		int sy1 = Math.Min( Y1, Y2 );
 		int sy2 = Math.Max( Y1, Y2 );
 
-		int tx1 = Math.Min( topLeft.X, bottomRight.X );
-		int tx2 = Math.Max( topLeft.X, bottomRight.X );
-		int ty1 = Math.Min( topLeft.Y, bottomRight.Y );
-		int ty2 = Math.Max( topLeft.Y, bottomRight.Y  );
+		int tx1 = Math.Min( x1, x2 );
+		int tx2 = Math.Max( x1, x2 );
+		int ty1 = Math.Min( y1, y2 );
+		int ty2 = Math.Max( y1, y2 );
 
 		return
 			sx1 == tx1
@@ -84,24 +109,12 @@ public sealed class Rect : IRect, ISize {
 		int x,
 		int y
 	) {
-		if( x >= X1
-			&& x <= X2
-			&& y >= Y1
-			&& y <= Y2
-		) {
-			return true;
+		if (x < X1 || x > X2 || y < Y1 || y > Y2) {
+			return false;
 		}
 
-		return false;
-	}
+		return true;
 
-	public bool Intersects(
-		IRect rect
-	) {
-		return X1 + Width >= rect.X1
-			 && X1 <= rect.X2
-			 && Y1 + Height >= rect.Y1
-			 && Y1 <= rect.Y2;
 	}
 
 	public bool Contains(
@@ -113,17 +126,13 @@ public sealed class Rect : IRect, ISize {
 			&& Y2 >= rect.Y2;
 	}
 
-	public override string ToString() {
-		return $"{X1},{Y1},{X2},{Y2}";
-	}
-
-	public bool IsEquivalentTo(
-		IRect other
+	public bool HasOverlap(
+		IRect rect
 	) {
-		return other.X1 == X1
-			&& other.Y1 == Y1
-			&& other.X2 == X2
-			&& other.Y2 == Y2;
+		return X1 + Width >= rect.X1
+			 && X1 <= rect.X2
+			 && Y1 + Height >= rect.Y1
+			 && Y1 <= rect.Y2;
 	}
 }
 
