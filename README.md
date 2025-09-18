@@ -15,46 +15,61 @@ LaunchCount=1  WarmupCount=10
 # Edge
 | Method              | Mean      | Error     | StdDev    | Allocated |
 |-------------------- |----------:|----------:|----------:|----------:|
-| HasIntersection     |  6.946 ns | 0.2079 ns | 0.1736 ns |         - |
-| TryFindIntersection | 13.635 ns | 0.4927 ns | 0.4608 ns |      24 B |
+| HasIntersection     |  6.643 ns | 0.3820 ns | 0.3573 ns |         - |
+| TryFindIntersection | 10.836 ns | 0.4186 ns | 0.3916 ns |         - |
 
 # Polygon
-| Method               | Mean           | Error         | StdDev        | Allocated |
-|--------------------- |---------------:|--------------:|--------------:|----------:|
-| TryFindOverlap       |   1,242.683 ns |    12.8698 ns |    11.4087 ns |    2232 B |
-| Contains             |      26.580 ns |     0.3306 ns |     0.3092 ns |         - |
-| Contains_1000x1000   | 865,219.182 ns | 3,705.4233 ns | 3,284.7613 ns |       1 B |
-| Intersections        |     173.365 ns |     0.9958 ns |     0.8316 ns |     216 B |
-| HasIntersection      |       9.443 ns |     0.2039 ns |     0.1808 ns |         - |
-| TryFindIntersections |      82.983 ns |     0.9793 ns |     0.9161 ns |     216 B |
+| Method                   | Mean        | Error     | StdDev    | Allocated |
+|------------------------- |------------:|----------:|----------:|----------:|
+| TryIntersect             | 1,447.16 ns | 31.768 ns | 29.716 ns |    2368 B |
+| Contains                 |    33.43 ns |  0.509 ns |  0.477 ns |         - |
+| Intersections            |   204.16 ns |  2.812 ns |  2.492 ns |     104 B |
+| IsEquivalentTo           |   524.55 ns | 20.538 ns | 19.211 ns |    1104 B |
+| HasOverlap               |   282.13 ns |  4.899 ns |  4.343 ns |     232 B |
+| TryFindIntersections     |   106.76 ns |  2.308 ns |  2.159 ns |     104 B |
+| HasIntersection_Edge     |    11.60 ns |  0.219 ns |  0.205 ns |         - |
+| HasIntersection_Polygon  |    90.56 ns |  1.908 ns |  1.784 ns |      40 B |
+| HasIntersection_EdgeList |    81.57 ns |  1.662 ns |  1.473 ns |      40 B |
+
+# Rect
+| Method                      | Mean      | Error     | StdDev    | Allocated |
+|---------------------------- |----------:|----------:|----------:|----------:|
+| Contains_Rect               | 1.6438 ns | 0.1303 ns | 0.1219 ns |         - |
+| Contains_IRect              | 3.7002 ns | 0.1800 ns | 0.1684 ns |         - |
+| Contains_Point              | 1.8831 ns | 0.1552 ns | 0.1376 ns |         - |
+| Contains_IntInt             | 0.0671 ns | 0.0657 ns | 0.0615 ns |         - |
+| IsEquivalentTo_Rect         | 4.1632 ns | 0.1818 ns | 0.1701 ns |         - |
+| IsEquivalentTo_IRect        | 4.7800 ns | 0.3425 ns | 0.3203 ns |         - |
+| IsEquivalentTo_PointPoint   | 3.7967 ns | 0.1910 ns | 0.1786 ns |         - |
+| IsEquivalentTo_IntIntIntInt | 4.1109 ns | 0.1834 ns | 0.1715 ns |         - |
 
 # FastRandom Benchmarks
 | Method                                    | Mean      | Error     | StdDev    | Allocated |
 |------------------------------------------ |----------:|----------:|----------:|----------:|
-| FastRandom_NextInt                        |  1.038 ns | 0.0147 ns | 0.0130 ns |         - |
-| FastRandom_NextInt_UpperBound             |  2.428 ns | 0.0479 ns | 0.0424 ns |         - |
-| FastRandom_NextInt_LowerBoundUpperBound   |  3.184 ns | 0.0575 ns | 0.0538 ns |         - |
-| FastRandom_NextBool                       |  1.876 ns | 0.0778 ns | 0.0690 ns |         - |
-| FastRandom_NextUInt                       |  1.350 ns | 0.0304 ns | 0.0269 ns |         - |
-| FastRandom_NextDouble                     |  1.837 ns | 0.0312 ns | 0.0261 ns |         - |
-| FastRandom_NextFloat                      |  1.791 ns | 0.0564 ns | 0.0527 ns |         - |
-| FastRandom_NextFloat_LowerBoundUpperBound |  2.778 ns | 0.0340 ns | 0.0301 ns |         - |
-| FastRandom_NextBytes                      | 59.486 ns | 1.1592 ns | 0.9680 ns |         - |
+| FastRandom_NextInt                        |  1.864 ns | 0.1373 ns | 0.1284 ns |         - |
+| FastRandom_NextInt_UpperBound             |  3.160 ns | 0.1749 ns | 0.1636 ns |         - |
+| FastRandom_NextInt_LowerBoundUpperBound   |  3.259 ns | 0.1680 ns | 0.1489 ns |         - |
+| FastRandom_NextBool                       |  2.587 ns | 0.1357 ns | 0.1269 ns |         - |
+| FastRandom_NextUInt                       |  1.877 ns | 0.1534 ns | 0.1435 ns |         - |
+| FastRandom_NextDouble                     |  2.289 ns | 0.1676 ns | 0.1568 ns |         - |
+| FastRandom_NextFloat                      |  2.362 ns | 0.1545 ns | 0.1445 ns |         - |
+| FastRandom_NextFloat_LowerBoundUpperBound |  3.122 ns | 0.1856 ns | 0.1736 ns |         - |
+| FastRandom_NextBytes                      | 60.006 ns | 2.1685 ns | 2.0284 ns |         - |
 
 # FastRandom Benchmarks vs System.Random
 | Method                  | Mean      | Error     | StdDev    | Ratio | RatioSD | Allocated | Alloc Ratio |
 |------------------------ |----------:|----------:|----------:|------:|--------:|----------:|------------:|
-| FastRandom_NextBytes    | 57.842 ns | 0.3804 ns | 0.3558 ns |  3.27 |    0.04 |         - |          NA |
-| SystemRandom_NextBytes  | 17.692 ns | 0.1999 ns | 0.1772 ns |  1.00 |    0.01 |         - |          NA |
+| FastRandom_NextBytes    | 59.430 ns | 2.5622 ns | 2.3967 ns |  3.30 |    0.16 |         - |          NA |
+| SystemRandom_NextBytes  | 18.018 ns | 0.5967 ns | 0.5290 ns |  1.00 |    0.04 |         - |          NA |
 |                         |           |           |           |       |         |           |             |
-| FastRandom_NextDouble   |  1.510 ns | 0.0233 ns | 0.0195 ns |  0.84 |    0.01 |         - |          NA |
-| SystemRandom_NextDouble |  1.801 ns | 0.0186 ns | 0.0145 ns |  1.00 |    0.01 |         - |          NA |
+| FastRandom_NextDouble   |  2.078 ns | 0.1822 ns | 0.1704 ns |  0.71 |    0.07 |         - |          NA |
+| SystemRandom_NextDouble |  2.938 ns | 0.1731 ns | 0.1619 ns |  1.00 |    0.08 |         - |          NA |
 |                         |           |           |           |       |         |           |             |
-| FastRandom_NextFloat    |  1.768 ns | 0.0268 ns | 0.0237 ns |  0.68 |    0.03 |         - |          NA |
-| SystemRandom_NextFloat  |  2.614 ns | 0.1443 ns | 0.1280 ns |  1.00 |    0.07 |         - |          NA |
+| FastRandom_NextFloat    |  2.174 ns | 0.1610 ns | 0.1506 ns |  0.97 |    0.09 |         - |          NA |
+| SystemRandom_NextFloat  |  2.247 ns | 0.1735 ns | 0.1623 ns |  1.00 |    0.10 |         - |          NA |
 |                         |           |           |           |       |         |           |             |
-| FastRandom_NextInt      |  1.155 ns | 0.0194 ns | 0.0162 ns |  0.59 |    0.02 |         - |          NA |
-| SystemRandom_NextInt    |  1.947 ns | 0.0502 ns | 0.0445 ns |  1.00 |    0.03 |         - |          NA |
+| FastRandom_NextInt      |  1.360 ns | 0.1371 ns | 0.1282 ns |  0.71 |    0.08 |         - |          NA |
+| SystemRandom_NextInt    |  1.933 ns | 0.1500 ns | 0.1404 ns |  1.00 |    0.10 |         - |          NA |
 
 # FastPoissonDiscPointFactory Benchmarks
 <sub>
@@ -65,14 +80,14 @@ The surface is filled with a separation of 5.
 
 | Method              | Mean          | Error       | StdDev      | Ratio | RatioSD | Allocated  | Alloc Ratio |
 |-------------------- |--------------:|------------:|------------:|------:|--------:|-----------:|------------:|
-| Fill_100x100        |    146.046 μs |   1.8147 μs |   1.5153 μs | 44.19 |    0.87 |   22.38 KB |        1.54 |
-| Fill_100x100_Base   |      3.306 μs |   0.0703 μs |   0.0587 μs |  1.00 |    0.02 |   14.54 KB |        1.00 |
+| Fill_1000x1000      | 16,163.716 μs | 674.5125 μs | 630.9394 μs | 27.37 |    2.07 | 1410.69 KB |        1.84 |
+| Fill_1000x1000_Base |    593.162 μs |  42.6133 μs |  39.8605 μs |  1.00 |    0.09 |  768.53 KB |        1.00 |
 |                     |               |             |             |       |         |            |             |
-| Fill_500x500        |  3,724.046 μs |  26.4510 μs |  22.0878 μs | 51.12 |    1.61 |  449.73 KB |        1.62 |
-| Fill_500x500_Base   |     72.917 μs |   2.5803 μs |   2.4136 μs |  1.00 |    0.04 |  277.13 KB |        1.00 |
+| Fill_100x100        |    152.325 μs |   5.8146 μs |   5.4390 μs | 44.82 |    3.24 |   19.94 KB |        1.63 |
+| Fill_100x100_Base   |      3.412 μs |   0.2379 μs |   0.2225 μs |  1.00 |    0.09 |    12.2 KB |        1.00 |
 |                     |               |             |             |       |         |            |             |
-| Fill_1000x1000      | 15,920.582 μs | 535.7817 μs | 474.9566 μs | 30.05 |    0.97 | 1777.32 KB |        1.61 |
-| Fill_1000x1000_Base |    529.963 μs |   9.0660 μs |   8.0368 μs |  1.00 |    0.02 | 1105.44 KB |        1.00 |
+| Fill_500x500        |  3,909.891 μs | 183.3170 μs | 171.4748 μs | 33.75 |    2.37 |  357.18 KB |        1.86 |
+| Fill_500x500_Base   |    116.192 μs |   6.9466 μs |   6.4978 μs |  1.00 |    0.08 |  192.33 KB |        1.00 |
 
 All of the following benchmarks fill a surface of the specified size with a poisson disc set of random values with a separation of 5.
 
@@ -84,24 +99,24 @@ All of the following benchmarks fill a surface of the specified size with a pois
 | Create_1000x1000 | 14,129.65 us | 107.994 us | 101.018 us | 4681.92 KB |
 
 # D3DelaunayFactory Benchmarks
-| Method           | Mean         | Error      | StdDev     | Allocated  |
-|----------------- |-------------:|-----------:|-----------:|-----------:|
-| Create_100x100   |     79.93 μs |   3.766 μs |   3.339 μs |   89.98 KB |
-| Create_500x500   |  3,566.07 μs |  38.761 μs |  34.360 μs |  2252.2 KB |
-| Create_1000x1000 | 18,431.21 μs | 510.076 μs | 477.125 μs | 9035.57 KB |
+| Method           | Mean         | Error      | StdDev     | Allocated   |
+|----------------- |-------------:|-----------:|-----------:|------------:|
+| Create_100x100   |     81.46 μs |   3.924 μs |   3.671 μs |   102.25 KB |
+| Create_500x500   |  3,866.33 μs |  93.106 μs |  87.092 μs |  2562.34 KB |
+| Create_1000x1000 | 17,588.62 μs | 303.054 μs | 268.649 μs | 10281.43 KB |
 
 
 # D3VoronoiFactory Benchmarks
 | Method           | Mean         | Error       | StdDev      | Allocated   |
 |----------------- |-------------:|------------:|------------:|------------:|
-| Create_100x100   |     392.6 μs |     5.46 μs |     4.84 μs |   436.54 KB |
-| Create_500x500   |  21,884.3 μs | 1,642.02 μs | 1,535.95 μs | 11933.25 KB |
-| Create_1000x1000 | 109,610.7 μs | 3,384.38 μs | 3,000.16 μs | 48706.67 KB |
+| Create_100x100   |     391.3 μs |    19.21 μs |    17.97 μs |   433.41 KB |
+| Create_500x500   |  22,846.6 μs | 1,438.23 μs | 1,345.32 μs | 11854.63 KB |
+| Create_1000x1000 | 121,492.1 μs | 7,361.32 μs | 6,885.78 μs | 48395.72 KB |
 
 # SimpleQuadTreeNode Benchmarks
 | Method | Mean     | Error     | StdDev    | Gen0   | Allocated |
 |------- |---------:|----------:|----------:|-------:|----------:|
-| Query  | 5.531 μs | 0.0734 μs | 0.0613 μs | 0.2136 |   1.34 KB |
+| Query  | 6.245 μs | 0.2259 μs | 0.2113 μs | 0.2136 |   1.34 KB |
 
 # Notes
 

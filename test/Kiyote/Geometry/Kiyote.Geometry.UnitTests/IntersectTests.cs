@@ -31,9 +31,10 @@ public sealed class IntersectTests {
 		int bX2,
 		int bY2
 	) {
-		bool result = Intersect.TryFindIntersection( aX1, aY1, aX2, aY2, bX1, bY1, bX2, bY2, out Point intersection );
+		bool result = Intersect.TryFindIntersection( aX1, aY1, aX2, aY2, bX1, bY1, bX2, bY2, out int ix, out int iy );
 		Assert.That( result, Is.False );
-		Assert.That( intersection, Is.Null );
+		Assert.That( ix, Is.Zero );
+		Assert.That( iy, Is.Zero );
 	}
 
 	[Test]
@@ -44,9 +45,10 @@ public sealed class IntersectTests {
 
 	[Test]
 	public void TryFindIntersection_ParallelLines_ReturnsFalse() {
-		bool result = Intersect.TryFindIntersection( 0, 0, 10, 10, 0, 0, 10, 10, out Point intersection );
+		bool result = Intersect.TryFindIntersection( 0, 0, 10, 10, 0, 0, 10, 10, out int ix, out int iy );
 		Assert.That( result, Is.False );
-		Assert.That( intersection, Is.Null );
+		Assert.That( ix, Is.Zero );
+		Assert.That( iy, Is.Zero );
 	}
 
 	[Test]
@@ -57,9 +59,10 @@ public sealed class IntersectTests {
 
 	[Test]
 	public void TryFindIntersection_LinesDoNotIntersect_ReturnsFalse() {
-		bool result = Intersect.TryFindIntersection( 0, 0, 10, 10, 10, 0, 15, 10, out Point intersection );
+		bool result = Intersect.TryFindIntersection( 0, 0, 10, 10, 10, 0, 15, 10, out int ix, out int iy );
 		Assert.That( result, Is.False );
-		Assert.That( intersection, Is.Null );
+		Assert.That( ix, Is.Zero );
+		Assert.That( iy, Is.Zero );
 	}
 
 	[Test]
@@ -70,10 +73,9 @@ public sealed class IntersectTests {
 
 	[Test]
 	public void TryeFindIntersection_LinesIntersect_ReturnsTrue() {
-		bool result = Intersect.TryFindIntersection( 0, 5, 10, 5, 5, 0, 5, 10, out Point intersection );
+		bool result = Intersect.TryFindIntersection( 0, 5, 10, 5, 5, 0, 5, 10, out int ix, out int iy );
 		Assert.That( result, Is.True );
-		Assert.That( intersection, Is.Not.Null );
-		Assert.That( intersection.X, Is.EqualTo( 5 ) );
-		Assert.That( intersection.Y, Is.EqualTo( 5 ) );
+		Assert.That( ix, Is.EqualTo( 5 ) );
+		Assert.That( iy, Is.EqualTo( 5 ) );
 	}
 }

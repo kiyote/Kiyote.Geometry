@@ -5,7 +5,7 @@ namespace Kiyote.Geometry.Benchmarks.DelaunayVoronoi;
 [MemoryDiagnoser( true )]
 [GroupBenchmarksBy( BenchmarkLogicalGroupRule.ByCategory )]
 [MarkdownExporterAttribute.GitHub]
-public sealed class MapboxDelaunatorFactoryBenchmarks {
+public class MapboxDelaunatorFactoryBenchmarks {
 
 	public const int DistanceApart = 5;
 	private readonly double[] _100points;

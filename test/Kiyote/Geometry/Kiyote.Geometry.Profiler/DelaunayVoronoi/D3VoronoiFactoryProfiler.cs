@@ -4,14 +4,14 @@ namespace Kiyote.Geometry.DelaunayVoronoi.Profiler;
 
 public sealed class D3VoronoiFactoryProfiler {
 
-	public const int Iterations = 1000;
+	public const int Iterations = 1;
 	public const int Separation = 5;
 	private readonly IReadOnlyList<Point> _points;
 	private readonly IVoronoiFactory _voronoiFactory;
 	private readonly Rect _bounds;
 
 	public D3VoronoiFactoryProfiler() {
-		ISize size = new Point( 1000, 1000 );
+		ISize size = new Point( 1600, 900 );
 		_bounds = new Rect( 0, 0, size );
 
 		IRandom random = new FastRandom();

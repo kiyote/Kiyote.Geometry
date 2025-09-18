@@ -1,6 +1,6 @@
 ﻿namespace Kiyote.Geometry;
 
-public sealed class Point : IEquatable<Point>, ISize {
+public readonly struct Point : IEquatable<Point>, ISize {
 
 	public static readonly Point None = new Point( int.MinValue, int.MaxValue );
 
@@ -12,43 +12,48 @@ public sealed class Point : IEquatable<Point>, ISize {
 	) {
 		X = x;
 		Y = y;
-		_hashCode = ( X << 16 ) ^ Y;
+		_hashCode = HashCode.Combine( x, y );
 	}
 
 	public int X { get; }
+
 	public int Y { get; }
 
-	int ISize.Width => X;
+	readonly int ISize.Width => X;
 
-	int ISize.Height => Y;
+	readonly int ISize.Height => Y;
 
-	public Point Subtract( Point other ) {
+	public readonly Point Subtract(
+		Point other
+	) {
 		return Subtract( other.X, other.Y );
 	}
 
-	public Point Subtract(
+	public readonly Point Subtract(
 		int x,
 		int y
 	) {
 		return new Point( X - x, Y - y );
 	}
 
-	public Point Add( Point other ) {
+	public readonly Point Add(
+		Point other
+	) {
 		return Add( other.X, other.Y );
 	}
 
-	public Point Add(
+	public readonly Point Add(
 		int x,
 		int y
 	) {
 		return new Point( X + x, Y + y );
 	}
 
-	public override int GetHashCode() {
+	public override readonly int GetHashCode() {
 		return _hashCode;
 	}
 
-	public override bool Equals(
+	public override readonly bool Equals(
 		object? obj
 	) {
 		return obj is Point p
@@ -56,11 +61,14 @@ public sealed class Point : IEquatable<Point>, ISize {
 			&& p.Y == Y;
 	}
 
-	bool IEquatable<Point>.Equals(
-		Point? other
+	public static bool operator ==( Point left, Point right ) => left.X == right.X && left.Y == right.Y;
+
+	public static bool operator !=( Point left, Point right ) => !( left == right );
+
+	readonly bool IEquatable<Point>.Equals(
+		Point other
 	) {
-		return other is not null
-			&& other.X == X
+		return other.X == X
 			&& other.Y == Y;
 	}
 }

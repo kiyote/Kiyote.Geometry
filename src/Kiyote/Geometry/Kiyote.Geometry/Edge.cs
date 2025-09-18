@@ -35,11 +35,10 @@ public sealed class Edge {
 
 	public bool TryFindIntersection(
 		Edge other,
-		[NotNullWhen(true)]
-		out Point? intersection
+		out Point intersection
 	) {
 
-		return Intersect.TryFindIntersection(
+		bool result = Intersect.TryFindIntersection(
 			A.X,
 			A.Y,
 			B.X,
@@ -48,8 +47,16 @@ public sealed class Edge {
 			other.A.Y,
 			other.B.X,
 			other.B.Y,
-			out intersection
+			out int intersectionX,
+			out int intersectionY
 		);
+
+		if (result) {
+			intersection = new Point( intersectionX, intersectionY );
+			return true;
+		}
+		intersection = Point.None;
+		return false;
 	}
 
 	public Rect GetBoundingBox() {
