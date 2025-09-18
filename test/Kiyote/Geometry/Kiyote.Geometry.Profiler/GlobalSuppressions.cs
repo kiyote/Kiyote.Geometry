@@ -9,3 +9,4 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage( "Performance", "CA1812:An internal (assembly-level) type is never instantiated.", Justification = "Dependency Injection gives this rule fits", Scope = "module" )]
 [assembly: SuppressMessage( "Security", "CA5394:Do not use insecure randomness", Justification = "We're not creating a security library here", Scope = "module" )]
 [assembly: SuppressMessage( "Style", "IDE0130:Namespace does not match folder structure ", Justification = "Test name belongs at end of namespace to prevent namespace bloat", Scope = "module" )]
+[assembly: SuppressMessage( "Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "Diagnostic program.", Scope = "module" )]

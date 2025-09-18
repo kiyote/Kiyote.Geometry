@@ -5,23 +5,19 @@ namespace Kiyote.Geometry;
 public sealed class Polygon {
 	public readonly static Polygon None = new Polygon( [] );
 
+	private readonly Lazy<IReadOnlyList<Edge>> _edges;
+
 	public Polygon(
 		IReadOnlyList<Point> points
 	) {
 		Points = points;
 
-		List<Edge> edges = [];
-		for( int i = 0; i < points.Count; i++ ) {
-			int ind = ( i + 1 ) % points.Count;
-			Edge edge = new Edge( points[i], points[ind] );
-			edges.Add( edge );
-		}
-		Edges = edges;
+		_edges = new Lazy<IReadOnlyList<Edge>>( CreateEdges( points ) );
 	}
 
 	public IReadOnlyList<Point> Points { get; }
 
-	public IReadOnlyList<Edge> Edges { get; }
+	public IReadOnlyList<Edge> Edges => _edges.Value;
 
 	public IReadOnlyList<Point> Intersections(
 		IReadOnlyList<Point> polygon
@@ -35,7 +31,7 @@ public sealed class Polygon {
 				Point p3 = polygon[j];
 				Point p4 = polygon[( j + 1 ) % polygon.Count];
 
-				if( Geometry.Intersect.TryFindIntersection(
+				if( Intersect.TryFindIntersection(
 					p1.X,
 					p1.Y,
 					p2.X,
@@ -44,9 +40,10 @@ public sealed class Polygon {
 					p3.Y,
 					p4.X,
 					p4.Y,
-					out Point? intersection
+					out int intersectionX,
+					out int intersectionY
 				) ) {
-					intersections.Add( intersection );
+					intersections.Add( new Point( intersectionX, intersectionY ) );
 				}
 			}
 		}
@@ -79,7 +76,7 @@ public sealed class Polygon {
 			Point p1 = Points[i];
 			Point p2 = Points[( i + 1 ) % Points.Count];
 
-			if( Geometry.Intersect.HasIntersection(
+			if( Intersect.HasIntersection(
 				edge.A.X,
 				edge.A.Y,
 				edge.B.X,
@@ -105,7 +102,7 @@ public sealed class Polygon {
 			Point p1 = Points[i];
 			Point p2 = Points[( i + 1 ) % Points.Count];
 
-			if( Geometry.Intersect.TryFindIntersection(
+			if( Intersect.TryFindIntersection(
 				edge.A.X,
 				edge.A.Y,
 				edge.B.X,
@@ -114,9 +111,10 @@ public sealed class Polygon {
 				p1.Y,
 				p2.X,
 				p2.Y,
-				out Point? intersection
+				out int intersectionX,
+				out int intersectionY
 			) ) {
-				result.Add( intersection );
+				result.Add( new Point( intersectionX, intersectionY ) );
 			}
 		}
 		intersections = result;
@@ -266,5 +264,17 @@ public sealed class Polygon {
 		IEnumerable<Point> two = other.Points.OrderBy( p => p.X ).ThenBy( p => p.Y );
 
 		return one.SequenceEqual( two );
+	}
+
+	private static IReadOnlyList<Edge> CreateEdges(
+		IReadOnlyList<Point> points
+	) {
+		List<Edge> edges = [];
+		for( int i = 0; i < points.Count; i++ ) {
+			int ind = ( i + 1 ) % points.Count;
+			Edge edge = new Edge( points[i], points[ind] );
+			edges.Add( edge );
+		}
+		return edges;
 	}
 }

@@ -9,6 +9,7 @@ public class PolygonBenchmarks {
 	private readonly IReadOnlyList<Point> _points;
 	private readonly Polygon _polygon;
 	private readonly Polygon _other;
+	private readonly Polygon _poly2;
 	private readonly Edge _edge;
 
 	public PolygonBenchmarks() {
@@ -28,6 +29,15 @@ public class PolygonBenchmarks {
 			]
 		);
 
+		_poly2 = new Polygon(
+			[
+				new Point( size.Width - 200, 200 ),
+				new Point( size.Width - 200, size.Height - 200 ),
+				new Point( 200, size.Height - 200 ),
+				new Point( 200, 200 )
+			]
+		);
+
 		_other = new Polygon(
 			[
 				new Point( 250, 250 ),
@@ -44,7 +54,7 @@ public class PolygonBenchmarks {
 	}
 
 	[Benchmark]
-	public void TryFindOverlap() {
+	public void TryIntersect() {
 		 _polygon.TryIntersect( _other, out Polygon _ );
 	}
 
@@ -54,21 +64,34 @@ public class PolygonBenchmarks {
 	}
 
 	[Benchmark]
-	public void Contains_1000x1000() {
-		for (int i = 0; i < _points.Count; i++) {
-			 _polygon.Contains( _points[i] );
-		}
-	}
-
-	[Benchmark]
 	public void Intersections() {
 		 _polygon.Intersections( _other.Points );
 	}
 
+	[Benchmark]
+	public void IsEquivalentTo() {
+		_polygon.IsEquivalentTo( _poly2 );
+	}
+
+
+	[Benchmark, BenchmarkCategory("HasIntersection")]
+	public void HasIntersection_Edge() {
+		_ = _polygon.HasIntersection( _edge );
+	}
+
+	[Benchmark, BenchmarkCategory( "HasIntersection" )]
+	public void HasIntersection_Polygon() {
+		_ = _polygon.HasIntersection( _other );
+	}
+
+	[Benchmark, BenchmarkCategory( "HasIntersection" )]
+	public void HasIntersection_EdgeList() {
+		_ = _polygon.HasIntersection( _other.Edges );
+	}
 
 	[Benchmark]
-	public void HasIntersection() {
-		_ = _polygon.HasIntersection( _edge );
+	public void HasOverlap() {
+		_ = _polygon.HasOverlap( _other );
 	}
 
 	[Benchmark]
