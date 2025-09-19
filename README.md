@@ -106,26 +106,25 @@ All of the following benchmarks fill a surface of the specified size with a pois
 | TryFindIntersection | 7.325 ns | 0.1383 ns | 0.1294 ns |         - |
 
 # MapboxDelaunatorFactory Benchmarks
-| Method           | Mean         | Error      | StdDev     | Allocated  |
-|----------------- |-------------:|-----------:|-----------:|-----------:|
-| Create_100x100   |     60.32 us |   0.193 us |   0.181 us |   47.63 KB |
-| Create_500x500   |  2,893.19 us |  13.911 us |  10.861 us | 1168.35 KB |
-| Create_1000x1000 | 14,129.65 us | 107.994 us | 101.018 us | 4681.92 KB |
+| Method           | Mean         | Error      | StdDev     | Gen0     | Gen1     | Gen2     | Allocated  |
+|----------------- |-------------:|-----------:|-----------:|---------:|---------:|---------:|-----------:|
+| Create_100x100   |     66.37 μs |   2.257 μs |   2.112 μs |   7.6904 |   0.4883 |        - |   47.63 KB |
+| Create_500x500   |  2,964.06 μs |  85.309 μs |  79.798 μs | 285.1563 | 257.8125 | 246.0938 | 1168.25 KB |
+| Create_1000x1000 | 15,013.09 μs | 731.815 μs | 684.540 μs | 937.5000 | 937.5000 | 937.5000 | 4682.29 KB |
 
 # D3DelaunayFactory Benchmarks
-| Method           | Mean         | Error      | StdDev     | Allocated   |
-|----------------- |-------------:|-----------:|-----------:|------------:|
-| Create_100x100   |     81.46 μs |   3.924 μs |   3.671 μs |   102.25 KB |
-| Create_500x500   |  3,866.33 μs |  93.106 μs |  87.092 μs |  2562.34 KB |
-| Create_1000x1000 | 17,588.62 μs | 303.054 μs | 268.649 μs | 10281.43 KB |
-
+| Method           | Mean         | Error        | StdDev     | Allocated   |
+|----------------- |-------------:|-------------:|-----------:|------------:|
+| Create_100x100   |     81.72 μs |     4.065 μs |   3.802 μs |   102.25 KB |
+| Create_500x500   |  3,639.00 μs |   178.453 μs | 166.925 μs |  2562.26 KB |
+| Create_1000x1000 | 19,265.41 μs | 1,012.116 μs | 946.734 μs | 10280.92 KB |
 
 # D3VoronoiFactory Benchmarks
-| Method           | Mean         | Error       | StdDev      | Allocated   |
-|----------------- |-------------:|------------:|------------:|------------:|
-| Create_100x100   |     391.3 μs |    19.21 μs |    17.97 μs |   433.41 KB |
-| Create_500x500   |  22,846.6 μs | 1,438.23 μs | 1,345.32 μs | 11854.63 KB |
-| Create_1000x1000 | 121,492.1 μs | 7,361.32 μs | 6,885.78 μs | 48395.72 KB |
+| Method           | Mean         | Error        | StdDev       | Allocated   |
+|----------------- |-------------:|-------------:|-------------:|------------:|
+| Create_100x100   |     351.8 μs |     13.82 μs |     12.25 μs |   471.41 KB |
+| Create_500x500   |  20,526.4 μs |    645.88 μs |    539.34 μs | 13656.81 KB |
+| Create_1000x1000 | 108,228.1 μs | 12,393.26 μs | 11,592.67 μs | 56303.58 KB |
 
 # SimpleQuadTreeNode Benchmarks
 | Method | Mean     | Error     | StdDev    | Gen0   | Allocated |
