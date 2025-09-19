@@ -4,7 +4,7 @@ namespace Kiyote.Geometry.DelaunayVoronoi.Profiler;
 
 public sealed class D3VoronoiFactoryProfiler {
 
-	public const int Iterations = 1;
+	public const int Iterations = 1000;
 	public const int Separation = 5;
 	private readonly IReadOnlyList<Point> _points;
 	private readonly IVoronoiFactory _voronoiFactory;

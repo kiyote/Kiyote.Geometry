@@ -14,15 +14,15 @@ ManualConfig config = DefaultConfig.Instance
 		 .WithLaunchCount( 1 )
 		 .WithToolchain( InProcessNoEmitToolchain.Instance ) );
 
-BenchmarkRunner.Run<D3DelaunayFactoryBenchmarks>( config );
-BenchmarkRunner.Run<D3VoronoiFactoryBenchmarks>( config );
+//BenchmarkRunner.Run<D3DelaunayFactoryBenchmarks>( config );
+//BenchmarkRunner.Run<D3VoronoiFactoryBenchmarks>( config );
 BenchmarkRunner.Run<MapboxDelaunatorFactoryBenchmarks>( config );
-BenchmarkRunner.Run<EdgeBenchmarks>( config );
-BenchmarkRunner.Run<FastPoissonDiscPointFactoryBenchmarks>( config );
-BenchmarkRunner.Run<FastRandomBenchmarks>( config );
-BenchmarkRunner.Run<FastRandomVsSystemBenchmarks>( config );
-BenchmarkRunner.Run<IntersectBenchmarks>( config );
-BenchmarkRunner.Run<PolygonBenchmarks>( config );
-BenchmarkRunner.Run<RectangleBenchmarks>( config );
-BenchmarkRunner.Run<SimpleQuadTreeNodeBenchmarks>( config );
+//BenchmarkRunner.Run<EdgeBenchmarks>( config );
+//BenchmarkRunner.Run<FastPoissonDiscPointFactoryBenchmarks>( config );
+//BenchmarkRunner.Run<FastRandomBenchmarks>( config );
+//BenchmarkRunner.Run<FastRandomVsSystemBenchmarks>( config );
+//BenchmarkRunner.Run<IntersectBenchmarks>( config );
+//BenchmarkRunner.Run<PolygonBenchmarks>( config );
+//BenchmarkRunner.Run<RectangleBenchmarks>( config );
+//BenchmarkRunner.Run<SimpleQuadTreeNodeBenchmarks>( config );
 

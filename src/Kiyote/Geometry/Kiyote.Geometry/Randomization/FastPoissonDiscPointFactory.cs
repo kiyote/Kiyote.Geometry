@@ -23,28 +23,62 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		ISize size,
 		int distanceApart
 	) {
-		return ( this as IPointFactory ).Fill( size, distanceApart, true );
+		return ( this as IPointFactory ).Fill( size.Width, size.Height, distanceApart, true );
+	}
+
+	IReadOnlyList<Point> IPointFactory.Fill(
+		Point size,
+		int distanceApart
+	) {
+		return ( this as IPointFactory ).Fill( size.X, size.Y, distanceApart, true );
+	}
+
+	IReadOnlyList<Point> IPointFactory.Fill(
+		int width,
+		int height,
+		int distanceApart
+	) {
+		return ( this as IPointFactory ).Fill( width, height, distanceApart, true );
 	}
 
 	IReadOnlyList<Point> IPointFactory.Fill(
 		ISize size,
 		int distanceApart,
-		bool inclusive
+		bool clipToBounds
+	) {
+		return ( this as IPointFactory ).Fill( size.Width, size.Height, distanceApart, clipToBounds );
+	}
+
+	IReadOnlyList<Point> IPointFactory.Fill(
+		Point size,
+		int distanceApart,
+		bool clipToBounds
+	) {
+		return ( this as IPointFactory ).Fill( size.X, size.Y, distanceApart, clipToBounds );
+	}
+
+	IReadOnlyList<Point> IPointFactory.Fill(
+		int width,
+		int height,
+		int distanceApart,
+		bool clipToBounds
 	) {
 		List<Point> result = [];
 
 		int radius2 = distanceApart * distanceApart;
 		float cellSize = distanceApart * Sqrt1_2;
-		int gridWidth = (int)Math.Ceiling( size.Width / cellSize );
-		int gridHeight = (int)Math.Ceiling( size.Height / cellSize );
+		int gridWidth = (int)Math.Ceiling( width / cellSize );
+		int gridHeight = (int)Math.Ceiling( height / cellSize );
+		int right = width - 1;
+		int bottom = height - 1;
 		float[] grid = new float[gridWidth * gridHeight * 2];
 		Array.Fill( grid, -1 );
 		List<int> candidates = [];
 		float rotx = (float)Math.Cos( 2 * Math.PI * M / K );
 		float roty = (float)Math.Sin( 2 * Math.PI * M / K );
 
-		float startX = ( ( size.Width / 2 ) + ( ( _random.NextFloat() * distanceApart * 2 ) - distanceApart ) );
-		float startY = ( ( size.Height / 2 ) + ( ( _random.NextFloat() * distanceApart * 2 ) - distanceApart ) );
+		float startX = ( ( width / 2 ) + ( ( _random.NextFloat() * distanceApart * 2 ) - distanceApart ) );
+		float startY = ( ( height / 2 ) + ( ( _random.NextFloat() * distanceApart * 2 ) - distanceApart ) );
 
 		result.Add(
 			Sample(
@@ -76,9 +110,9 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 				float y = ( grid[parent + 1] + ( r * dy ) );
 
 				if( 0 <= x
-					&& x < size.Width
+					&& x < width
 					&& 0 <= y
-					&& y < size.Height
+					&& y < height
 					&& Far( x, y, radius2, cellSize, gridWidth, gridHeight, grid )
 				) {
 					Point p = Sample(
@@ -89,20 +123,20 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 							grid,
 							candidates
 						);
-					if( inclusive ) {
-						result.Add( p );
-						added = true;
-						break;
-					} else {
+					if( clipToBounds ) {
 						if( p.X > 0
-							&& p.X < size.Width - 1
+							&& p.X < right
 							&& p.Y > 0
-							&& p.Y < size.Height - 1
+							&& p.Y < bottom
 						) {
 							result.Add( p );
 							added = true;
 							break;
 						}
+					} else {
+						result.Add( p );
+						added = true;
+						break;
 					}
 				}
 			}
@@ -127,7 +161,7 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		float cellSize,
 		int gridWidth,
 		int gridHeight,
-		ReadOnlySpan<float> grid
+		float[] grid
 	) {
 		int di = (int)( x / cellSize );
 		int dj = (int)( y / cellSize );
@@ -164,13 +198,14 @@ internal sealed class FastPoissonDiscPointFactory : IPointFactory {
 		float y,
 		int gridWidth,
 		float cellSize,
-		Span<float> grid,
+		float[] grid,
 		List<int> candidates
 	) {
 		Point s = new Point( (int)x, (int)y );
 		int index = ( ( gridWidth * (int)( y / cellSize ) ) + (int)( x / cellSize ) ) * 2;
 		grid[index + 0] = x;
 		grid[index + 1] = y;
+
 		candidates.Add( index );
 		return s;
 

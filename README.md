@@ -80,24 +80,11 @@ LaunchCount=1  WarmupCount=10
 | SystemRandom_NextInt    |  1.933 ns | 0.1500 ns | 0.1404 ns |  1.00 |    0.10 |         - |          NA |
 
 # FastPoissonDiscPointFactory Benchmarks
-<sub>
-The `_Base` versions allocate an approximate number of random points in order to be able to judge roughly
-how much of the cost of the routine came simply from randomizing points and constructing a list of them.
-The surface is filled with a separation of 5.
-</sub>
-
-| Method              | Mean          | Error       | StdDev      | Ratio | RatioSD | Allocated  | Alloc Ratio |
-|-------------------- |--------------:|------------:|------------:|------:|--------:|-----------:|------------:|
-| Fill_1000x1000      | 16,163.716 μs | 674.5125 μs | 630.9394 μs | 27.37 |    2.07 | 1410.69 KB |        1.84 |
-| Fill_1000x1000_Base |    593.162 μs |  42.6133 μs |  39.8605 μs |  1.00 |    0.09 |  768.53 KB |        1.00 |
-|                     |               |             |             |       |         |            |             |
-| Fill_100x100        |    152.325 μs |   5.8146 μs |   5.4390 μs | 44.82 |    3.24 |   19.94 KB |        1.63 |
-| Fill_100x100_Base   |      3.412 μs |   0.2379 μs |   0.2225 μs |  1.00 |    0.09 |    12.2 KB |        1.00 |
-|                     |               |             |             |       |         |            |             |
-| Fill_500x500        |  3,909.891 μs | 183.3170 μs | 171.4748 μs | 33.75 |    2.37 |  357.18 KB |        1.86 |
-| Fill_500x500_Base   |    116.192 μs |   6.9466 μs |   6.4978 μs |  1.00 |    0.08 |  192.33 KB |        1.00 |
-
-All of the following benchmarks fill a surface of the specified size with a poisson disc set of random values with a separation of 5.
+| Method         | Mean        | Error     | StdDev    | Allocated  |
+|--------------- |------------:|----------:|----------:|-----------:|
+| Fill_100x100   |    139.9 us |   1.30 us |   1.15 us |   19.92 KB |
+| Fill_500x500   |  3,742.5 us | 164.07 us | 153.47 us |   358.1 KB |
+| Fill_1000x1000 | 15,474.4 us | 740.32 us | 692.50 us | 1410.53 KB |
 
 # Intersect
 | Method              | Mean     | Error     | StdDev    | Allocated |
@@ -106,11 +93,11 @@ All of the following benchmarks fill a surface of the specified size with a pois
 | TryFindIntersection | 7.325 ns | 0.1383 ns | 0.1294 ns |         - |
 
 # MapboxDelaunatorFactory Benchmarks
-| Method           | Mean         | Error      | StdDev     | Gen0     | Gen1     | Gen2     | Allocated  |
-|----------------- |-------------:|-----------:|-----------:|---------:|---------:|---------:|-----------:|
-| Create_100x100   |     66.37 μs |   2.257 μs |   2.112 μs |   7.6904 |   0.4883 |        - |   47.63 KB |
-| Create_500x500   |  2,964.06 μs |  85.309 μs |  79.798 μs | 285.1563 | 257.8125 | 246.0938 | 1168.25 KB |
-| Create_1000x1000 | 15,013.09 μs | 731.815 μs | 684.540 μs | 937.5000 | 937.5000 | 937.5000 | 4682.29 KB |
+| Method           | Mean         | Error      | StdDev     | Allocated  |
+|----------------- |-------------:|-----------:|-----------:|-----------:|
+| Create_100x100   |     63.95 us |   1.720 us |   1.525 us |   47.63 KB |
+| Create_500x500   |  2,948.48 us | 110.265 us | 103.142 us | 1168.41 KB |
+| Create_1000x1000 | 14,203.20 us | 586.036 us | 519.506 us | 4681.83 KB |
 
 # D3DelaunayFactory Benchmarks
 | Method           | Mean         | Error        | StdDev     | Allocated   |
@@ -120,11 +107,11 @@ All of the following benchmarks fill a surface of the specified size with a pois
 | Create_1000x1000 | 19,265.41 μs | 1,012.116 μs | 946.734 μs | 10280.92 KB |
 
 # D3VoronoiFactory Benchmarks
-| Method           | Mean         | Error        | StdDev       | Allocated   |
-|----------------- |-------------:|-------------:|-------------:|------------:|
-| Create_100x100   |     351.8 μs |     13.82 μs |     12.25 μs |   471.41 KB |
-| Create_500x500   |  20,526.4 μs |    645.88 μs |    539.34 μs | 13656.81 KB |
-| Create_1000x1000 | 108,228.1 μs | 12,393.26 μs | 11,592.67 μs | 56303.58 KB |
+| Method           | Mean         | Error       | StdDev      | Allocated   |
+|----------------- |-------------:|------------:|------------:|------------:|
+| Create_100x100   |     349.2 us |    16.57 us |    15.50 us |   471.41 KB |
+| Create_500x500   |  20,988.6 us | 1,628.98 us | 1,523.75 us | 13656.45 KB |
+| Create_1000x1000 | 102,818.1 us | 9,488.92 us | 8,875.94 us | 56306.15 KB |
 
 # SimpleQuadTreeNode Benchmarks
 | Method | Mean     | Error     | StdDev    | Gen0   | Allocated |
