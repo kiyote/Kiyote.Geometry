@@ -13,23 +13,31 @@ LaunchCount=1  WarmupCount=10
 
 ```
 # Edge
-| Method              | Mean      | Error     | StdDev    | Allocated |
-|-------------------- |----------:|----------:|----------:|----------:|
-| HasIntersection     |  6.643 ns | 0.3820 ns | 0.3573 ns |         - |
-| TryFindIntersection | 10.836 ns | 0.4186 ns | 0.3916 ns |         - |
+| Method              | Mean       | Error     | StdDev    | Median     | Allocated |
+|-------------------- |-----------:|----------:|----------:|-----------:|----------:|
+| HasIntersection     |  7.4783 ns | 0.3029 ns | 0.2833 ns |  7.5074 ns |         - |
+| TryFindIntersection | 10.8151 ns | 0.3087 ns | 0.2887 ns | 10.8744 ns |         - |
+| GetBoundingBox      |  1.8059 ns | 0.1634 ns | 0.1529 ns |  1.7492 ns |         - |
+| Ctor_PointPoint     |  0.0340 ns | 0.0398 ns | 0.0372 ns |  0.0254 ns |         - |
+| Ctor_IntIntIntInt   |  3.6238 ns | 0.2290 ns | 0.2142 ns |  3.6003 ns |         - |
 
 # Polygon
-| Method                   | Mean        | Error     | StdDev    | Allocated |
-|------------------------- |------------:|----------:|----------:|----------:|
-| TryIntersect             | 1,447.16 ns | 31.768 ns | 29.716 ns |    2368 B |
-| Contains                 |    33.43 ns |  0.509 ns |  0.477 ns |         - |
-| Intersections            |   204.16 ns |  2.812 ns |  2.492 ns |     104 B |
-| IsEquivalentTo           |   524.55 ns | 20.538 ns | 19.211 ns |    1104 B |
-| HasOverlap               |   282.13 ns |  4.899 ns |  4.343 ns |     232 B |
-| TryFindIntersections     |   106.76 ns |  2.308 ns |  2.159 ns |     104 B |
-| HasIntersection_Edge     |    11.60 ns |  0.219 ns |  0.205 ns |         - |
-| HasIntersection_Polygon  |    90.56 ns |  1.908 ns |  1.784 ns |      40 B |
-| HasIntersection_EdgeList |    81.57 ns |  1.662 ns |  1.473 ns |      40 B |
+| Method                                            | Mean        | Error     | StdDev    | Allocated |
+|-------------------------------------------------- |------------:|----------:|----------:|----------:|
+| Ctor                                              |    70.55 ns |  3.506 ns |  3.108 ns |     272 B |
+| Contains_Point                                    |    55.12 ns |  1.625 ns |  1.520 ns |         - |
+| Contains_Polygon                                  |    58.23 ns |  1.894 ns |  1.772 ns |         - |
+| HasOverlap                                        |    56.95 ns |  0.899 ns |  0.840 ns |         - |
+| IsEquivalentTo                                    |    53.43 ns |  1.948 ns |  1.822 ns |         - |
+| TryIntersect_WithIntersection                     | 1,075.64 ns | 30.766 ns | 27.274 ns |    1304 B |
+| TryIntersect_WithoutIntersection                  |    94.47 ns |  5.909 ns |  5.527 ns |      24 B |
+| TryFindIntersections_Edge_WithIntersections       |    72.85 ns |  3.318 ns |  3.103 ns |     104 B |
+| TryFindIntersections_Edge_WithoutIntersections    |    17.93 ns |  0.706 ns |  0.660 ns |         - |
+| TryFindIntersections_Polygon_WithIntersections    |   137.99 ns |  7.343 ns |  6.869 ns |     104 B |
+| TryFindIntersections_Polygon_WithoutIntersections |    81.33 ns |  2.354 ns |  2.202 ns |         - |
+| HasIntersection_Edge                              |    12.73 ns |  0.273 ns |  0.255 ns |         - |
+| HasIntersection_Polygon                           |    70.50 ns |  1.579 ns |  1.477 ns |         - |
+| HasIntersection_EdgeArray                         |    72.31 ns |  2.843 ns |  2.659 ns |         - |
 
 # Rect
 | Method                      | Mean      | Error     | StdDev    | Allocated |
@@ -90,6 +98,12 @@ The surface is filled with a separation of 5.
 | Fill_500x500_Base   |    116.192 μs |   6.9466 μs |   6.4978 μs |  1.00 |    0.08 |  192.33 KB |        1.00 |
 
 All of the following benchmarks fill a surface of the specified size with a poisson disc set of random values with a separation of 5.
+
+# Intersect
+| Method              | Mean     | Error     | StdDev    | Allocated |
+|-------------------- |---------:|----------:|----------:|----------:|
+| HasIntersection     | 4.856 ns | 0.1851 ns | 0.1732 ns |         - |
+| TryFindIntersection | 7.325 ns | 0.1383 ns | 0.1294 ns |         - |
 
 # MapboxDelaunatorFactory Benchmarks
 | Method           | Mean         | Error      | StdDev     | Allocated  |

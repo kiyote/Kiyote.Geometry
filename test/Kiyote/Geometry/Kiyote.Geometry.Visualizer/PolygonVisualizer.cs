@@ -117,9 +117,10 @@ public sealed class PolygonVisualizer {
 			 context.DrawLine( Color.White, 1.0f, lines );
 		} );
 
-		IReadOnlyList<Point> intersections = polygon1.Intersections( polygon2.Points );
-		foreach (Point p in intersections) {
-			image[p.X, p.Y] = Color.Red;
+		if (polygon1.TryFindIntersections( polygon2, out IReadOnlyList<Point> intersections)) {
+			foreach( Point p in intersections ) {
+				image[p.X, p.Y] = Color.Red;
+			}
 		}
 
 		image.SaveAsPng( Path.Combine( _outputFolder, "PolygonIntersections.png" ) );

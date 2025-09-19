@@ -71,4 +71,8 @@ public readonly struct Point : IEquatable<Point>, ISize {
 		return other.X == X
 			&& other.Y == Y;
 	}
+
+	public override string ToString() {
+		return $"( {X}, {Y} )";
+	}
 }

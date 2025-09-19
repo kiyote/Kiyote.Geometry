@@ -1,8 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿namespace Kiyote.Geometry;
 
-namespace Kiyote.Geometry;
-
-public sealed class Edge {
+public readonly struct Edge : IEquatable<Edge> {
 
 	public static readonly Edge None = new Edge( Point.None, Point.None );
 
@@ -12,6 +10,16 @@ public sealed class Edge {
 	) {
 		A = a;
 		B = b;
+	}
+
+	public Edge(
+		int aX,
+		int aY,
+		int bX,
+		int bY
+	) {
+		A = new Point( aX, aY );
+		B = new Point( bX, bY );
 	}
 
 	public Point A { get; }
@@ -65,8 +73,10 @@ public sealed class Edge {
 		int maxX = Math.Max( A.X, B.X );
 		int maxY = Math.Max( A.Y, B.Y );
 		return new Rect(
-			new Point( minX, minY ),
-			new Point( maxX, maxY )
+			minX,
+			minY,
+			maxX - minX + 1,
+			maxY - minY + 1
 		);
 	}
 
@@ -75,5 +85,45 @@ public sealed class Edge {
 	) {
 		return ( ( other.A.Equals( A ) && other.B.Equals( B ) )
 			|| ( other.A.Equals( B ) && other.B.Equals( A ) ) );
+	}
+
+	public override bool Equals(
+		object? obj
+	) {
+		return obj is Edge e
+			&& A.X == e.A.X
+			&& A.Y == e.A.Y
+			&& B.X == e.B.X
+			&& B.Y == e.B.Y;
+	}
+
+	public override int GetHashCode() {
+		return HashCode.Combine( A, B );
+	}
+
+	bool IEquatable<Edge>.Equals(
+		Edge other
+	) {
+		return A.X == other.A.X
+			&& A.Y == other.A.Y
+			&& B.X == other.B.X
+			&& B.Y == other.B.Y;
+	}
+
+	public static bool operator ==(
+		Edge left,
+		Edge right
+	) {
+		return left.A.X == right.A.X
+			&& left.A.Y == right.A.Y
+			&& left.B.X == right.B.X
+			&& left.B.Y == right.B.Y;
+	}
+
+	public static bool operator !=(
+		Edge left,
+		Edge right
+	) {
+		return !( left  ==  right );
 	}
 }

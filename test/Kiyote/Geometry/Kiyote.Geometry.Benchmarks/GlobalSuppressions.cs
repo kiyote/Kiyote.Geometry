@@ -8,3 +8,4 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage( "Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "module" )]
 [assembly: SuppressMessage( "Performance", "CA1812:An internal (assembly-level) type is never instantiated.", Justification = "<Pending>", Scope = "module" )]
 [assembly: SuppressMessage( "Security", "CA5394:Do not use insecure randomness", Justification = "<Pending>", Scope = "module" )]
+[assembly: SuppressMessage( "Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "module" )]
