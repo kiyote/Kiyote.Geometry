@@ -1,6 +1,4 @@
-﻿using Kiyote.Geometry.DelaunayVoronoi;
-
-namespace Kiyote.Geometry.Benchmarks.DelaunayVoronoi;
+﻿namespace Kiyote.Geometry.DelaunayVoronoi.Benchmarks;
 
 [MemoryDiagnoser( false )]
 [GroupBenchmarksBy( BenchmarkLogicalGroupRule.ByCategory )]

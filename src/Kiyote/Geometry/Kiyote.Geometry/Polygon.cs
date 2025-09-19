@@ -1,55 +1,22 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
 
 namespace Kiyote.Geometry;
 
 public sealed class Polygon {
 	public readonly static Polygon None = new Polygon( [] );
 
-	private readonly Lazy<IReadOnlyList<Edge>> _edges;
-
 	public Polygon(
 		IReadOnlyList<Point> points
 	) {
 		Points = points;
 
-		_edges = new Lazy<IReadOnlyList<Edge>>( CreateEdges( points ) );
+		Edges = CreateEdges( points );
 	}
 
 	public IReadOnlyList<Point> Points { get; }
 
-	public IReadOnlyList<Edge> Edges => _edges.Value;
-
-	public IReadOnlyList<Point> Intersections(
-		IReadOnlyList<Point> polygon
-	) {
-		List<Point> intersections = [];
-		for( int i = 0; i < Points.Count; i++ ) {
-			Point p1 = Points[i];
-			Point p2 = Points[( i + 1 ) % Points.Count];
-
-			for( int j = 0; j < polygon.Count; j++ ) {
-				Point p3 = polygon[j];
-				Point p4 = polygon[( j + 1 ) % polygon.Count];
-
-				if( Intersect.TryFindIntersection(
-					p1.X,
-					p1.Y,
-					p2.X,
-					p2.Y,
-					p3.X,
-					p3.Y,
-					p4.X,
-					p4.Y,
-					out int intersectionX,
-					out int intersectionY
-				) ) {
-					intersections.Add( new Point( intersectionX, intersectionY ) );
-				}
-			}
-		}
-
-		return intersections;
-	}
+	public ImmutableArray<Edge> Edges { get; }
 
 	public bool HasIntersection(
 		Polygon polygon
@@ -58,23 +25,24 @@ public sealed class Polygon {
 	}
 
 	public bool HasIntersection(
-		IReadOnlyList<Edge> edges
+		ImmutableArray<Edge> edges
 	) {
-		foreach( Edge edge in edges ) {
-			if( HasIntersection( edge ) ) {
+		for( int i = 0; i < edges.Length; i++ ) {
+			if( HasIntersection( edges[i] ) ) {
 				return true;
 			}
 		}
-
 		return false;
 	}
 
 	public bool HasIntersection(
 		Edge edge
 	) {
-		for( int i = 0; i < Points.Count; i++ ) {
+		int pointCount = Points.Count;
+		for( int i = 0; i < pointCount; i++ ) {
+			int j = ( i + 1 ) % pointCount;
 			Point p1 = Points[i];
-			Point p2 = Points[( i + 1 ) % Points.Count];
+			Point p2 = Points[j];
 
 			if( Intersect.HasIntersection(
 				edge.A.X,
@@ -97,28 +65,65 @@ public sealed class Polygon {
 		Edge edge,
 		out IReadOnlyList<Point> intersections
 	) {
-		List<Point> result = [];
-		for( int i = 0; i < Points.Count; i++ ) {
-			Point p1 = Points[i];
-			Point p2 = Points[( i + 1 ) % Points.Count];
 
+		List<Point>? result = null;
+		for( int i = 0; i < Edges.Length; i++ ) {
 			if( Intersect.TryFindIntersection(
 				edge.A.X,
 				edge.A.Y,
 				edge.B.X,
 				edge.B.Y,
-				p1.X,
-				p1.Y,
-				p2.X,
-				p2.Y,
+				Edges[i].A.X,
+				Edges[i].A.Y,
+				Edges[i].B.X,
+				Edges[i].B.Y,
 				out int intersectionX,
 				out int intersectionY
 			) ) {
+				result ??= [];
 				result.Add( new Point( intersectionX, intersectionY ) );
 			}
 		}
+
+		if( result is null ) {
+			intersections = [];
+			return false;
+		}
 		intersections = result;
-		return intersections.Count != 0;
+		return true;
+	}
+
+	public bool TryFindIntersections(
+		Polygon polygon,
+		out IReadOnlyList<Point> intersections
+	) {
+		List<Point>? result = null;
+		for( int i = 0; i < Edges.Length; i++ ) {
+			for( int j = 0; j < polygon.Edges.Length; j++ ) {
+				if( Intersect.TryFindIntersection(
+					polygon.Edges[j].A.X,
+					polygon.Edges[j].A.Y,
+					polygon.Edges[j].B.X,
+					polygon.Edges[j].B.Y,
+					Edges[i].A.X,
+					Edges[i].A.Y,
+					Edges[i].B.X,
+					Edges[i].B.Y,
+					out int intersectionX,
+					out int intersectionY
+				) ) {
+					result ??= [];
+					result.Add( new Point( intersectionX, intersectionY ) );
+				}
+			}
+		}
+
+		if( result is null ) {
+			intersections = [];
+			return false;
+		}
+		intersections = result;
+		return true;
 	}
 
 	public bool Contains(
@@ -167,6 +172,115 @@ public sealed class Polygon {
 
 	}
 
+	public bool Contains(
+		Polygon polygon
+	) {
+		for( int i = 0; i < polygon.Points.Count; i++ ) {
+			if( Contains( polygon.Points[i] ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public bool Contains(
+		IEnumerable<Point> points
+	) {
+		return points.All( Contains );
+	}
+
+	public bool HasOverlap(
+		Polygon polygon
+	) {
+		if( this.Contains( polygon ) ) {
+			return true;
+		}
+
+		if( polygon.Contains( this ) ) {
+			return true;
+		}
+
+		return HasIntersection( polygon );
+	}
+
+	public bool TryIntersect(
+		Polygon polygon,
+		out Polygon intersectedPolygon
+	) {
+		// https://gorillasun.de/blog/an-algorithm-for-polygon-intersections
+		if( !TryFindIntersections( polygon, out IReadOnlyList<Point> intersections ) ) {
+			intersectedPolygon = None;
+			return false;
+		}
+
+		List<Point> allPoints = [];
+		allPoints.AddRange( intersections );
+		for( int i = 0; i < polygon.Points.Count; i++ ) {
+			if( Contains( polygon.Points[i] ) ) {
+				allPoints.Add( polygon.Points[i] );
+			}
+		}
+		for( int i = 0; i < Points.Count; i++ ) {
+			if( polygon.Contains( Points[i] ) ) {
+				allPoints.Add( Points[i] );
+			}
+		}
+
+		int centerX = allPoints.ElementAt( 0 ).X;
+		int centerY = allPoints.ElementAt( 0 ).Y;
+		for( int i = 1; i < allPoints.Count; i++ ) {
+			centerX += allPoints.ElementAt( i ).X;
+			centerY += allPoints.ElementAt( i ).Y;
+		}
+		centerX /= allPoints.Count;
+		centerY /= allPoints.Count;
+
+		List<Point> sortedPoints = [.. allPoints.OrderBy( p => Math.Atan2( centerY - p.Y, centerX - p.X ) )];
+		intersectedPolygon = new Polygon( sortedPoints );
+		return true;
+	}
+
+	public bool IsEquivalentTo(
+		Polygon other
+	) {
+		if( Points.Count != other.Points.Count ) {
+			return false;
+		}
+
+		// It's not great that this is N^2 but for our small polygons
+		// this works well enough
+		for( int i = 0; i < Points.Count; i++ ) {
+			int iv = ( Points[i].X << 32 ) | Points[i].Y;
+
+			bool found = false;
+			for( int j = 0; j < other.Points.Count; j++ ) {
+				int jv = ( other.Points[j].X << 32 ) | other.Points[j].Y;
+				if( iv == jv ) {
+					found = true;
+					break;
+				}
+			}
+
+			if( !found ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static ImmutableArray<Edge> CreateEdges(
+		IReadOnlyList<Point> points
+	) {
+		int pc = points.Count;
+		Edge[] edges = new Edge[pc];
+		for( int i = 0; i < pc; i++ ) {
+			int ind = ( i + 1 ) % pc;
+			Edge edge = new Edge( points[i], points[ind] );
+			edges[i] = edge;
+		}
+		return [.. edges];
+	}
+
 	[MethodImpl( MethodImplOptions.AggressiveInlining )]
 	private static int IsLeft(
 		int p0x,
@@ -200,81 +314,5 @@ public sealed class Polygon {
 			&& p2x <= Math.Max( p0x, p1x )
 			&& p2y >= Math.Min( p0y, p1y )
 			&& p2y <= Math.Max( p0y, p1y );
-	}
-
-	public bool Contains(
-		Polygon polygon
-	) {
-		return Contains( polygon.Points );
-	}
-
-	public bool Contains(
-		IEnumerable<Point> points
-	) {
-		return points.All( Contains );
-	}
-
-	public bool HasOverlap(
-		Polygon polygon
-	) {
-		return
-			this.Contains( polygon )
-			|| polygon.Contains( this )
-			|| this.HasIntersection( polygon );
-	}
-
-	public bool TryIntersect(
-		Polygon polygon,
-		out Polygon intersectedPolygon
-	) {
-		// https://gorillasun.de/blog/an-algorithm-for-polygon-intersections
-		IReadOnlyList<Point> intersections = Intersections( polygon.Points );
-		if( intersections.Count == 0 ) {
-			intersectedPolygon = None;
-			return false;
-		}
-		IEnumerable<Point> otherPointsWithinThis = polygon.Points.Where( Contains );
-		IEnumerable<Point> thisPointsWithinOther = Points.Where( polygon.Contains );
-
-		// This may need a .Distinct() just beforehand?
-		List<Point> allPoints = [.. intersections.Union( otherPointsWithinThis ).Union( thisPointsWithinOther )];
-
-		int centerX = allPoints[0].X;
-		int centerY = allPoints[0].Y;
-		for( int i = 1; i < allPoints.Count; i++ ) {
-			centerX += allPoints[i].X;
-			centerY += allPoints[i].Y;
-		}
-		centerX /= allPoints.Count;
-		centerY /= allPoints.Count;
-
-		var sortedPoints = allPoints.OrderBy( p => Math.Atan2( centerY - p.Y, centerX - p.X ) ).ToList();
-		intersectedPolygon = new Polygon( sortedPoints );
-		return true;
-	}
-
-	public bool IsEquivalentTo(
-		Polygon other
-	) {
-		if (Points.Count != other.Points.Count) {
-			return false;
-		}
-
-		IEnumerable<Point> one = Points.OrderBy( p => p.X ).ThenBy( p => p.Y );
-		IEnumerable<Point> two = other.Points.OrderBy( p => p.X ).ThenBy( p => p.Y );
-
-		return one.SequenceEqual( two );
-	}
-
-	private static IReadOnlyList<Edge> CreateEdges(
-		IReadOnlyList<Point> points
-	) {
-		List<Edge> edges = [];
-		for( int i = 0; i < points.Count; i++ ) {
-			int ind = ( i + 1 ) % points.Count;
-			Edge edge = new Edge( points[i], points[ind] );
-			edges.Add( edge );
-		}
-		return edges;
 	}
 }

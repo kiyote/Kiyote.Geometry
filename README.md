@@ -13,23 +13,31 @@ LaunchCount=1  WarmupCount=10
 
 ```
 # Edge
-| Method              | Mean      | Error     | StdDev    | Allocated |
-|-------------------- |----------:|----------:|----------:|----------:|
-| HasIntersection     |  6.643 ns | 0.3820 ns | 0.3573 ns |         - |
-| TryFindIntersection | 10.836 ns | 0.4186 ns | 0.3916 ns |         - |
+| Method              | Mean       | Error     | StdDev    | Median     | Allocated |
+|-------------------- |-----------:|----------:|----------:|-----------:|----------:|
+| HasIntersection     |  7.4783 ns | 0.3029 ns | 0.2833 ns |  7.5074 ns |         - |
+| TryFindIntersection | 10.8151 ns | 0.3087 ns | 0.2887 ns | 10.8744 ns |         - |
+| GetBoundingBox      |  1.8059 ns | 0.1634 ns | 0.1529 ns |  1.7492 ns |         - |
+| Ctor_PointPoint     |  0.0340 ns | 0.0398 ns | 0.0372 ns |  0.0254 ns |         - |
+| Ctor_IntIntIntInt   |  3.6238 ns | 0.2290 ns | 0.2142 ns |  3.6003 ns |         - |
 
 # Polygon
-| Method                   | Mean        | Error     | StdDev    | Allocated |
-|------------------------- |------------:|----------:|----------:|----------:|
-| TryIntersect             | 1,447.16 ns | 31.768 ns | 29.716 ns |    2368 B |
-| Contains                 |    33.43 ns |  0.509 ns |  0.477 ns |         - |
-| Intersections            |   204.16 ns |  2.812 ns |  2.492 ns |     104 B |
-| IsEquivalentTo           |   524.55 ns | 20.538 ns | 19.211 ns |    1104 B |
-| HasOverlap               |   282.13 ns |  4.899 ns |  4.343 ns |     232 B |
-| TryFindIntersections     |   106.76 ns |  2.308 ns |  2.159 ns |     104 B |
-| HasIntersection_Edge     |    11.60 ns |  0.219 ns |  0.205 ns |         - |
-| HasIntersection_Polygon  |    90.56 ns |  1.908 ns |  1.784 ns |      40 B |
-| HasIntersection_EdgeList |    81.57 ns |  1.662 ns |  1.473 ns |      40 B |
+| Method                                            | Mean        | Error     | StdDev    | Allocated |
+|-------------------------------------------------- |------------:|----------:|----------:|----------:|
+| Ctor                                              |    70.55 ns |  3.506 ns |  3.108 ns |     272 B |
+| Contains_Point                                    |    55.12 ns |  1.625 ns |  1.520 ns |         - |
+| Contains_Polygon                                  |    58.23 ns |  1.894 ns |  1.772 ns |         - |
+| HasOverlap                                        |    56.95 ns |  0.899 ns |  0.840 ns |         - |
+| IsEquivalentTo                                    |    53.43 ns |  1.948 ns |  1.822 ns |         - |
+| TryIntersect_WithIntersection                     | 1,075.64 ns | 30.766 ns | 27.274 ns |    1304 B |
+| TryIntersect_WithoutIntersection                  |    94.47 ns |  5.909 ns |  5.527 ns |      24 B |
+| TryFindIntersections_Edge_WithIntersections       |    72.85 ns |  3.318 ns |  3.103 ns |     104 B |
+| TryFindIntersections_Edge_WithoutIntersections    |    17.93 ns |  0.706 ns |  0.660 ns |         - |
+| TryFindIntersections_Polygon_WithIntersections    |   137.99 ns |  7.343 ns |  6.869 ns |     104 B |
+| TryFindIntersections_Polygon_WithoutIntersections |    81.33 ns |  2.354 ns |  2.202 ns |         - |
+| HasIntersection_Edge                              |    12.73 ns |  0.273 ns |  0.255 ns |         - |
+| HasIntersection_Polygon                           |    70.50 ns |  1.579 ns |  1.477 ns |         - |
+| HasIntersection_EdgeArray                         |    72.31 ns |  2.843 ns |  2.659 ns |         - |
 
 # Rect
 | Method                      | Mean      | Error     | StdDev    | Allocated |
@@ -91,27 +99,32 @@ The surface is filled with a separation of 5.
 
 All of the following benchmarks fill a surface of the specified size with a poisson disc set of random values with a separation of 5.
 
+# Intersect
+| Method              | Mean     | Error     | StdDev    | Allocated |
+|-------------------- |---------:|----------:|----------:|----------:|
+| HasIntersection     | 4.856 ns | 0.1851 ns | 0.1732 ns |         - |
+| TryFindIntersection | 7.325 ns | 0.1383 ns | 0.1294 ns |         - |
+
 # MapboxDelaunatorFactory Benchmarks
-| Method           | Mean         | Error      | StdDev     | Allocated  |
-|----------------- |-------------:|-----------:|-----------:|-----------:|
-| Create_100x100   |     60.32 us |   0.193 us |   0.181 us |   47.63 KB |
-| Create_500x500   |  2,893.19 us |  13.911 us |  10.861 us | 1168.35 KB |
-| Create_1000x1000 | 14,129.65 us | 107.994 us | 101.018 us | 4681.92 KB |
+| Method           | Mean         | Error      | StdDev     | Gen0     | Gen1     | Gen2     | Allocated  |
+|----------------- |-------------:|-----------:|-----------:|---------:|---------:|---------:|-----------:|
+| Create_100x100   |     66.37 μs |   2.257 μs |   2.112 μs |   7.6904 |   0.4883 |        - |   47.63 KB |
+| Create_500x500   |  2,964.06 μs |  85.309 μs |  79.798 μs | 285.1563 | 257.8125 | 246.0938 | 1168.25 KB |
+| Create_1000x1000 | 15,013.09 μs | 731.815 μs | 684.540 μs | 937.5000 | 937.5000 | 937.5000 | 4682.29 KB |
 
 # D3DelaunayFactory Benchmarks
-| Method           | Mean         | Error      | StdDev     | Allocated   |
-|----------------- |-------------:|-----------:|-----------:|------------:|
-| Create_100x100   |     81.46 μs |   3.924 μs |   3.671 μs |   102.25 KB |
-| Create_500x500   |  3,866.33 μs |  93.106 μs |  87.092 μs |  2562.34 KB |
-| Create_1000x1000 | 17,588.62 μs | 303.054 μs | 268.649 μs | 10281.43 KB |
-
+| Method           | Mean         | Error        | StdDev     | Allocated   |
+|----------------- |-------------:|-------------:|-----------:|------------:|
+| Create_100x100   |     81.72 μs |     4.065 μs |   3.802 μs |   102.25 KB |
+| Create_500x500   |  3,639.00 μs |   178.453 μs | 166.925 μs |  2562.26 KB |
+| Create_1000x1000 | 19,265.41 μs | 1,012.116 μs | 946.734 μs | 10280.92 KB |
 
 # D3VoronoiFactory Benchmarks
-| Method           | Mean         | Error       | StdDev      | Allocated   |
-|----------------- |-------------:|------------:|------------:|------------:|
-| Create_100x100   |     391.3 μs |    19.21 μs |    17.97 μs |   433.41 KB |
-| Create_500x500   |  22,846.6 μs | 1,438.23 μs | 1,345.32 μs | 11854.63 KB |
-| Create_1000x1000 | 121,492.1 μs | 7,361.32 μs | 6,885.78 μs | 48395.72 KB |
+| Method           | Mean         | Error        | StdDev       | Allocated   |
+|----------------- |-------------:|-------------:|-------------:|------------:|
+| Create_100x100   |     351.8 μs |     13.82 μs |     12.25 μs |   471.41 KB |
+| Create_500x500   |  20,526.4 μs |    645.88 μs |    539.34 μs | 13656.81 KB |
+| Create_1000x1000 | 108,228.1 μs | 12,393.26 μs | 11,592.67 μs | 56303.58 KB |
 
 # SimpleQuadTreeNode Benchmarks
 | Method | Mean     | Error     | StdDev    | Gen0   | Allocated |
