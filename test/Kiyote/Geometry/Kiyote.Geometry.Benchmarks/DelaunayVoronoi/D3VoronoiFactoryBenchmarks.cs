@@ -17,25 +17,25 @@ public class D3VoronoiFactoryBenchmarks {
 
 	public D3VoronoiFactoryBenchmarks() {
 
+		_1000points = Fill( 1000, 1000 );
 		_1000bounds = new Rect( 0, 0, 1000, 1000 );
-		_1000points = Fill( new Point( 1000, 1000 ) );
-
+		_500points = Fill( 500, 500 );
 		_500bounds = new Rect( 0, 0, 500, 500 );
-		_500points = Fill( new Point( 500, 500 ) );
-
+		_100points = Fill( 100, 100 );
 		_100bounds = new Rect( 0, 0, 100, 100 );
-		_100points = Fill( new Point( 100, 100 ) );
 
 		_voronoiFactory = new D3VoronoiFactory();
 	}
 
 	private static IReadOnlyList<Point> Fill(
-		ISize bounds
+		int width, int height
 	) {
-		int horizontalPoints = bounds.Width / DistanceApart;
-		int verticalPoints = bounds.Height / DistanceApart;
+		int horizontalPoints = width / DistanceApart;
+		int verticalPoints = height / DistanceApart;
 		int offset = DistanceApart / 2;
-		List<Point> points = new List<Point>( bounds.Width / horizontalPoints * (bounds.Height / verticalPoints) );
+		// Produce a grid of points to reduce positioning of the points
+		// affecting performance
+		List<Point> points = new List<Point>( width / horizontalPoints * (height / verticalPoints) );
 		for( int i = 0; i < horizontalPoints; i++ ) {
 			for( int j = 0; j < verticalPoints; j++ ) {
 				points.Add(
@@ -49,17 +49,17 @@ public class D3VoronoiFactoryBenchmarks {
 		return points;
 	}
 
-	[BenchmarkCategory( "100x100" ), Benchmark]
+	[BenchmarkCategory( "Create" ), Benchmark]
 	public void Create_100x100() {
 		 _voronoiFactory.Create( _100bounds, _100points );
 	}
 
-	[BenchmarkCategory( "500x500" ), Benchmark]
+	[BenchmarkCategory( "Create" ), Benchmark]
 	public void Create_500x500() {
 		 _voronoiFactory.Create( _500bounds, _500points );
 	}
 
-	[BenchmarkCategory( "1000x1000" ), Benchmark]
+	[BenchmarkCategory( "Create" ), Benchmark]
 	public void Create_1000x1000() {
 		 _voronoiFactory.Create( _1000bounds, _1000points );
 	}

@@ -3,7 +3,7 @@ using Kiyote.Geometry.Profiler;
 using Kiyote.Geometry.Randomization.Profiler;
 using Kiyote.Geometry.Trees.Profiler;
 
-var profiler = new RectProfiler();
+var profiler = new FastPoissonDiscPointFactoryProfiler();
 Console.WriteLine( "Press a key to execute..." );
 Console.ReadKey();
 profiler.Profile();

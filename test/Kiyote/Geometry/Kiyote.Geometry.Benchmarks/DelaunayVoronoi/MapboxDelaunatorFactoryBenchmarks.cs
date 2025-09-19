@@ -1,7 +1,6 @@
 ﻿namespace Kiyote.Geometry.DelaunayVoronoi.Benchmarks;
 
-[MemoryDiagnoser( true )]
-[GroupBenchmarksBy( BenchmarkLogicalGroupRule.ByCategory )]
+[MemoryDiagnoser( false )]
 [MarkdownExporterAttribute.GitHub]
 public class MapboxDelaunatorFactoryBenchmarks {
 
@@ -35,17 +34,17 @@ public class MapboxDelaunatorFactoryBenchmarks {
 		return points;
 	}
 
-	[BenchmarkCategory( "100x100" ), Benchmark]
+	[BenchmarkCategory( "Create" ), Benchmark]
 	public void Create_100x100() {
 		MapboxDelaunatorFactory.Create( _100points );
 	}
 
-	[BenchmarkCategory( "500x500" ), Benchmark]
+	[BenchmarkCategory( "Create" ), Benchmark]
 	public void Create_500x500() {
 		MapboxDelaunatorFactory.Create( _500points );
 	}
 
-	[BenchmarkCategory( "1000x1000" ), Benchmark]
+	[BenchmarkCategory( "Create" ), Benchmark]
 	public void Create_1000x1000() {
 		MapboxDelaunatorFactory.Create( _1000points );
 	}
