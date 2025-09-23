@@ -1,4 +1,6 @@
-﻿namespace Kiyote.Geometry.Trees;
+﻿using System.Runtime.InteropServices.Marshalling;
+
+namespace Kiyote.Geometry.Trees;
 
 public class SimpleQuadTreeNode<T> where T : IRect {
 
@@ -45,8 +47,8 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 		get {
 			int count = 0;
 
-			foreach( SimpleQuadTreeNode<T> node in _nodes ) {
-				count += node.Count;
+			for (int i = 0; i < _nodes.Count; i++) {
+				count += _nodes[i].Count;
 			}
 
 			count += this.Contents.Count;
@@ -58,17 +60,12 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 	/// <summary>
 	/// Return the contents of this node and all subnodes in the true below this one.
 	/// </summary>
-	public IReadOnlyList<T> SubTreeContents {
-		get {
-			List<T> results = [];
+	public IReadOnlyList<T> GetSubTreeContents() {
+		List<T> results = [];
 
-			foreach( SimpleQuadTreeNode<T> node in _nodes ) {
-				results.AddRange( node.SubTreeContents );
-			}
+		FillContents( results );
 
-			results.AddRange( this.Contents );
-			return results;
-		}
+		return results;
 	}
 
 	public IReadOnlyList<T> Contents => _contents;
@@ -110,7 +107,7 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 			// to the result set. You need to continue the loop to test 
 			// the other quads
 			if( queryArea.Contains( node.Bounds ) ) {
-				results.AddRange( node.SubTreeContents );
+				node.FillContents( results );
 				continue;
 			}
 
@@ -123,6 +120,15 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 		}
 
 		return results;
+	}
+
+	private void FillContents(
+		List<T> contents
+	) {
+		for (int i = 0; i < _nodes.Count; i++) {
+			_nodes[i].FillContents( contents );
+		}
+		contents.AddRange( this.Contents );
 	}
 
 	/// <summary>

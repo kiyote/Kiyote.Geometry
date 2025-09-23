@@ -2,13 +2,14 @@
 
 namespace Kiyote.Geometry.Trees.Benchmarks;
 
-[MemoryDiagnoser( true )]
+[MemoryDiagnoser( false )]
 [MarkdownExporterAttribute.GitHub]
 public class SimpleQuadTreeNodeBenchmarks {
 
 	private readonly IRect _bounds;
 	private readonly IRect _query;
 	private readonly SimpleQuadTreeNode<Rect> _node;
+	private readonly Rect _insert;
 
 	public SimpleQuadTreeNodeBenchmarks() {
 		_bounds = new Rect( 0, 0, 1920, 1080 );
@@ -24,6 +25,22 @@ public class SimpleQuadTreeNodeBenchmarks {
 		}
 
 		_query = new Rect( 250, 250, 20, 20 );
+		_insert = new Rect( 500, 500, 500, 500 );
+	}
+
+	[Benchmark]
+	public void Count() {
+		_ = _node.Count;
+	}
+
+	[Benchmark]
+	public void GetSubTreeContents() {
+		_ = _node.GetSubTreeContents();
+	}
+
+	[Benchmark]
+	public void Insert() {
+		_node.Insert( _insert );
 	}
 
 	[Benchmark]
