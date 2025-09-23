@@ -114,9 +114,12 @@ LaunchCount=1  WarmupCount=10
 | Create_1000x1000 | 102,818.1 us | 9,488.92 us | 8,875.94 us | 56306.15 KB |
 
 # SimpleQuadTreeNode Benchmarks
-| Method | Mean     | Error     | StdDev    | Gen0   | Allocated |
-|------- |---------:|----------:|----------:|-------:|----------:|
-| Query  | 6.245 μs | 0.2259 μs | 0.2113 μs | 0.2136 |   1.34 KB |
+| Method             | Mean          | Error         | StdDev        | Allocated |
+|------------------- |--------------:|--------------:|--------------:|----------:|
+| Count              |  81,048.03 ns |  5,601.581 ns |  5,239.722 ns |         - |
+| GetSubTreeContents | 803,318.79 ns | 79,809.932 ns | 74,654.260 ns |  786805 B |
+| Insert             |      44.91 ns |      2.815 ns |      2.496 ns |     200 B |
+| Query              |   7,123.67 ns |    555.542 ns |    519.655 ns |   24408 B |
 
 # Notes
 

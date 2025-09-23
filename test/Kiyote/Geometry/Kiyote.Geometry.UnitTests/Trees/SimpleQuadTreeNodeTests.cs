@@ -75,7 +75,7 @@ internal sealed class SimpleQuadTreeNodeTests {
 		node.Insert( item );
 
 		Assert.That( node.Count, Is.EqualTo( 1 ) );
-		Assert.That( node.SubTreeContents, Is.EquivalentTo( new List<Rect> { item } ) );
+		Assert.That( node.GetSubTreeContents, Is.EquivalentTo( new List<Rect> { item } ) );
 	}
 
 	[Test]
@@ -88,7 +88,7 @@ internal sealed class SimpleQuadTreeNodeTests {
 
 		Assert.That( _node.Count, Is.EqualTo( 2 ), "Count does not match" );
 		Assert.That( _node.Contents, Is.EquivalentTo( new List<Rect> { item } ), "Contents do not match" );
-		Assert.That( _node.SubTreeContents, Is.EquivalentTo( new List<Rect> { item, subItem } ), "SubTreeContents do not match" );
+		Assert.That( _node.GetSubTreeContents, Is.EquivalentTo( new List<Rect> { item, subItem } ), "SubTreeContents do not match" );
 	}
 
 	[Test]
