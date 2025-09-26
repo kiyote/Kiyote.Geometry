@@ -56,4 +56,9 @@ public class EdgeBenchmarks {
 	public void GetBoundingBox() {
 		_ = _edge.GetBoundingBox();
 	}
+
+	[Benchmark]
+	public void GetMidpoint() {
+		_ = _edge.GetMidpoint( 0.5f );
+	}
 }

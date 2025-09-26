@@ -15,11 +15,13 @@ LaunchCount=1  WarmupCount=10
 # Edge
 | Method              | Mean       | Error     | StdDev    | Median     | Allocated |
 |-------------------- |-----------:|----------:|----------:|-----------:|----------:|
-| HasIntersection     |  7.4783 ns | 0.3029 ns | 0.2833 ns |  7.5074 ns |         - |
-| TryFindIntersection | 10.8151 ns | 0.3087 ns | 0.2887 ns | 10.8744 ns |         - |
-| GetBoundingBox      |  1.8059 ns | 0.1634 ns | 0.1529 ns |  1.7492 ns |         - |
-| Ctor_PointPoint     |  0.0340 ns | 0.0398 ns | 0.0372 ns |  0.0254 ns |         - |
-| Ctor_IntIntIntInt   |  3.6238 ns | 0.2290 ns | 0.2142 ns |  3.6003 ns |         - |
+| HasIntersection     |  7.1543 ns | 0.3235 ns | 0.3026 ns |  7.0201 ns |         - |
+| TryFindIntersection | 10.5231 ns | 0.2849 ns | 0.2665 ns | 10.4053 ns |         - |
+| GetBoundingBox      |  1.9560 ns | 0.1252 ns | 0.1171 ns |  1.9322 ns |         - |
+| GetMidpoint         |  7.5447 ns | 0.1799 ns | 0.1683 ns |  7.5094 ns |         - |
+| Ctor_PointPoint     |  0.0036 ns | 0.0110 ns | 0.0103 ns |  0.0000 ns |         - |
+| Ctor_IntIntIntInt   |  3.7167 ns | 0.1899 ns | 0.1776 ns |  3.6965 ns |         - |
+
 
 # Polygon
 | Method                                            | Mean        | Error     | StdDev    | Allocated |
@@ -40,16 +42,16 @@ LaunchCount=1  WarmupCount=10
 | HasIntersection_EdgeArray                         |    72.31 ns |  2.843 ns |  2.659 ns |         - |
 
 # Rect
-| Method                      | Mean      | Error     | StdDev    | Allocated |
-|---------------------------- |----------:|----------:|----------:|----------:|
-| Contains_Rect               | 1.6438 ns | 0.1303 ns | 0.1219 ns |         - |
-| Contains_IRect              | 3.7002 ns | 0.1800 ns | 0.1684 ns |         - |
-| Contains_Point              | 1.8831 ns | 0.1552 ns | 0.1376 ns |         - |
-| Contains_IntInt             | 0.0671 ns | 0.0657 ns | 0.0615 ns |         - |
-| IsEquivalentTo_Rect         | 4.1632 ns | 0.1818 ns | 0.1701 ns |         - |
-| IsEquivalentTo_IRect        | 4.7800 ns | 0.3425 ns | 0.3203 ns |         - |
-| IsEquivalentTo_PointPoint   | 3.7967 ns | 0.1910 ns | 0.1786 ns |         - |
-| IsEquivalentTo_IntIntIntInt | 4.1109 ns | 0.1834 ns | 0.1715 ns |         - |
+| Method                      | Mean      | Error     | StdDev    | Median    | Allocated |
+|---------------------------- |----------:|----------:|----------:|----------:|----------:|
+| Contains_Rect               | 1.6484 ns | 0.0895 ns | 0.0793 ns | 1.6516 ns |         - |
+| Contains_IRect              | 2.8592 ns | 0.1698 ns | 0.1588 ns | 2.8406 ns |         - |
+| Contains_Point              | 1.2285 ns | 0.0617 ns | 0.0547 ns | 1.2276 ns |         - |
+| Contains_IntInt             | 0.0006 ns | 0.0025 ns | 0.0023 ns | 0.0000 ns |         - |
+| IsEquivalentTo_Rect         | 3.5132 ns | 0.1529 ns | 0.1430 ns | 3.5039 ns |         - |
+| IsEquivalentTo_IRect        | 4.2392 ns | 0.1280 ns | 0.1135 ns | 4.2351 ns |         - |
+| IsEquivalentTo_PointPoint   | 3.6127 ns | 0.0731 ns | 0.0610 ns | 3.6149 ns |         - |
+| IsEquivalentTo_IntIntIntInt | 3.5041 ns | 0.1253 ns | 0.1172 ns | 3.4988 ns |         - |
 
 # FastRandom Benchmarks
 | Method                                    | Mean      | Error     | StdDev    | Allocated |
@@ -95,23 +97,23 @@ LaunchCount=1  WarmupCount=10
 # MapboxDelaunatorFactory Benchmarks
 | Method           | Mean         | Error      | StdDev     | Allocated  |
 |----------------- |-------------:|-----------:|-----------:|-----------:|
-| Create_100x100   |     63.95 us |   1.720 us |   1.525 us |   47.63 KB |
-| Create_500x500   |  2,948.48 us | 110.265 us | 103.142 us | 1168.41 KB |
-| Create_1000x1000 | 14,203.20 us | 586.036 us | 519.506 us | 4681.83 KB |
+| Create_100x100   |     63.58 us |   1.393 us |   1.163 us |   47.63 KB |
+| Create_500x500   |  2,984.96 us | 111.314 us | 104.123 us | 1168.34 KB |
+| Create_1000x1000 | 14,114.88 us | 459.767 us | 430.066 us |  4681.6 KB |
 
 # D3DelaunayFactory Benchmarks
-| Method           | Mean         | Error        | StdDev     | Allocated   |
-|----------------- |-------------:|-------------:|-----------:|------------:|
-| Create_100x100   |     81.72 μs |     4.065 μs |   3.802 μs |   102.25 KB |
-| Create_500x500   |  3,639.00 μs |   178.453 μs | 166.925 μs |  2562.26 KB |
-| Create_1000x1000 | 19,265.41 μs | 1,012.116 μs | 946.734 μs | 10280.92 KB |
+| Method           | Mean         | Error        | StdDev       | Allocated  |
+|----------------- |-------------:|-------------:|-------------:|-----------:|
+| Create_100x100   |     85.49 us |     4.978 us |     4.656 us |  102.25 KB |
+| Create_500x500   |  3,801.30 us |   119.785 us |   112.047 us | 2562.28 KB |
+| Create_1000x1000 | 17,327.80 us | 1,101.025 us | 1,029.899 us | 10281.1 KB |
 
 # D3VoronoiFactory Benchmarks
 | Method           | Mean         | Error       | StdDev      | Allocated   |
 |----------------- |-------------:|------------:|------------:|------------:|
-| Create_100x100   |     349.2 us |    16.57 us |    15.50 us |   471.41 KB |
-| Create_500x500   |  20,988.6 us | 1,628.98 us | 1,523.75 us | 13656.45 KB |
-| Create_1000x1000 | 102,818.1 us | 9,488.92 us | 8,875.94 us | 56306.15 KB |
+| Create_100x100   |     352.9 us |    17.23 us |    16.12 us |   471.41 KB |
+| Create_500x500   |  21,065.9 us | 1,583.75 us | 1,481.44 us | 13657.32 KB |
+| Create_1000x1000 | 102,617.1 us | 8,399.49 us | 7,445.93 us | 56306.48 KB |
 
 # SimpleQuadTreeNode Benchmarks
 | Method             | Mean          | Error         | StdDev        | Allocated |

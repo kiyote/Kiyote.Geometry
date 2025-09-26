@@ -59,7 +59,7 @@ public readonly struct Edge : IEquatable<Edge> {
 			out int intersectionY
 		);
 
-		if (result) {
+		if( result ) {
 			intersection = new Point( intersectionX, intersectionY );
 			return true;
 		}
@@ -67,24 +67,78 @@ public readonly struct Edge : IEquatable<Edge> {
 		return false;
 	}
 
-	public Rect GetBoundingBox() {
-		int minX = Math.Min( A.X, B.X );
-		int minY = Math.Min( A.Y, B.Y );
-		int maxX = Math.Max( A.X, B.X );
-		int maxY = Math.Max( A.Y, B.Y );
+	public bool IsEquivalentTo(
+		Edge other
+	) {
+		return ( ( other.A == A && other.B == B )
+			|| ( other.A == B && other.B == A ) );
+	}
+
+	public static Rect GetBoundingBox(
+		Point p1,
+		Point p2
+	) {
+		int minX = Math.Min( p1.X, p2.X );
+		int minY = Math.Min( p1.Y, p2.Y );
+		int maxX = Math.Max( p1.X, p2.X );
+		int maxY = Math.Max( p1.Y, p2.Y );
 		return new Rect(
 			minX,
 			minY,
 			maxX - minX + 1,
 			maxY - minY + 1
 		);
+
 	}
 
-	public bool IsEquivalentTo(
-		Edge other
+	public Rect GetBoundingBox() {
+		return GetBoundingBox( A, B );
+	}
+
+	public static Point GetMidpoint(
+		Point p1,
+		Point p2,
+		float distance
 	) {
-		return ( ( other.A.Equals( A ) && other.B.Equals( B ) )
-			|| ( other.A.Equals( B ) && other.B.Equals( A ) ) );
+		int mx = Math.Min( p1.X, p2.X );
+		int dx = Math.Max( p1.X, p2.X ) - mx;
+		int my = Math.Min( p1.Y, p2.Y );
+		int dy = Math.Max( p1.Y, p2.Y ) - my;
+		int x = mx + (int)Math.Floor( dx * distance );
+		int y = my + (int)Math.Floor( dy * distance );
+
+		return new Point( x, y );
+	}
+
+	public Point GetMidpoint(
+		float distance
+	) {
+		return GetMidpoint( A, B, distance );
+	}
+
+	public static float Magnitude(
+		Point p1,
+		Point p2
+	) {
+		Point norm = Normalize( p1, p2 );
+		return (float)Math.Sqrt( ( norm.X * norm.X ) + ( norm.Y * norm.Y ) );
+	}
+
+	public float Magnitude() {
+		return Magnitude( A, B );
+	}
+
+	public static Point Normalize(
+		Point p1,
+		Point p2
+	) {
+		Rect bb = GetBoundingBox( p1, p2 );
+		return new Point( bb.X2 - bb.X1, bb.Y2 - bb.Y1 );
+	}
+
+	public Point Normalize() {
+		Rect bb = GetBoundingBox( A, B );
+		return new Point( bb.X2 - bb.X1, bb.Y2 - bb.Y1 );
 	}
 
 	public override bool Equals(
@@ -124,6 +178,10 @@ public readonly struct Edge : IEquatable<Edge> {
 		Edge left,
 		Edge right
 	) {
-		return !( left  ==  right );
+		return !( left == right );
+	}
+
+	public override string ToString() {
+		return $"({A},{B})";
 	}
 }
