@@ -7,3 +7,4 @@ using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage( "Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "Text is not for consumers, only for diagnostics.", Scope = "module" )]
 [assembly: SuppressMessage( "Performance", "CA1814:Prefer jagged arrays over multidimensional", Justification = "Convenience for testing.", Scope = "module" )]
+[assembly: SuppressMessage( "Style", "IDE0130:Namespace does not match folder structure", Justification = "Allows for cleaner imports.", Scope = "module" )]

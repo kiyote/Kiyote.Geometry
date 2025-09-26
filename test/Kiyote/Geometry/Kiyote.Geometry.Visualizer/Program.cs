@@ -1,6 +1,7 @@
 ﻿using Kiyote.Geometry.Visualizer.Randomization;
 using Kiyote.Geometry.Visualizer.DelaunayVoronoi;
 using Kiyote.Geometry.Visualizer.Rasterizers;
+using Kiyote.Geometry.Noises.Visualizer;
 
 namespace Kiyote.Geometry.Visualizer;
 
@@ -55,5 +56,12 @@ public static class Program {
 			bounds
 		);
 		rasterizer.Visualize();
+
+		// MidpointDisplacementNoisyEdgeFactory
+		var midpointDisplacementNoisyEdgeFactory = new MidpointDisplacementNoisyEdgeFactoryVisualizer(
+			outputFolder,
+			bounds
+		);
+		midpointDisplacementNoisyEdgeFactory.Visualize();
 	}
 }

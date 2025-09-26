@@ -3,30 +3,29 @@
 [TestFixture]
 public sealed class EdgeTests {
 
-	[Test]
-	public void IsEquivalentTo_SamePointsDifferentOrder_ReturnsTrue() {
-		Point p1 = new Point( 100, 200 );
-		Point p2 = new Point( 300, 400 );
-		Edge e1 = new Edge( p1, p2 );
-		Edge e2 = new Edge( p2, p1 );
+	[TestCase(0, 9, 5, 9, 0, 9, 5, 9, true)]
+	[TestCase( 0, 9, 5, 9, 5, 9, 0, 9, true )]
+	[TestCase( 5, 9, 0, 9, 0, 9, 5, 9, true )]
+	[TestCase( 0, 5, 9, 9, 0, 9, 5, 5, false )]
+	public void IsEquivalentTo(
+		int ax1,
+		int ay1,
+		int ax2,
+		int ay2,
+		int bx1,
+		int by1,
+		int bx2,
+		int by2,
+		bool expected
+	) {
+		Edge a = new Edge( ax1, ay1, ax2, ay2 );
+		Edge b = new Edge( bx1, by1, bx2, by2 );
 
-		Assert.That( e1.IsEquivalentTo( e2 ), Is.True );
-		Assert.That( e2.IsEquivalentTo( e1 ), Is.True );
+		Assert.That( a.IsEquivalentTo( b ), Is.EqualTo( expected ) );
 	}
 
 	[Test]
-	public void IsEquivalentTo_SamePointsSameOrder_ReturnsTrue() {
-		Point p1 = new Point( 100, 200 );
-		Point p2 = new Point( 300, 400 );
-		Edge e1 = new Edge( p1, p2 );
-		Edge e2 = new Edge( p1, p2 );
-
-		Assert.That( e1.IsEquivalentTo( e2 ), Is.True );
-		Assert.That( e2.IsEquivalentTo( e1 ), Is.True );
-	}
-
-	[Test]
-	public void GetBoundingBox_EdgeNotTopLeftBottomRight_CorrectBoundingBox() {
+	public void BoundingBox_EdgeNotTopLeftBottomRight_CorrectBoundingBox() {
 		Point p1 = new Point( 100, 0 );
 		Point p2 = new Point( 0, 100 );
 		Edge edge = new Edge( p1, p2 );
