@@ -123,6 +123,12 @@ LaunchCount=1  WarmupCount=10
 | Insert             |      44.91 ns |      2.815 ns |      2.496 ns |     200 B |
 | Query              |   7,123.67 ns |    555.542 ns |    519.655 ns |   24408 B |
 
+# MidpointDisplacementNoisyEdgeFactory Benchmarks
+| Method                     | Mean       | Error    | StdDev   | Allocated |
+|--------------------------- |-----------:|---------:|---------:|----------:|
+| Create_Amplitude05_Levels3 |   609.2 ns | 17.48 ns | 16.35 ns |     912 B |
+| Create_Amplitude05_Levels4 | 1,300.3 ns | 41.72 ns | 39.03 ns |    1680 B |
+
 # Notes
 
 Github action failing with permission denied?
