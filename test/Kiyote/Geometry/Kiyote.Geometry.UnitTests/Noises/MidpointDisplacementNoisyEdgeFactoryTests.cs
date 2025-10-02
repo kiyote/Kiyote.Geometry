@@ -35,7 +35,7 @@ public sealed class MidpointDisplacementNoisyEdgeFactoryTests {
 				new Edge( 5, 9, 9, 9 )
 			];
 		Assert.That( result.Source, Is.EqualTo( toSplit ) );
-		for (int i = 0; i < expected.Length; i++) {
+		for( int i = 0; i < expected.Length; i++ ) {
 			bool equivalent = result.Noise[i].IsEquivalentTo( expected[i] );
 			Assert.That( equivalent, Is.True );
 		}
@@ -59,8 +59,7 @@ public sealed class MidpointDisplacementNoisyEdgeFactoryTests {
 			];
 		Assert.That( result.Source, Is.EqualTo( toSplit ) );
 		for( int i = 0; i < expected.Length; i++ ) {
-			bool equivalent = result.Noise[i].IsEquivalentTo( expected[i] );
-			Assert.That( equivalent, Is.True, $"{result.Noise[i]} != {expected[i]}" );
+			Assert.That( result.Noise, Has.Member( expected[i] ) );
 		}
 	}
 }

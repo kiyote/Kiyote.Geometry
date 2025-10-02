@@ -3,6 +3,7 @@ using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Toolchains.InProcess.NoEmit;
 using Kiyote.Geometry.Benchmarks;
+using Kiyote.Geometry.Benchmarks.Noises;
 using Kiyote.Geometry.DelaunayVoronoi.Benchmarks;
 using Kiyote.Geometry.Randomization.Benchmarks;
 using Kiyote.Geometry.Trees.Benchmarks;
@@ -25,4 +26,5 @@ BenchmarkRunner.Run<IntersectBenchmarks>( config );
 BenchmarkRunner.Run<PolygonBenchmarks>( config );
 BenchmarkRunner.Run<RectangleBenchmarks>( config );
 BenchmarkRunner.Run<SimpleQuadTreeNodeBenchmarks>( config );
+BenchmarkRunner.Run<MidpointDisplacementNoisyEdgeFactoryBenchmarks>( config );
 
