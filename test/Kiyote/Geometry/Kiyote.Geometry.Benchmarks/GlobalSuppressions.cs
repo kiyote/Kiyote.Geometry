@@ -9,3 +9,4 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage( "Performance", "CA1812:An internal (assembly-level) type is never instantiated.", Justification = "<Pending>", Scope = "module" )]
 [assembly: SuppressMessage( "Security", "CA5394:Do not use insecure randomness", Justification = "<Pending>", Scope = "module" )]
 [assembly: SuppressMessage( "Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "module" )]
+[assembly: SuppressMessage( "Maintainability", "CA1515:Consider making public types internal", Justification = "Code not released, doesn't mattter.", Scope = "module" )]
