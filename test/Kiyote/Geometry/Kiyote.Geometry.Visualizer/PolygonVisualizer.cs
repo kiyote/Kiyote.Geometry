@@ -1,8 +1,7 @@
-﻿using Kiyote.Geometry.Randomization;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Drawing.Processing;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+using Kiyote.Buffers;
+using Kiyote.Geometry.Randomization;
+using Kiyote.Geometry.Rasterizers;
+using Kiyote.Imaging;
 
 namespace Kiyote.Geometry.Visualizer;
 
@@ -12,6 +11,10 @@ public sealed class PolygonVisualizer {
 	private readonly string _outputFolder;
 	private readonly IRandom _random;
 
+	private readonly IBufferFactory _bufferFactory;
+
+	private readonly IRasterizer _rasterizer;
+
 	public PolygonVisualizer(
 		string outputFolder,
 		ISize bounds
@@ -19,17 +22,19 @@ public sealed class PolygonVisualizer {
 		_outputFolder = outputFolder;
 		_bounds = bounds;
 		_random = new FastRandom();
+		_bufferFactory = IBufferFactory.CreateArrayFactory();
+		_rasterizer = new IntegerRasterizer();
 	}
 
 	public void Visualize() {
-		VisualizeContains();
-		VisualizeIntersections();
 		VisualizeClip();
+		VisualizeIntersections();
+		VisualizeContains();
 	}
 
 	private void VisualizeClip() {
 		Console.WriteLine( "Polygon.Clip" );
-		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
+		IBuffer<uint> buffer = _bufferFactory.Create( _bounds.Width, _bounds.Height, 0x000000FFU );
 
 		Polygon polygon1 = new Polygon( [
 			new Point( 200, 200 ),
@@ -45,43 +50,26 @@ public sealed class PolygonVisualizer {
 			new Point( 150, _bounds.Height - 300 )
 		] );
 
-		image.Mutate( ( context ) => {
-			PointF[] lines = new PointF[polygon1.Points.Count + 1];
-			for( int i = 0; i < polygon1.Points.Count + 1; i++ ) {
-				lines[i].X = polygon1.Points[i % polygon1.Points.Count].X;
-				lines[i].Y = polygon1.Points[i % polygon1.Points.Count].Y;
-			}
+		_rasterizer.Rasterize( polygon1.Points, ( int x, int y ) => {
+			buffer[x, y] = 0xFFFF00FFU;
+		}, false );
 
-			 context.DrawLine( Color.Yellow, 1.0f, lines );
-		} );
-
-		image.Mutate( ( context ) => {
-			PointF[] lines = new PointF[polygon2.Points.Count + 1];
-			for( int i = 0; i < polygon2.Points.Count + 1; i++ ) {
-				lines[i].X = polygon2.Points[i % polygon2.Points.Count].X;
-				lines[i].Y = polygon2.Points[i % polygon2.Points.Count].Y;
-			}
-
-			 context.DrawLine( Color.Orange, 1.0f, lines );
-		} );
+		_rasterizer.Rasterize( polygon2.Points, ( int x, int y ) => {
+			buffer[x, y] = 0xFFA500FFU;
+		}, false );
 
 		 polygon1.TryIntersect( polygon2, out Polygon polygon3 );
-		image.Mutate( ( context ) => {
-			PointF[] lines = new PointF[polygon3.Points.Count + 1];
-			for( int i = 0; i < polygon3.Points.Count + 1; i++ ) {
-				lines[i].X = polygon3.Points[i % polygon3.Points.Count].X;
-				lines[i].Y = polygon3.Points[i % polygon3.Points.Count].Y;
-			}
+		_rasterizer.Rasterize( polygon3.Points, ( int x, int y ) => {
+			buffer[x, y] = 0xFFFFFFFFU;
+		}, false );
 
-			 context.DrawLine( Color.White, 2.0f, lines );
-		} );
-
-		image.SaveAsPng( Path.Combine( _outputFolder, "PolygonClip.png" ) );
+		IImageWriter writer = IImageWriter.CreatePng();
+		writer.WriteImage( Path.Combine( _outputFolder, "PolygonClip.png" ), buffer );
 	}
 
 	private void VisualizeIntersections() {
 		Console.WriteLine( "Polygon.Intersections" );
-		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
+		IBuffer<uint> buffer = _bufferFactory.Create( _bounds.Width, _bounds.Height, 0x000000FFU );
 
 		Polygon polygon1 = new Polygon( [
 			new Point( 200, 200 ),
@@ -97,38 +85,29 @@ public sealed class PolygonVisualizer {
 			new Point( 150, _bounds.Height - 300 )
 		] );
 
-		image.Mutate( ( context ) => {
-			PointF[] lines = new PointF[polygon1.Points.Count + 1];
-			for( int i = 0; i < polygon1.Points.Count + 1; i++ ) {
-				lines[i].X = polygon1.Points[i % polygon1.Points.Count].X;
-				lines[i].Y = polygon1.Points[i % polygon1.Points.Count].Y;
-			}
 
-			 context.DrawLine( Color.Yellow, 1.0f, lines );
-		} );
+		_rasterizer.Rasterize( polygon1.Points, ( int x, int y ) => {
+			buffer[x, y] = 0xFFFF00FFU;
+		}, false );
 
-		image.Mutate( ( context ) => {
-			PointF[] lines = new PointF[polygon2.Points.Count + 1];
-			for( int i = 0; i < polygon2.Points.Count + 1; i++ ) {
-				lines[i].X = polygon2.Points[i % polygon2.Points.Count].X;
-				lines[i].Y = polygon2.Points[i % polygon2.Points.Count].Y;
-			}
+		_rasterizer.Rasterize( polygon2.Points, ( int x, int y ) => {
+			buffer[x, y] = 0xFFFFFFFFU;
+		}, false );
 
-			 context.DrawLine( Color.White, 1.0f, lines );
-		} );
 
 		if (polygon1.TryFindIntersections( polygon2, out IReadOnlyList<Point> intersections)) {
 			foreach( Point p in intersections ) {
-				image[p.X, p.Y] = Color.Red;
+				buffer[p.X, p.Y] = 0xFF0000FFU; ;
 			}
 		}
 
-		image.SaveAsPng( Path.Combine( _outputFolder, "PolygonIntersections.png" ) );
+		IImageWriter writer = IImageWriter.CreatePng();
+		writer.WriteImage( Path.Combine( _outputFolder, "PolygonIntersections.png" ), buffer );
 	}
 
 	private void VisualizeContains() {
 		Console.WriteLine( "Polygon.Contains" );
-		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
+		IBuffer<uint> buffer = _bufferFactory.Create( _bounds.Width, _bounds.Height, 0x000000FFU );
 
 		Polygon polygon = new Polygon( [
 			new Point( 200, 200 ),
@@ -137,26 +116,19 @@ public sealed class PolygonVisualizer {
 			new Point( 200, _bounds.Height - 200 )
 		] );
 
-		image.Mutate( ( context ) => {
-			PointF[] lines = new PointF[polygon.Points.Count + 1];
-			for( int i = 0; i < polygon.Points.Count + 1; i++ ) {
-				lines[i].X = polygon.Points[i % polygon.Points.Count].X;
-				lines[i].Y = polygon.Points[i % polygon.Points.Count].Y;
-			}
-
-			 context.DrawLine(Color.Yellow, 1.0f, lines);
-		} );
+		_rasterizer.Rasterize( polygon.Points, (int x, int y) => {
+			buffer[x, y] = 0xFFFF00FFU;
+		}, false );
 
 		for( int i = 0; i < 5000; i++ ) {
 			int x = _random.NextInt( _bounds.Width );
 			int y = _random.NextInt( _bounds.Height );
 			Point p = new Point( x, y );
 
-			image[x, y] = polygon.Contains( p ) ? Color.Green : Color.Red;
+			buffer[x, y] = polygon.Contains( p ) ? 0x00FF00FFU : 0xFF0000FFU;
 		}
 
-
-
-		image.SaveAsPng( Path.Combine( _outputFolder, "PolygonContains.png" ) );
+		IImageWriter writer = IImageWriter.CreatePng();
+		writer.WriteImage( Path.Combine( _outputFolder, "PolygonContains.png" ), buffer );
 	}
 }

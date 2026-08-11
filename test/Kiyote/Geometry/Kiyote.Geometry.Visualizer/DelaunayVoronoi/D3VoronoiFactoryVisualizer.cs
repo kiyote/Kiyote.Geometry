@@ -1,9 +1,8 @@
-﻿using Kiyote.Geometry.DelaunayVoronoi;
+using Kiyote.Buffers;
+using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Drawing.Processing;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+using Kiyote.Geometry.Rasterizers;
+using Kiyote.Imaging;
 
 namespace Kiyote.Geometry.Visualizer.DelaunayVoronoi;
 
@@ -12,6 +11,8 @@ public sealed class D3VoronoiFactoryVisualizer {
 	private readonly string _outputFolder;
 	private readonly ISize _size;
 	private readonly IVoronoiFactory _voronoiFactory;
+	private readonly IRasterizer _rasterizer;
+	private readonly IBufferFactory _bufferFactory;
 
 	public D3VoronoiFactoryVisualizer(
 		string outputFolder,
@@ -21,6 +22,8 @@ public sealed class D3VoronoiFactoryVisualizer {
 		_size = size;
 
 		_voronoiFactory = new D3VoronoiFactory();
+		_rasterizer = new IntegerRasterizer();
+		_bufferFactory = IBufferFactory.CreateArrayFactory();
 	}
 
 	public void Visualize() {
@@ -45,11 +48,12 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		using Image<Rgb24> image = new Image<Rgb24>( _size.Width, _size.Height );
+		IBuffer<uint> buffer = _bufferFactory.Create( _size.Width, _size.Height, 0x000000FFU );
 
-		Render( image, voronoi );
+		Render( buffer, voronoi );
 
-		image.SaveAsPng( Path.Combine( _outputFolder, "D3VoronoiFactory_Square.png" ) );
+		IImageWriter writer = IImageWriter.CreatePng();
+		writer.WriteImage( Path.Combine( _outputFolder, "D3VoronoiFactory_Square.png" ), buffer );
 	}
 
 	private void VisualizeGrid() {
@@ -101,11 +105,12 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		using Image<Rgb24> image = new Image<Rgb24>( _size.Width, _size.Height );
+		IBuffer<uint> buffer = _bufferFactory.Create( _size.Width, _size.Height, 0x000000FFU );
 
-		Render( image, voronoi );
+		Render( buffer, voronoi );
 
-		image.SaveAsPng( Path.Combine( _outputFolder, "D3VoronoiFactory_Grid.png" ) );
+		IImageWriter writer = IImageWriter.CreatePng();
+		writer.WriteImage( Path.Combine( _outputFolder, "D3VoronoiFactory_Grid.png" ), buffer );
 	}
 
 	private void VisualizeRandom() {
@@ -116,11 +121,12 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		using Image<Rgb24> image = new Image<Rgb24>( _size.Width, _size.Height );
+		IBuffer<uint> buffer = _bufferFactory.Create( _size.Width, _size.Height, 0x000000FFU );
 
-		Render( image, voronoi );
+		Render( buffer, voronoi );
 
-		image.SaveAsPng( Path.Combine( _outputFolder, "D3VoronoiFactory_Random.png" ) );
+		IImageWriter writer = IImageWriter.CreatePng();
+		writer.WriteImage( Path.Combine( _outputFolder, "D3VoronoiFactory_Random.png" ), buffer );
 	}
 
 	private void VisualizeNeighbours() {
@@ -131,27 +137,20 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		using Image<Rgb24> image = new Image<Rgb24>( _size.Width, _size.Height );
+		IBuffer<uint> buffer = _bufferFactory.Create( _size.Width, _size.Height, 0x000000FFU );
 
-		Render( image, voronoi );
+		Render( buffer, voronoi );
 
 		Cell cell = voronoi.Cells[0];
 		foreach( Cell neighbour in voronoi.Neighbours[cell] ) {
-			image.Mutate( ( context ) => {
-				PointF[] lines = new PointF[neighbour.Polygon.Points.Count + 1];
-				int index = 0;
-				foreach( Point point in neighbour.Polygon.Points ) {
-					lines[index].X = point.X;
-					lines[index].Y = point.Y;
-					index++;
-				}
-				lines[index].X = neighbour.Polygon.Points[0].X;
-				lines[index].Y = neighbour.Polygon.Points[0].Y;
-				 context.DrawLine( Color.Red, 1.0f, lines );
-			} );
+
+			_rasterizer.Rasterize( neighbour.Polygon.Points, ( int x, int y ) => {
+				buffer[x, y] = 0xFF0000FFU;
+			}, false );
 		}
 
-		image.SaveAsPng( Path.Combine( _outputFolder, "D3VoronoiFactory_Neighbours.png" ) );
+		IImageWriter writer = IImageWriter.CreatePng();
+		writer.WriteImage( Path.Combine( _outputFolder, "D3VoronoiFactory_Neighbours.png" ), buffer );
 	}
 
 	private void VisualizeOpen() {
@@ -162,50 +161,33 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		using Image<Rgb24> image = new Image<Rgb24>( _size.Width, _size.Height );
+		IBuffer<uint> buffer = _bufferFactory.Create( _size.Width, _size.Height, 0x000000FFU );
 
-		//Render( image, voronoi );
+		foreach (Cell cell in voronoi.Cells) {
+			_rasterizer.Rasterize( cell.Polygon.Points, ( int x, int y ) => {
+				buffer[x, y] = cell.IsOpen ? 0xFF0000FFU : 0xA9A9A9FFU;
 
-		image.Mutate( ( context ) => {
-			foreach( Cell cell in voronoi.Cells ) {
-				PointF[] lines = new PointF[cell.Polygon.Points.Count + 1];
-				int index = 0;
-				foreach( Point point in cell.Polygon.Points ) {
-					lines[index].X = point.X;
-					lines[index].Y = point.Y;
-					index++;
-				}
-				lines[index].X = cell.Polygon.Points[0].X;
-				lines[index].Y = cell.Polygon.Points[0].Y;
-				 context.DrawLine( cell.IsOpen ? Color.Red : Color.DarkGray, 1.0f, lines );
-			}
-		} );
+			}, false );
+		}
 
-		image.SaveAsPng( Path.Combine( _outputFolder, "D3VoronoiFactory_Open.png" ) );
+		IImageWriter writer = IImageWriter.CreatePng();
+		writer.WriteImage( Path.Combine( _outputFolder, "D3VoronoiFactory_Open.png" ), buffer );
 	}
 
-	private static void Render(
-		Image<Rgb24> image,
+	private void Render(
+		IBuffer<uint> buffer,
 		IVoronoi voronoi
 	) {
-		image.Mutate( ( context ) => {
-			foreach( Cell cell in voronoi.Cells ) {
-				PointF[] lines = new PointF[cell.Polygon.Points.Count + 1];
-				int index = 0;
-				foreach( Point point in cell.Polygon.Points ) {
-					lines[index].X = point.X;
-					lines[index].Y = point.Y;
-					index++;
-				}
-				lines[index].X = cell.Polygon.Points[0].X;
-				lines[index].Y = cell.Polygon.Points[0].Y;
-				 context.DrawLine( Color.DarkGray, 1.0f, lines );
-			}
-		} );
+		foreach (Cell cell in voronoi.Cells) {
+			_rasterizer.Rasterize( cell.Polygon.Points, ( int x, int y ) => {
+				buffer[x, y] = 0xA9A9A9FFU;
+			}, false );
+		}
 
 		// Render the coords
 		for( int i = 0; i < voronoi.Cells.Count; i++ ) {
-			image[voronoi.Cells[i].Center.X, voronoi.Cells[i].Center.Y] = Color.Magenta;
+			buffer[voronoi.Cells[i].Center.X, voronoi.Cells[i].Center.Y] = 0xFF00FFFFU;
 		}
 	}
+	
 }

@@ -1,8 +1,8 @@
-﻿using Kiyote.Geometry.DelaunayVoronoi;
+using Kiyote.Buffers;
+using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
 using Kiyote.Geometry.Rasterizers;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using Kiyote.Imaging;
 
 namespace Kiyote.Geometry.Visualizer.Rasterizers;
 
@@ -11,6 +11,7 @@ public sealed class IntegerRasterizerVisualizer {
 	private readonly string _outputFolder;
 	private readonly IRasterizer _rasterizer;
 	private readonly ISize _size;
+	private readonly IBufferFactory _bufferFactory;
 
 	public IntegerRasterizerVisualizer(
 		string outputFolder,
@@ -19,16 +20,17 @@ public sealed class IntegerRasterizerVisualizer {
 		_outputFolder = outputFolder;
 		_rasterizer = new IntegerRasterizer();
 		_size = size;
+		_bufferFactory = IBufferFactory.CreateArrayFactory();
 	}
 
 	public void Visualize() {
+		VisualizeLines();
 		VisualizeRotation();
 		VisualizeVoronoiEdges();
-		VisualizeLines();
 	}
 
 	public void VisualizeLines() {
-		using Image<Rgb24> image = new Image<Rgb24>( 50, 50 );
+		IBuffer<uint> buffer = _bufferFactory.Create( 50, 50, 0x000000FFU );
 
 		Point p1 = new Point( 632, 537 );
 		Point p2 = new Point( 648, 551 );
@@ -37,14 +39,15 @@ public sealed class IntegerRasterizerVisualizer {
 		Point n2 = p2.Subtract( p1 ).Add( 25, 25 );
 
 		_rasterizer.Rasterize( n1, n2, ( int x, int y ) => {
-			image[x, y] = Color.White;
+			buffer[x, y] = 0xFFFFFFFFU;
 		} );
 
 		_rasterizer.Rasterize( n2, n1, ( int x, int y ) => {
-			image[x, y] = Color.White;
+			buffer[x, y] = 0xFFFFFFFFU;
 		} );
 
-		image.SaveAsPng( Path.Combine( _outputFolder, "IntegerRasterizer_Lines.png" ) );
+		IImageWriter writer = IImageWriter.CreatePng();
+		writer.WriteImage( Path.Combine( _outputFolder, "IntegerRasterizer_Lines.png" ), buffer );
 
 	}
 
@@ -60,11 +63,11 @@ public sealed class IntegerRasterizerVisualizer {
 		];
 
 		for( int j = 0; j < size; j++ ) {
-			using Image<Rgb24> image = new Image<Rgb24>( size, size );
+			IBuffer<uint> buffer = _bufferFactory.Create( size, size, 0x000000FFU );
 
 			bool[,] poly = new bool[size, size];
 			_rasterizer.Rasterize( points, ( int x, int y ) => {
-				image[x, y] = Color.DimGray;
+				buffer[x, y] = 0x696969FFU;
 			} );
 
 			bool[,] line = new bool[size, size];
@@ -73,7 +76,7 @@ public sealed class IntegerRasterizerVisualizer {
 					points[i],
 					points[i + 1],
 					( int x, int y ) => {
-						image[x, y] = Color.White;
+						buffer[x, y] = 0xFFFFFFFFU;
 					}
 				);
 			}
@@ -81,11 +84,12 @@ public sealed class IntegerRasterizerVisualizer {
 				points[^1],
 				points[0],
 				( int x, int y ) => {
-					image[x, y] = Color.White;
+					buffer[x, y] = 0xFFFFFFFFU;
 				}
 			);
 
-			image.SaveAsPng( Path.Combine( _outputFolder, $"IntegerRasterizer_Rotation_{j}.png" ) );
+			IImageWriter writer = IImageWriter.CreatePng();
+			writer.WriteImage( Path.Combine( _outputFolder, $"IntegerRasterizer_Rotation_{j}.png" ), buffer );
 
 			points = [
 				new Point( points[0].X + 1, points[0].Y ),
@@ -97,7 +101,7 @@ public sealed class IntegerRasterizerVisualizer {
 	}
 
 	public void VisualizeVoronoiEdges() {
-		using Image<Rgb24> image = new Image<Rgb24>( _size.Width, _size.Height );
+		IBuffer<uint> buffer = _bufferFactory.Create( _size.Width, _size.Height, 0x000000FFU );
 
 		IRandom random = new FastRandom();
 		IPointFactory pointFactory = new FastPoissonDiscPointFactory( random );
@@ -107,25 +111,26 @@ public sealed class IntegerRasterizerVisualizer {
 
 		foreach( Cell cell in voronoi.Cells ) {
 			byte value = (byte)random.NextInt( 255 );
-			Rgb24 color = new Rgb24( value, value, value );
+			uint color = (uint)( ( value << 24 ) | ( value << 16 ) | ( value << 8 ) | 0xFF );
 			_rasterizer.Rasterize( cell.Polygon.Points, ( int x, int y ) => {
-				image[x, y] = color;
+				buffer[x, y] = color;
 			} );
 		}
 
 		foreach( Edge edge in voronoi.Edges ) {
 			_rasterizer.Rasterize( edge.A, edge.B, ( int x, int y ) => {
-				image[x, y] = Color.DarkRed;
+				buffer[x, y] = 0x8B0000FFU;
 			} );
 		}
 
 		foreach( Cell cell in voronoi.Cells ) {
 			foreach( Point p in cell.Polygon.Points ) {
-				image[p.X, p.Y] = Color.Fuchsia;
+				buffer[p.X, p.Y] = 0xFF00FFFFU;
 			}
-			image[cell.Center.X, cell.Center.Y] = Color.Goldenrod;
+			buffer[cell.Center.X, cell.Center.Y] = 0xFFD700FFU;
 		}
 
-		image.SaveAsPng( Path.Combine( _outputFolder, "IntegerRasterizer_Voronoi.png" ) );
+		IImageWriter writer = IImageWriter.CreatePng();
+		writer.WriteImage( Path.Combine( _outputFolder, "IntegerRasterizer_Voronoi.png" ), buffer );
 	}
 }

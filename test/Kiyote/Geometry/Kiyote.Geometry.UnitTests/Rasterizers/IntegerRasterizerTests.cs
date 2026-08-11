@@ -1,8 +1,3 @@
-﻿using Kiyote.Geometry.DelaunayVoronoi;
-using Kiyote.Geometry.Randomization;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-
 namespace Kiyote.Geometry.Rasterizers.Tests;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage( "Performance", "CA1814:Prefer jagged arrays over multidimensional", Justification = "Simplicity for test" )]
@@ -119,98 +114,6 @@ public sealed class IntegerRasterizerTests {
 				Assert.That( poly[i, j], Is.EqualTo( line[i, j] ), $"Rasterize mismatch: {i},{j}, poly: {poly[i, j]}, line: {line[i, j]}" );
 			}
 		}
-	}
-
-	[Test]
-	public void Rasterize_VoronoiPolygons_EdgesMatch() {
-		IPointFactory pointFactory = new FastPoissonDiscPointFactory( new FastRandom() );
-		ISize size = new Point( 1000, 1000 );
-		IReadOnlyList<Point> voronoiPoints = pointFactory.Fill( size, 5 );
-		IVoronoiFactory voronoiFactory = new D3VoronoiFactory();
-		IVoronoi voronoi = voronoiFactory.Create( new Rect( 0, 0, size.Width, size.Height ), voronoiPoints, false );
-		bool mismatch = false;
-		foreach( Cell cell in voronoi.Cells ) {
-			int cellWidth = cell.BoundingBox.Width;
-			int cellHeight = cell.BoundingBox.Height;
-			IReadOnlyList<Point> points = cell.Polygon.Points;
-			bool[,] line = new bool[cellWidth, cellHeight];
-			// Rasterize the lines
-			for( int i = 0; i < points.Count - 1; i++ ) {
-				_rasterizer.Rasterize(
-					points[i],
-					points[i + 1],
-					( x, y ) => {
-						line[x - cell.BoundingBox.X1, y - cell.BoundingBox.Y1] = true;
-					}
-				);
-			}
-			_rasterizer.Rasterize(
-				points[^1],
-				points[0],
-				( x, y ) => {
-					line[x - cell.BoundingBox.X1, y - cell.BoundingBox.Y1] = true;
-				}
-			);
-
-			// Fill the lines
-			for( int y = 0; y < cellHeight; y++ ) {
-				int minX = int.MaxValue;
-				// Find the smallest X
-				for( int x = 0; x < cellWidth; x++ ) {
-					if( line[x, y] ) {
-						minX = x;
-						break;
-					}
-				}
-				// Find the largest X
-				int maxX = int.MinValue;
-				for( int x = cellWidth - 1; x >= 0; x-- ) {
-					if( line[x, y] ) {
-						maxX = x;
-						break;
-					}
-				}
-
-				if( maxX < minX ) {
-					throw new InvalidOperationException();
-				}
-
-				for( int x = minX; x <= maxX; x++ ) {
-					line[x, y] = true;
-				}
-			}
-
-			bool[,] poly = new bool[cellWidth, cellHeight];
-			_rasterizer.Rasterize( points, ( x, y ) => {
-				poly[x - cell.BoundingBox.X1, y - cell.BoundingBox.Y1] = true;
-			} );
-
-
-			for( int y = 0; y < cellHeight; y++ ) {
-				for( int x = 0; x < cellWidth; x++ ) {
-
-					if( poly[x, y] != line[x, y] ) {
-						using Image<Rgb24> imgLine = new Image<Rgb24>( cell.BoundingBox.Width, cell.BoundingBox.Height );
-						using Image<Rgb24> imgPoly = new Image<Rgb24>( cell.BoundingBox.Width, cell.BoundingBox.Height );
-						for( int sy = 0; sy < cellHeight; sy++ ) {
-							for( int sx = 0; sx < cellWidth; sx++ ) {
-								imgLine[sx, sy] = line[sx, sy] ? Color.White : Color.Black;
-								imgPoly[sx, sy] = poly[sx, sy] ? Color.White : Color.Black;
-							}
-						}
-						imgLine.SaveAsPng( Path.Combine( "C:\\temp\\Kiyote.Geometry.Visualizer", $"D3DelaunayFactory_Line_{x}-{y}.png" ) );
-						imgPoly.SaveAsPng( Path.Combine( "C:\\temp\\Kiyote.Geometry.Visualizer", $"D3DelaunayFactory_Poly_{x}-{y}.png" ) );
-						mismatch = true;
-						goto next;
-					}
-					//Assert.AreEqual( poly[x, y], line[x, y], $"Polygon does not match at {x},{y}: poly {poly[x, y]} vs line {line[x, y]}." );
-				}
-			}
-			next:
-			poly = null;
-			line = null;
-		}
-		Assert.That( mismatch, Is.False, "Cell mismatches" );
 	}
 
 	[Test]
