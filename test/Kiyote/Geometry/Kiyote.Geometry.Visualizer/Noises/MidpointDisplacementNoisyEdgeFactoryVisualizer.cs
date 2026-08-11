@@ -1,8 +1,7 @@
-﻿using Kiyote.Geometry.Randomization;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Drawing.Processing;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+using Kiyote.Buffers;
+using Kiyote.Geometry.Randomization;
+using Kiyote.Geometry.Rasterizers;
+using Kiyote.Imaging;
 
 namespace Kiyote.Geometry.Noises.Visualizer;
 
@@ -11,6 +10,8 @@ public sealed class MidpointDisplacementNoisyEdgeFactoryVisualizer {
 	private readonly string _outputFolder;
 	private readonly ISize _bounds;
 	private readonly INoisyEdgeFactory _edgeFactory;
+	private readonly IRasterizer _rasterizer;
+	private readonly IBufferFactory _bufferFactory;
 
 	public MidpointDisplacementNoisyEdgeFactoryVisualizer(
 		string outputFolder,
@@ -21,6 +22,8 @@ public sealed class MidpointDisplacementNoisyEdgeFactoryVisualizer {
 
 		IRandom random = new FastRandom();
 		_edgeFactory = new MidpointDisplacementNoisyEdgeFactory( random );
+		_rasterizer = new IntegerRasterizer();
+		_bufferFactory = IBufferFactory.CreateArrayFactory();
 	}
 
 	public void Visualize() {
@@ -29,7 +32,7 @@ public sealed class MidpointDisplacementNoisyEdgeFactoryVisualizer {
 
 	private void VisualizeCreate() {
 		Console.WriteLine( "MidpointDisplacementNoisyEdgeFactoryVisualizer.Create" );
-		using Image<Rgb24> image = new Image<Rgb24>( _bounds.Width, _bounds.Height );
+		IBuffer<uint> buffer = _bufferFactory.Create( _bounds.Width, _bounds.Height, 0x000000FFU );
 
 		int midX = (int)( _bounds.Width * 0.5f );
 		int xOffset = (int)( _bounds.Width * 0.1f );
@@ -40,41 +43,29 @@ public sealed class MidpointDisplacementNoisyEdgeFactoryVisualizer {
 
 		NoisyEdge noisyEdge = _edgeFactory.Create( toSplit, control, 0.5f, 6 );
 
-		image.Mutate( ( context ) => {
-			PointF[] edge = new PointF[2];
-			edge[0].X = noisyEdge.Source.A.X;
-			edge[0].Y = noisyEdge.Source.A.Y;
-			edge[1].X = noisyEdge.Source.B.X;
-			edge[1].Y = noisyEdge.Source.B.Y;
-			context.DrawLine( Color.LightGray, 1.0f, edge );
-
-			edge[0].X = control.A.X;
-			edge[0].Y = control.A.Y;
-			edge[1].X = control.B.X;
-			edge[1].Y = control.B.Y;
-			context.DrawLine( Color.DarkGray, 1.0f, edge );
-
-			PointF[] lines = new PointF[noisyEdge.Noise.Count + 1];
-			lines[0].X = noisyEdge.Noise[0].A.X;
-			lines[0].Y = noisyEdge.Noise[0].A.Y;
-			for( int i = 0; i < noisyEdge.Noise.Count; i++ ) {
-				lines[i + 1].X = noisyEdge.Noise[i].B.X;
-				lines[i + 1].Y = noisyEdge.Noise[i].B.Y;
-			}
-
-			context.DrawLine( Color.Yellow, 1.0f, lines );
-
-			foreach( Edge e in noisyEdge.Noise ) {
-				image[e.A.X, e.A.Y] = Color.Magenta;
-				image[e.B.X, e.B.Y] = Color.Magenta;
-			}
-
-			image[control.A.X, control.A.Y] = Color.Red;
-			image[control.B.X, control.B.Y] = Color.Red;
-			image[toSplit.A.X, toSplit.A.Y] = Color.Blue;
-			image[toSplit.B.X, toSplit.B.Y] = Color.Blue;
+		_rasterizer.Rasterize( noisyEdge.Source.A, noisyEdge.Source.B, ( int x, int y ) => {
+			buffer[x, y] = 0xD3D3D3FFU;
 		} );
 
-		image.SaveAsPng( System.IO.Path.Combine( _outputFolder, "MidpointDisplacementNoisyEdgeFactoryVisualizerCreate.png" ) );
+		_rasterizer.Rasterize( control.A, control.B, ( int x, int y ) => {
+			buffer[x, y] = 0xA9A9A9FFU;
+		} );
+
+		foreach( Edge e in noisyEdge.Noise ) {
+			_rasterizer.Rasterize( e.A, e.B, ( int x, int y ) => {
+				buffer[x, y] = 0xFFFF00FFU;
+			} );
+
+			buffer[e.A.X, e.A.Y] = 0xFF00FFFFU;
+			buffer[e.B.X, e.B.Y] = 0xFF00FFFFU;
+		}
+
+		buffer[control.A.X, control.A.Y] = 0xFF0000FFU;
+		buffer[control.B.X, control.B.Y] = 0xFF0000FFU;
+		buffer[toSplit.A.X, toSplit.A.Y] = 0x0000FFFFU;
+		buffer[toSplit.B.X, toSplit.B.Y] = 0x0000FFFFU;
+
+		IImageWriter writer = IImageWriter.CreatePng();
+		writer.WriteImage( Path.Combine( _outputFolder, "MidpointDisplacementNoisyEdgeFactoryVisualizerCreate.png" ), buffer );
 	}
 }

@@ -1,4 +1,4 @@
-﻿namespace Kiyote.Geometry.Rasterizers;
+namespace Kiyote.Geometry.Rasterizers;
 
 // Polygon rasterization ported from here: https://www.angelfire.com/linux/myp/ConvexPolRas/ConvexPolRas.cpp
 
@@ -6,8 +6,24 @@ internal sealed class IntegerRasterizer : IRasterizer {
 
 	void IRasterizer.Rasterize(
 		IReadOnlyList<Point> polygon,
-		Action<int, int> pixelAction
+		Action<int, int> pixelAction,
+		bool filled
 	) {
+		// Rasterizing only the border means each edge can be emitted directly
+		// without needing to calculate the horizontal spans.
+		if( !filled ) {
+			for( int i = 0; i < polygon.Count; i++ ) {
+				int ind = ( i + 1 ) % polygon.Count;
+
+				( this as IRasterizer ).Rasterize(
+					polygon[i],
+					polygon[ind],
+					pixelAction
+				);
+			}
+			return;
+		}
+
 		// Find the smallest and largest Y's of the polygon
 		int small_y = polygon[0].Y;
 		int large_y = polygon[0].Y;

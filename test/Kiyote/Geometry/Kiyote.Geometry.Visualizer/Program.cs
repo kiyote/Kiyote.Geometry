@@ -1,4 +1,4 @@
-﻿using Kiyote.Geometry.Visualizer.Randomization;
+using Kiyote.Geometry.Visualizer.Randomization;
 using Kiyote.Geometry.Visualizer.DelaunayVoronoi;
 using Kiyote.Geometry.Visualizer.Rasterizers;
 using Kiyote.Geometry.Noises.Visualizer;
@@ -41,7 +41,7 @@ public static class Program {
 			bounds
 		);
 		d3DelaunayFactory.Visualize();
-		
+
 
 		// D3VoronoiFactory
 		var d3VoronoiFactory = new D3VoronoiFactoryVisualizer(

@@ -133,7 +133,7 @@ LaunchCount=1  WarmupCount=10
 
 Github action failing with permission denied?
 ```
-git update-index --chmod=+x ./create-orphan-branch.sh
+git update-index --add --chmod=+x ./create-orphan-branch.sh
 ```
 
 Still failing?  Try running the `./create-orphan-branch.sh` locally once.

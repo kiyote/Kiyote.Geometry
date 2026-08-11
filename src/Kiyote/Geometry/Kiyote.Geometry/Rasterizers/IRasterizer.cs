@@ -1,10 +1,11 @@
-﻿namespace Kiyote.Geometry.Rasterizers;
+namespace Kiyote.Geometry.Rasterizers;
 
 public interface IRasterizer {
 
 	void Rasterize(
 		IReadOnlyList<Point> polygon,
-		Action<int, int> pixelAction
+		Action<int, int> pixelAction,
+		bool filled = true
 	);
 
 	void Rasterize(

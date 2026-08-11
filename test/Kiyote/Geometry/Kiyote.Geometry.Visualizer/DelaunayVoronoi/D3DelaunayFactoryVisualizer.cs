@@ -1,9 +1,8 @@
-﻿using Kiyote.Geometry.DelaunayVoronoi;
+using Kiyote.Buffers;
+using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Drawing.Processing;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+using Kiyote.Geometry.Rasterizers;
+using Kiyote.Imaging;
 
 namespace Kiyote.Geometry.Visualizer.DelaunayVoronoi;
 
@@ -12,6 +11,8 @@ public sealed class D3DelaunayFactoryVisualizer {
 	private readonly string _outputFolder;
 	private readonly ISize _size;
 	private readonly IDelaunayFactory _delaunayFactory;
+	private readonly IRasterizer _rasterizer;
+	private readonly IBufferFactory _bufferFactory;
 
 	public D3DelaunayFactoryVisualizer(
 		string outputFolder,
@@ -20,6 +21,8 @@ public sealed class D3DelaunayFactoryVisualizer {
 		_outputFolder = outputFolder;
 		_size = size;
 		_delaunayFactory = new D3DelaunayFactory();
+		_rasterizer = new IntegerRasterizer();
+		_bufferFactory = IBufferFactory.CreateArrayFactory();
 	}
 
 	public void Visualize() {
@@ -40,11 +43,12 @@ public sealed class D3DelaunayFactoryVisualizer {
 		];
 		IDelaunay delaunay = _delaunayFactory.Create( points );
 
-		using Image<Rgb24> image = new Image<Rgb24>( _size.Width, _size.Height );
+		IBuffer<uint> buffer = _bufferFactory.Create( _size.Width, _size.Height, 0x000000FFU );
 
-		Render( image, delaunay );
+		Render( buffer, delaunay );
 
-		image.SaveAsPng( Path.Combine( _outputFolder, "D3DelaunayFactory_Square.png" ) );
+		IImageWriter writer = IImageWriter.CreatePng();
+		writer.WriteImage( Path.Combine( _outputFolder, "D3DelaunayFactory_Square.png" ), buffer );
 	}
 
 	private void VisualizeRandom() {
@@ -54,48 +58,39 @@ public sealed class D3DelaunayFactoryVisualizer {
 		IReadOnlyList<Point> points = pointFactory.Fill( new Point( _size.Width, _size.Height ), 25 );
 		IDelaunay delaunay = _delaunayFactory.Create( points );
 
-		using Image<Rgb24> image = new Image<Rgb24>( _size.Width, _size.Height );
+		IBuffer<uint> buffer = _bufferFactory.Create( _size.Width, _size.Height, 0x000000FFU );
 
-		Render( image, delaunay );
+		Render( buffer, delaunay );
 
-		image.SaveAsPng( Path.Combine( _outputFolder, "D3DelaunayFactory_Random.png" ) );
+		IImageWriter writer = IImageWriter.CreatePng();
+		writer.WriteImage( Path.Combine( _outputFolder, "D3DelaunayFactory_Random.png" ), buffer );
 	}
 
-	private static void Render(
-		Image<Rgb24> image,
+	private void Render(
+		IBuffer<uint> buffer,
 		IDelaunay delaunay
 	) {
 		// Draw the triangles
-		image.Mutate( ( context ) => {
-			PointF[] lines = new PointF[4];
-			for( int i = 0; i < delaunay.Triangles.Count; i++ ) {
-				lines[0].X = delaunay.Triangles[i].P1.X;
-				lines[0].Y = delaunay.Triangles[i].P1.Y;
-				lines[1].X = delaunay.Triangles[i].P2.X;
-				lines[1].Y = delaunay.Triangles[i].P2.Y;
-				lines[2].X = delaunay.Triangles[i].P3.X;
-				lines[2].Y = delaunay.Triangles[i].P3.Y;
-				lines[3].X = delaunay.Triangles[i].P1.X;
-				lines[3].Y = delaunay.Triangles[i].P1.Y;
-				 context.DrawLine( Color.DarkGray, 1.0f, lines );
-			}
-		} );
+		for (int i = 0; i < delaunay.Triangles.Count; i++ ) {
+			_rasterizer.Rasterize( delaunay.Triangles[i].P1, delaunay.Triangles[i].P2, ( int x, int y ) => {
+				buffer[x, y] = 0xA9A9A9FFU;
+			} );
+			_rasterizer.Rasterize( delaunay.Triangles[i].P2, delaunay.Triangles[i].P3, ( int x, int y ) => {
+				buffer[x, y] = 0xA9A9A9FFU;
+			} );
+			_rasterizer.Rasterize( delaunay.Triangles[i].P3, delaunay.Triangles[i].P1, ( int x, int y ) => {
+				buffer[x, y] = 0xA9A9A9FFU;
+			} );
+		}
 
 		// Draw the hull
-		image.Mutate( ( context ) => {
-			PointF[] lines = new PointF[delaunay.Hull.Count + 1];
-			for( int i = 0; i < delaunay.Hull.Count; i++ ) {
-				lines[i].X = delaunay.Hull[i].X;
-				lines[i].Y = delaunay.Hull[i].Y;
-			}
-			lines[^1].X = delaunay.Hull[0].X;
-			lines[^1].Y = delaunay.Hull[0].Y;
-			 context.DrawLine( Color.Yellow, 1.0f, lines );
-		} );
+		_rasterizer.Rasterize( delaunay.Hull, ( int x, int y ) => {
+			buffer[x, y] = 0xFFFF00FFU;
+		}, false );
 
 		// Draw the points
 		for( int i = 0; i < delaunay.Points.Count; i++ ) {
-			image[delaunay.Points[i].X, delaunay.Points[i].Y] = Color.Magenta;
+			buffer[delaunay.Points[i].X, delaunay.Points[i].Y] = 0xFF00FFFFU;
 		}
 	}
 }

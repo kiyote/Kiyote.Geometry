@@ -1,6 +1,7 @@
-﻿using Kiyote.Geometry.Randomization;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using Kiyote.Buffers;
+using Kiyote.Geometry.Randomization;
+using Kiyote.Geometry.Rasterizers;
+using Kiyote.Imaging;
 
 namespace Kiyote.Geometry.Visualizer.Randomization;
 
@@ -9,6 +10,8 @@ public sealed class FastPoissonDiscPointFactoryVisualizer {
 	private readonly string _outputFolder;
 	private readonly IPointFactory _pointFactory;
 	private readonly ISize _size;
+	private readonly IRasterizer _rasterizer;
+	private readonly IBufferFactory _bufferFactory;
 
 	public FastPoissonDiscPointFactoryVisualizer(
 		string outputFolder,
@@ -18,6 +21,8 @@ public sealed class FastPoissonDiscPointFactoryVisualizer {
 		_size = size;
 		IRandom random = new FastRandom();
 		_pointFactory = new FastPoissonDiscPointFactory( random );
+		_rasterizer = new IntegerRasterizer();
+		_bufferFactory = IBufferFactory.CreateArrayFactory();
 	}
 
 	public void Visualize() {
@@ -29,12 +34,13 @@ public sealed class FastPoissonDiscPointFactoryVisualizer {
 		Console.WriteLine( "IPointFactory.Fill" );
 		IReadOnlyList<Point> points = _pointFactory.Fill( _size, 25 );
 
-		L8 white = new L8( 255 );
-		using Image<L8> image = new Image<L8>( _size.Width, _size.Height );
+		IBuffer<bool> buffer = _bufferFactory.Create( _size.Width, _size.Height, false );
 		foreach( Point p in points ) {
-			image[p.X, p.Y] = white;
+			buffer[p.X, p.Y] = false;
 		}
-		image.SaveAsPng( Path.Combine( _outputFolder, "FastPoissonDiscPointFactory.png" ) );
+
+		IImageWriter writer = IImageWriter.CreatePng();
+		writer.WriteImage( Path.Combine( _outputFolder, "FastPoissonDiscPointFactory.png" ), buffer );
 	}
 
 	private void VisualizeFillHeatmap() {
@@ -62,7 +68,7 @@ public sealed class FastPoissonDiscPointFactoryVisualizer {
 		}
 		float actualRange = Math.Abs( maxValue - minValue );
 		float scale = 1.0f / actualRange;
-		using Image<L8> image = new Image<L8>( _size.Width, _size.Height );
+		IBuffer<byte> buffer = _bufferFactory.Create<byte>( _size.Width, _size.Height, 0 );
 		for( int r = 0; r < _size.Height; r++ ) {
 			for( int c = 0; c < _size.Width; c++ ) {
 				int index = c + ( r * _size.Width );
@@ -71,9 +77,11 @@ public sealed class FastPoissonDiscPointFactoryVisualizer {
 				float result = value - minValue;
 				result *= scale; // Value will now be between 0..1
 
-				image[c, r] = new L8( (byte)( result * 255 ) );
+				buffer[c, r] = (byte)( result * 255 );
 			}
 		}
-		image.SaveAsPng( Path.Combine( _outputFolder, "FastPoissonDiscPointFactory_Heatmap.png" ) );
+
+		IImageWriter writer = IImageWriter.CreatePng();
+		writer.WriteImage( Path.Combine( _outputFolder, "FastPoissonDiscPointFactory_Heatmap.png" ), buffer );
 	}
 }

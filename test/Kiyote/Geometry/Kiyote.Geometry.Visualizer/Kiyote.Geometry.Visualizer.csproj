@@ -6,9 +6,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="SixLabors.ImageSharp" />
-		<PackageReference Include="SixLabors.ImageSharp.Drawing" />
-	</ItemGroup>
+    <PackageReference Include="Kiyote.Buffers" />
+    <PackageReference Include="Kiyote.Imaging" />
+  </ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\..\src\Kiyote\Geometry\Kiyote.Geometry\Kiyote.Geometry.csproj" />
