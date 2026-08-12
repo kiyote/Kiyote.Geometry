@@ -192,4 +192,390 @@ public sealed class IntegerRasterizerTests {
 		}
 	}
 
+	/// <summary>
+	/// Records the pixels it is handed.  This is a struct implementing
+	/// <see cref="IPixelOperation"/> so that the generic, allocation free path through
+	/// the rasterizer is what gets exercised, rather than the delegate wrappers.
+	/// </summary>
+	private readonly struct GridRecorder(
+		bool[,] grid
+	) : IPixelOperation {
+
+		public void Pixel(
+			int x,
+			int y
+		) {
+			grid[x, y] = true;
+		}
+	}
+
+	/// <summary>
+	/// An <see cref="IReadOnlyList{T}"/> that is deliberately none of the types the
+	/// rasterizer has a fast path for, so that the pooled copy fallback is used.
+	/// </summary>
+	private sealed class OpaquePointList(
+		IReadOnlyList<Point> points
+	) : IReadOnlyList<Point> {
+
+		public Point this[int index] => points[index];
+
+		public int Count => points.Count;
+
+		public IEnumerator<Point> GetEnumerator() {
+			return points.GetEnumerator();
+		}
+
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
+			return GetEnumerator();
+		}
+	}
+
+	private static void AssertGridsMatch(
+		bool[,] expected,
+		bool[,] actual,
+		int size,
+		string context
+	) {
+		for( int x = 0; x < size; x++ ) {
+			for( int y = 0; y < size; y++ ) {
+				Assert.That( actual[x, y], Is.EqualTo( expected[x, y] ), $"{context} mismatch at {x},{y}: expected {expected[x, y]}, actual {actual[x, y]}." );
+			}
+		}
+	}
+
+	private static List<Point> BoxPoints() {
+		return [
+			new Point( 1, 1 ),
+			new Point( 8, 1 ),
+			new Point( 8, 8 ),
+			new Point( 1, 8 ),
+		];
+	}
+
+	[Test]
+	public void Rasterize_UnfilledPolygon_MatchesManualEdges() {
+		List<Point> points = BoxPoints();
+
+		bool[,] polygon = new bool[10, 10];
+		_rasterizer.Rasterize( points, ( x, y ) => {
+			polygon[x, y] = true;
+		}, false );
+
+		// Walking the edges by hand is the independent oracle for what an unfilled
+		// polygon should produce.
+		bool[,] edges = new bool[10, 10];
+		for( int i = 0; i < points.Count; i++ ) {
+			_rasterizer.Rasterize(
+				points[i],
+				points[( i + 1 ) % points.Count],
+				( x, y ) => {
+					edges[x, y] = true;
+				}
+			);
+		}
+
+		AssertGridsMatch( edges, polygon, 10, "Unfilled polygon" );
+	}
+
+	[Test]
+	public void Rasterize_UnfilledPolygon_DoesNotFillInterior() {
+		List<Point> points = BoxPoints();
+
+		bool[,] unfilled = new bool[10, 10];
+		_rasterizer.Rasterize( points, ( x, y ) => {
+			unfilled[x, y] = true;
+		}, false );
+
+		// The interior of the box must be untouched, otherwise "unfilled" is not
+		// actually doing anything.
+		Assert.Multiple( () => {
+			Assert.That( unfilled[4, 4], Is.False, "Interior pixel should not be set." );
+			Assert.That( unfilled[1, 1], Is.True, "Corner pixel should be set." );
+			Assert.That( unfilled[8, 8], Is.True, "Corner pixel should be set." );
+			Assert.That( unfilled[4, 1], Is.True, "Edge pixel should be set." );
+		} );
+	}
+
+	[Test]
+	public void Rasterize_FilledPolygon_IncludesUnfilledOutline() {
+		List<Point> points = BoxPoints();
+
+		bool[,] filled = new bool[10, 10];
+		_rasterizer.Rasterize( points, ( x, y ) => {
+			filled[x, y] = true;
+		} );
+
+		bool[,] unfilled = new bool[10, 10];
+		_rasterizer.Rasterize( points, ( x, y ) => {
+			unfilled[x, y] = true;
+		}, false );
+
+		// Every pixel on the outline must also appear in the filled result.
+		for( int x = 0; x < 10; x++ ) {
+			for( int y = 0; y < 10; y++ ) {
+				if( unfilled[x, y] ) {
+					Assert.That( filled[x, y], Is.True, $"Filled result is missing outline pixel {x},{y}." );
+				}
+			}
+		}
+	}
+
+	[Test]
+	public void Rasterize_Triangle_MatchesManualEdges() {
+		Point p1 = new Point( 2, 1 );
+		Point p2 = new Point( 8, 4 );
+		Point p3 = new Point( 4, 8 );
+		Triangle triangle = new Triangle( p1, p2, p3 );
+
+		bool[,] fromTriangle = new bool[10, 10];
+		_rasterizer.Rasterize( triangle, ( x, y ) => {
+			fromTriangle[x, y] = true;
+		}, false );
+
+		// This is the call sequence the Triangle overload replaced, so it is the
+		// oracle for the collapse being behaviour preserving.
+		bool[,] fromLines = new bool[10, 10];
+		_rasterizer.Rasterize( p1, p2, ( x, y ) => {
+			fromLines[x, y] = true;
+		} );
+		_rasterizer.Rasterize( p2, p3, ( x, y ) => {
+			fromLines[x, y] = true;
+		} );
+		_rasterizer.Rasterize( p3, p1, ( x, y ) => {
+			fromLines[x, y] = true;
+		} );
+
+		AssertGridsMatch( fromLines, fromTriangle, 10, "Triangle outline" );
+	}
+
+	[Test]
+	public void Rasterize_FilledTriangle_MatchesEquivalentPolygon() {
+		Point p1 = new Point( 2, 1 );
+		Point p2 = new Point( 8, 4 );
+		Point p3 = new Point( 4, 8 );
+
+		bool[,] fromTriangle = new bool[10, 10];
+		_rasterizer.Rasterize( new Triangle( p1, p2, p3 ), ( x, y ) => {
+			fromTriangle[x, y] = true;
+		} );
+
+		bool[,] fromPolygon = new bool[10, 10];
+		_rasterizer.Rasterize( new List<Point> { p1, p2, p3 }, ( x, y ) => {
+			fromPolygon[x, y] = true;
+		} );
+
+		AssertGridsMatch( fromPolygon, fromTriangle, 10, "Filled triangle" );
+	}
+
+	[Test]
+	public void Rasterize_Polygon_MatchesItsPoints() {
+		List<Point> points = BoxPoints();
+		Polygon polygon = new Polygon( points );
+
+		bool[,] fromPolygon = new bool[10, 10];
+		_rasterizer.Rasterize( polygon, ( x, y ) => {
+			fromPolygon[x, y] = true;
+		} );
+
+		bool[,] fromPoints = new bool[10, 10];
+		_rasterizer.Rasterize( points, ( x, y ) => {
+			fromPoints[x, y] = true;
+		} );
+
+		AssertGridsMatch( fromPoints, fromPolygon, 10, "Polygon overload" );
+	}
+
+	[Test]
+	public void Rasterize_PolygonUnfilled_MatchesItsPoints() {
+		List<Point> points = BoxPoints();
+		Polygon polygon = new Polygon( points );
+
+		bool[,] fromPolygon = new bool[10, 10];
+		_rasterizer.Rasterize( polygon, ( x, y ) => {
+			fromPolygon[x, y] = true;
+		}, false );
+
+		bool[,] fromPoints = new bool[10, 10];
+		_rasterizer.Rasterize( points, ( x, y ) => {
+			fromPoints[x, y] = true;
+		}, false );
+
+		AssertGridsMatch( fromPoints, fromPolygon, 10, "Unfilled polygon overload" );
+	}
+
+	[Test]
+	public void Rasterize_PointArray_MatchesList() {
+		List<Point> points = BoxPoints();
+
+		bool[,] fromArray = new bool[10, 10];
+		_rasterizer.Rasterize( points.ToArray(), ( x, y ) => {
+			fromArray[x, y] = true;
+		} );
+
+		bool[,] fromList = new bool[10, 10];
+		_rasterizer.Rasterize( points, ( x, y ) => {
+			fromList[x, y] = true;
+		} );
+
+		AssertGridsMatch( fromList, fromArray, 10, "Array fast path" );
+	}
+
+	[Test]
+	public void Rasterize_ImmutableArray_MatchesList() {
+		List<Point> points = BoxPoints();
+
+		bool[,] fromImmutable = new bool[10, 10];
+		_rasterizer.Rasterize( [.. points], ( x, y ) => {
+			fromImmutable[x, y] = true;
+		} );
+
+		bool[,] fromList = new bool[10, 10];
+		_rasterizer.Rasterize( points, ( x, y ) => {
+			fromList[x, y] = true;
+		} );
+
+		AssertGridsMatch( fromList, fromImmutable, 10, "ImmutableArray fast path" );
+	}
+
+	[Test]
+	public void Rasterize_UnknownListType_MatchesList() {
+		List<Point> points = BoxPoints();
+
+		// OpaquePointList has no fast path, so this exercises the pooled copy.
+		bool[,] fromOpaque = new bool[10, 10];
+		_rasterizer.Rasterize( new OpaquePointList( points ), ( x, y ) => {
+			fromOpaque[x, y] = true;
+		} );
+
+		bool[,] fromList = new bool[10, 10];
+		_rasterizer.Rasterize( points, ( x, y ) => {
+			fromList[x, y] = true;
+		} );
+
+		AssertGridsMatch( fromList, fromOpaque, 10, "Pooled fallback" );
+	}
+
+	[Test]
+	public void Rasterize_UnknownListTypeReused_MatchesList() {
+		List<Point> points = BoxPoints();
+		OpaquePointList opaque = new OpaquePointList( points );
+
+		// Rasterizing repeatedly returns and re-rents the pooled buffer, so a stale
+		// or incorrectly sized rental would show up here.
+		bool[,] fromList = new bool[10, 10];
+		_rasterizer.Rasterize( points, ( x, y ) => {
+			fromList[x, y] = true;
+		} );
+
+		for( int i = 0; i < 5; i++ ) {
+			bool[,] fromOpaque = new bool[10, 10];
+			_rasterizer.Rasterize( opaque, ( x, y ) => {
+				fromOpaque[x, y] = true;
+			} );
+
+			AssertGridsMatch( fromList, fromOpaque, 10, $"Pooled fallback iteration {i}" );
+		}
+	}
+
+	[Test]
+	public void Rasterize_Span_MatchesList() {
+		List<Point> points = BoxPoints();
+
+		bool[,] fromSpan = new bool[10, 10];
+		ReadOnlySpan<Point> span = [
+			new Point( 1, 1 ),
+			new Point( 8, 1 ),
+			new Point( 8, 8 ),
+			new Point( 1, 8 ),
+		];
+		_rasterizer.Rasterize( span, ( x, y ) => {
+			fromSpan[x, y] = true;
+		} );
+
+		bool[,] fromList = new bool[10, 10];
+		_rasterizer.Rasterize( points, ( x, y ) => {
+			fromList[x, y] = true;
+		} );
+
+		AssertGridsMatch( fromList, fromSpan, 10, "Span primitive" );
+	}
+
+	[Test]
+	public void Rasterize_StrucTPixelOperation_MatchesDelegate() {
+		List<Point> points = BoxPoints();
+
+		// The struct path is the reason the generic API exists, so it must agree
+		// with the delegate path it replaced.
+		bool[,] fromStruct = new bool[10, 10];
+		_rasterizer.Rasterize( points, new GridRecorder( fromStruct ) );
+
+		bool[,] fromDelegate = new bool[10, 10];
+		_rasterizer.Rasterize( points, ( x, y ) => {
+			fromDelegate[x, y] = true;
+		} );
+
+		AssertGridsMatch( fromDelegate, fromStruct, 10, "Struct pixel action" );
+	}
+
+	[Test]
+	public void Rasterize_StrucTPixelOperationUnfilled_MatchesDelegate() {
+		List<Point> points = BoxPoints();
+
+		bool[,] fromStruct = new bool[10, 10];
+		_rasterizer.Rasterize( points, new GridRecorder( fromStruct ), false );
+
+		bool[,] fromDelegate = new bool[10, 10];
+		_rasterizer.Rasterize( points, ( x, y ) => {
+			fromDelegate[x, y] = true;
+		}, false );
+
+		AssertGridsMatch( fromDelegate, fromStruct, 10, "Unfilled struct pixel action" );
+	}
+
+	[Test]
+	public void Rasterize_StrucTPixelOperationLine_MatchesDelegate() {
+		Point p1 = new Point( 3, 2 );
+		Point p2 = new Point( 8, 8 );
+
+		bool[,] fromStruct = new bool[10, 10];
+		_rasterizer.Rasterize( p1, p2, new GridRecorder( fromStruct ) );
+
+		bool[,] fromDelegate = new bool[10, 10];
+		_rasterizer.Rasterize( p1, p2, ( x, y ) => {
+			fromDelegate[x, y] = true;
+		} );
+
+		AssertGridsMatch( fromDelegate, fromStruct, 10, "Struct pixel action line" );
+	}
+
+	[Test]
+	public void Rasterize_TallPolygon_MatchesManualEdges() {
+		// A polygon taller than the small test cases pushes the pooled scanline
+		// buffer past the size the earlier tests exercise.
+		const int size = 200;
+		List<Point> points = [
+			new Point( 10, 5 ),
+			new Point( 150, 20 ),
+			new Point( 120, 190 ),
+			new Point( 20, 160 ),
+		];
+
+		bool[,] unfilled = new bool[size, size];
+		_rasterizer.Rasterize( points, ( x, y ) => {
+			unfilled[x, y] = true;
+		}, false );
+
+		bool[,] edges = new bool[size, size];
+		for( int i = 0; i < points.Count; i++ ) {
+			_rasterizer.Rasterize(
+				points[i],
+				points[( i + 1 ) % points.Count],
+				( x, y ) => {
+					edges[x, y] = true;
+				}
+			);
+		}
+
+		AssertGridsMatch( edges, unfilled, size, "Tall polygon outline" );
+	}
 }

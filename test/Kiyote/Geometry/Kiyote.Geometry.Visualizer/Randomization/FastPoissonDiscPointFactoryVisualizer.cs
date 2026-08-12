@@ -11,7 +11,6 @@ public sealed class FastPoissonDiscPointFactoryVisualizer {
 	private readonly IPointFactory _pointFactory;
 	private readonly ISize _size;
 	private readonly IRasterizer _rasterizer;
-	private readonly IBufferFactory _bufferFactory;
 
 	public FastPoissonDiscPointFactoryVisualizer(
 		string outputFolder,
@@ -22,7 +21,6 @@ public sealed class FastPoissonDiscPointFactoryVisualizer {
 		IRandom random = new FastRandom();
 		_pointFactory = new FastPoissonDiscPointFactory( random );
 		_rasterizer = new IntegerRasterizer();
-		_bufferFactory = IBufferFactory.CreateArrayFactory();
 	}
 
 	public void Visualize() {
@@ -34,9 +32,9 @@ public sealed class FastPoissonDiscPointFactoryVisualizer {
 		Console.WriteLine( "IPointFactory.Fill" );
 		IReadOnlyList<Point> points = _pointFactory.Fill( _size, 25 );
 
-		IBuffer<bool> buffer = _bufferFactory.Create( _size.Width, _size.Height, false );
+		IBuffer<bool> buffer = new ArrayBuffer<bool>( _size.Width, _size.Height, false );
 		foreach( Point p in points ) {
-			buffer[p.X, p.Y] = false;
+			buffer[p.X, p.Y] = true;
 		}
 
 		IImageWriter writer = IImageWriter.CreatePng();
@@ -68,7 +66,7 @@ public sealed class FastPoissonDiscPointFactoryVisualizer {
 		}
 		float actualRange = Math.Abs( maxValue - minValue );
 		float scale = 1.0f / actualRange;
-		IBuffer<byte> buffer = _bufferFactory.Create<byte>( _size.Width, _size.Height, 0 );
+		IBuffer<byte> buffer = new ArrayBuffer<byte>( _size.Width, _size.Height, 0 );
 		for( int r = 0; r < _size.Height; r++ ) {
 			for( int c = 0; c < _size.Width; c++ ) {
 				int index = c + ( r * _size.Width );

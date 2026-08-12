@@ -12,7 +12,6 @@ public sealed class D3DelaunayFactoryVisualizer {
 	private readonly ISize _size;
 	private readonly IDelaunayFactory _delaunayFactory;
 	private readonly IRasterizer _rasterizer;
-	private readonly IBufferFactory _bufferFactory;
 
 	public D3DelaunayFactoryVisualizer(
 		string outputFolder,
@@ -22,7 +21,6 @@ public sealed class D3DelaunayFactoryVisualizer {
 		_size = size;
 		_delaunayFactory = new D3DelaunayFactory();
 		_rasterizer = new IntegerRasterizer();
-		_bufferFactory = IBufferFactory.CreateArrayFactory();
 	}
 
 	public void Visualize() {
@@ -43,7 +41,7 @@ public sealed class D3DelaunayFactoryVisualizer {
 		];
 		IDelaunay delaunay = _delaunayFactory.Create( points );
 
-		IBuffer<uint> buffer = _bufferFactory.Create( _size.Width, _size.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
 		Render( buffer, delaunay );
 
@@ -58,7 +56,7 @@ public sealed class D3DelaunayFactoryVisualizer {
 		IReadOnlyList<Point> points = pointFactory.Fill( new Point( _size.Width, _size.Height ), 25 );
 		IDelaunay delaunay = _delaunayFactory.Create( points );
 
-		IBuffer<uint> buffer = _bufferFactory.Create( _size.Width, _size.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
 		Render( buffer, delaunay );
 
@@ -72,21 +70,11 @@ public sealed class D3DelaunayFactoryVisualizer {
 	) {
 		// Draw the triangles
 		for (int i = 0; i < delaunay.Triangles.Count; i++ ) {
-			_rasterizer.Rasterize( delaunay.Triangles[i].P1, delaunay.Triangles[i].P2, ( int x, int y ) => {
-				buffer[x, y] = 0xA9A9A9FFU;
-			} );
-			_rasterizer.Rasterize( delaunay.Triangles[i].P2, delaunay.Triangles[i].P3, ( int x, int y ) => {
-				buffer[x, y] = 0xA9A9A9FFU;
-			} );
-			_rasterizer.Rasterize( delaunay.Triangles[i].P3, delaunay.Triangles[i].P1, ( int x, int y ) => {
-				buffer[x, y] = 0xA9A9A9FFU;
-			} );
+			_rasterizer.Rasterize( delaunay.Triangles[i], new BufferPixelWriter( buffer, 0xA9A9A9FFU ), false );
 		}
 
 		// Draw the hull
-		_rasterizer.Rasterize( delaunay.Hull, ( int x, int y ) => {
-			buffer[x, y] = 0xFFFF00FFU;
-		}, false );
+		_rasterizer.Rasterize( delaunay.Hull, new BufferPixelWriter( buffer, 0xFFFF00FFU ), false );
 
 		// Draw the points
 		for( int i = 0; i < delaunay.Points.Count; i++ ) {

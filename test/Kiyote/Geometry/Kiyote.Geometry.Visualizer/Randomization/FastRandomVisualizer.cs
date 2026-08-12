@@ -12,7 +12,6 @@ public sealed class FastRandomVisualizer {
 	private readonly IRandom _random;
 	private readonly int _count;
 	private readonly IRasterizer _rasterizer;
-	private readonly IBufferFactory _bufferFactory;
 
 	public FastRandomVisualizer(
 		string outputFolder,
@@ -23,7 +22,6 @@ public sealed class FastRandomVisualizer {
 		_random = new FastRandom();
 		_count = bounds.Width * bounds.Height / 100;
 		_rasterizer = new IntegerRasterizer();
-		_bufferFactory = IBufferFactory.CreateArrayFactory();
 	}
 
 	public void Visualize() {
@@ -39,7 +37,7 @@ public sealed class FastRandomVisualizer {
 
 	private void NextInt() {
 		Console.WriteLine( "FastRandom.NextInt" );
-		IBuffer<byte> buffer = _bufferFactory.Create<byte>( _bounds.Width, _bounds.Height, 0x00 );
+		IBuffer<byte> buffer = new ArrayBuffer<byte>( _bounds.Width, _bounds.Height, 0x00 );
 		for( int i = 0; i < _count; i++ ) {
 			int x = (int)( _random.NextInt() / (float)int.MaxValue * ( _bounds.Width - 1 ) );
 			int y = (int)( _random.NextInt() / (float)int.MaxValue * ( _bounds.Height - 1 ) );
@@ -51,7 +49,7 @@ public sealed class FastRandomVisualizer {
 
 	private void NextIntUpperBound() {
 		Console.WriteLine( "FastRandom.NextIntUpperBound" );
-		IBuffer<byte> buffer = _bufferFactory.Create<byte>( _bounds.Width, _bounds.Height, 0x00 );
+		IBuffer<byte> buffer = new ArrayBuffer<byte>( _bounds.Width, _bounds.Height, 0x00 );
 		for( int i = 0; i < _count; i++ ) {
 			int x = _random.NextInt( _bounds.Width / 2 );
 			int y = _random.NextInt( _bounds.Height / 2 );
@@ -63,7 +61,7 @@ public sealed class FastRandomVisualizer {
 
 	private void NextIntLowerBoundUpperBound() {
 		Console.WriteLine( "FastRandom.NextIntLowerBoundUpperBound" );
-		IBuffer<byte> buffer = _bufferFactory.Create<byte>( _bounds.Width, _bounds.Height, 0x00 );
+		IBuffer<byte> buffer = new ArrayBuffer<byte>( _bounds.Width, _bounds.Height, 0x00 );
 		for( int i = 0; i < _count; i++ ) {
 			int x = _random.NextInt( _bounds.Width / 4, _bounds.Width / 4 * 3 );
 			int y = _random.NextInt( _bounds.Height / 4, _bounds.Height / 4 * 3 );
@@ -75,7 +73,7 @@ public sealed class FastRandomVisualizer {
 
 	private void NextUInt() {
 		Console.WriteLine( "FastRandom.NextUInt" );
-		IBuffer<byte> buffer = _bufferFactory.Create<byte>( _bounds.Width, _bounds.Height, 0x00 );
+		IBuffer<byte> buffer = new ArrayBuffer<byte>( _bounds.Width, _bounds.Height, 0x00 );
 		for( int i = 0; i < _count; i++ ) {
 			int x = (int)( _random.NextUInt() / (float)uint.MaxValue * ( _bounds.Width - 1 ) );
 			int y = (int)( _random.NextUInt() / (float)uint.MaxValue * ( _bounds.Height - 1 ) );
@@ -87,7 +85,7 @@ public sealed class FastRandomVisualizer {
 
 	private void NextDouble() {
 		Console.WriteLine( "FastRandom.NextDouble" );
-		IBuffer<byte> buffer = _bufferFactory.Create<byte>( _bounds.Width, _bounds.Height, 0x00 );
+		IBuffer<byte> buffer = new ArrayBuffer<byte>( _bounds.Width, _bounds.Height, 0x00 );
 		for( int i = 0; i < _count; i++ ) {
 			double dx = _random.NextDouble();
 			double dy = _random.NextDouble();
@@ -101,7 +99,7 @@ public sealed class FastRandomVisualizer {
 
 	private void NextFloat() {
 		Console.WriteLine( "FastRandom.NextFloat" );
-		IBuffer<byte> buffer = _bufferFactory.Create<byte>( _bounds.Width, _bounds.Height, 0x00 );
+		IBuffer<byte> buffer = new ArrayBuffer<byte>( _bounds.Width, _bounds.Height, 0x00 );
 		for( int i = 0; i < _count; i++ ) {
 			double dx = _random.NextFloat();
 			double dy = _random.NextFloat();
@@ -115,7 +113,7 @@ public sealed class FastRandomVisualizer {
 
 	private void NextFloatLowerBoundUpperBound() {
 		Console.WriteLine( "FastRandom.nextFloatLowerBoundUpperBound" );
-		IBuffer<byte> buffer = _bufferFactory.Create<byte>( _bounds.Width, _bounds.Height, 0x00 );
+		IBuffer<byte> buffer = new ArrayBuffer<byte>( _bounds.Width, _bounds.Height, 0x00 );
 		for( int i = 0; i < _count; i++ ) {
 			double dx = _random.NextFloat( 0.25f, 0.75f );
 			double dy = _random.NextFloat( 0.25f, 0.75f );
@@ -131,7 +129,7 @@ public sealed class FastRandomVisualizer {
 		Console.WriteLine( "FastRandom.NextBytes" );
 		byte[] bytes = new byte[_count * 2];
 		_random.NextBytes( bytes );
-		IBuffer<byte> buffer = _bufferFactory.Create<byte>( _bounds.Width, _bounds.Height, 0x00 );
+		IBuffer<byte> buffer = new ArrayBuffer<byte>( _bounds.Width, _bounds.Height, 0x00 );
 		for( int i = 0; i < _count; i++ ) {
 			int x = (int)( bytes[i] / (float)byte.MaxValue * ( _bounds.Width - 1 ) );
 			int y = (int)( bytes[i + 1] / (float)byte.MaxValue * ( _bounds.Height - 1 ) );

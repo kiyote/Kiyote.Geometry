@@ -11,7 +11,6 @@ public sealed class IntegerRasterizerVisualizer {
 	private readonly string _outputFolder;
 	private readonly IRasterizer _rasterizer;
 	private readonly ISize _size;
-	private readonly IBufferFactory _bufferFactory;
 
 	public IntegerRasterizerVisualizer(
 		string outputFolder,
@@ -20,7 +19,6 @@ public sealed class IntegerRasterizerVisualizer {
 		_outputFolder = outputFolder;
 		_rasterizer = new IntegerRasterizer();
 		_size = size;
-		_bufferFactory = IBufferFactory.CreateArrayFactory();
 	}
 
 	public void Visualize() {
@@ -30,7 +28,7 @@ public sealed class IntegerRasterizerVisualizer {
 	}
 
 	public void VisualizeLines() {
-		IBuffer<uint> buffer = _bufferFactory.Create( 50, 50, 0x000000FFU );
+		IBuffer<uint> buffer = new ArrayBuffer<uint>( 50, 50, 0x000000FFU );
 
 		Point p1 = new Point( 632, 537 );
 		Point p2 = new Point( 648, 551 );
@@ -38,13 +36,9 @@ public sealed class IntegerRasterizerVisualizer {
 		Point n1 = p1.Subtract( p1 ).Add( 25, 25 );
 		Point n2 = p2.Subtract( p1 ).Add( 25, 25 );
 
-		_rasterizer.Rasterize( n1, n2, ( int x, int y ) => {
-			buffer[x, y] = 0xFFFFFFFFU;
-		} );
+		_rasterizer.Rasterize( n1, n2, new BufferPixelWriter( buffer, 0xFFFFFFFFU ) );
 
-		_rasterizer.Rasterize( n2, n1, ( int x, int y ) => {
-			buffer[x, y] = 0xFFFFFFFFU;
-		} );
+		_rasterizer.Rasterize( n2, n1, new BufferPixelWriter( buffer, 0xFFFFFFFFU ) );
 
 		IImageWriter writer = IImageWriter.CreatePng();
 		writer.WriteImage( Path.Combine( _outputFolder, "IntegerRasterizer_Lines.png" ), buffer );
@@ -63,29 +57,21 @@ public sealed class IntegerRasterizerVisualizer {
 		];
 
 		for( int j = 0; j < size; j++ ) {
-			IBuffer<uint> buffer = _bufferFactory.Create( size, size, 0x000000FFU );
+			IBuffer<uint> buffer = new ArrayBuffer<uint>( size, size, 0x000000FFU );
 
-			bool[,] poly = new bool[size, size];
-			_rasterizer.Rasterize( points, ( int x, int y ) => {
-				buffer[x, y] = 0x696969FFU;
-			} );
+			_rasterizer.Rasterize( points, new BufferPixelWriter( buffer, 0x696969FFU ) );
 
-			bool[,] line = new bool[size, size];
 			for( int i = 0; i < points.Count - 1; i++ ) {
 				_rasterizer.Rasterize(
 					points[i],
 					points[i + 1],
-					( int x, int y ) => {
-						buffer[x, y] = 0xFFFFFFFFU;
-					}
+					new BufferPixelWriter( buffer, 0xFFFFFFFFU )
 				);
 			}
 			_rasterizer.Rasterize(
 				points[^1],
 				points[0],
-				( int x, int y ) => {
-					buffer[x, y] = 0xFFFFFFFFU;
-				}
+				new BufferPixelWriter( buffer, 0xFFFFFFFFU )
 			);
 
 			IImageWriter writer = IImageWriter.CreatePng();
@@ -101,7 +87,7 @@ public sealed class IntegerRasterizerVisualizer {
 	}
 
 	public void VisualizeVoronoiEdges() {
-		IBuffer<uint> buffer = _bufferFactory.Create( _size.Width, _size.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
 		IRandom random = new FastRandom();
 		IPointFactory pointFactory = new FastPoissonDiscPointFactory( random );
@@ -112,15 +98,11 @@ public sealed class IntegerRasterizerVisualizer {
 		foreach( Cell cell in voronoi.Cells ) {
 			byte value = (byte)random.NextInt( 255 );
 			uint color = (uint)( ( value << 24 ) | ( value << 16 ) | ( value << 8 ) | 0xFF );
-			_rasterizer.Rasterize( cell.Polygon.Points, ( int x, int y ) => {
-				buffer[x, y] = color;
-			} );
+			_rasterizer.Rasterize( cell.Polygon, new BufferPixelWriter( buffer, color ) );
 		}
 
 		foreach( Edge edge in voronoi.Edges ) {
-			_rasterizer.Rasterize( edge.A, edge.B, ( int x, int y ) => {
-				buffer[x, y] = 0x8B0000FFU;
-			} );
+			_rasterizer.Rasterize( edge.A, edge.B, new BufferPixelWriter( buffer, 0x8B0000FFU ) );
 		}
 
 		foreach( Cell cell in voronoi.Cells ) {

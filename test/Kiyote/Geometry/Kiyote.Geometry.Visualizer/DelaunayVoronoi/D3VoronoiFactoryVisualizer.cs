@@ -12,7 +12,6 @@ public sealed class D3VoronoiFactoryVisualizer {
 	private readonly ISize _size;
 	private readonly IVoronoiFactory _voronoiFactory;
 	private readonly IRasterizer _rasterizer;
-	private readonly IBufferFactory _bufferFactory;
 
 	public D3VoronoiFactoryVisualizer(
 		string outputFolder,
@@ -23,7 +22,6 @@ public sealed class D3VoronoiFactoryVisualizer {
 
 		_voronoiFactory = new D3VoronoiFactory();
 		_rasterizer = new IntegerRasterizer();
-		_bufferFactory = IBufferFactory.CreateArrayFactory();
 	}
 
 	public void Visualize() {
@@ -48,7 +46,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		IBuffer<uint> buffer = _bufferFactory.Create( _size.Width, _size.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
 		Render( buffer, voronoi );
 
@@ -105,7 +103,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		IBuffer<uint> buffer = _bufferFactory.Create( _size.Width, _size.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
 		Render( buffer, voronoi );
 
@@ -121,7 +119,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		IBuffer<uint> buffer = _bufferFactory.Create( _size.Width, _size.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
 		Render( buffer, voronoi );
 
@@ -137,16 +135,14 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		IBuffer<uint> buffer = _bufferFactory.Create( _size.Width, _size.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
 		Render( buffer, voronoi );
 
 		Cell cell = voronoi.Cells[0];
 		foreach( Cell neighbour in voronoi.Neighbours[cell] ) {
 
-			_rasterizer.Rasterize( neighbour.Polygon.Points, ( int x, int y ) => {
-				buffer[x, y] = 0xFF0000FFU;
-			}, false );
+			_rasterizer.Rasterize( neighbour.Polygon, new BufferPixelWriter( buffer, 0xFF0000FFU ), false );
 		}
 
 		IImageWriter writer = IImageWriter.CreatePng();
@@ -161,13 +157,14 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		IBuffer<uint> buffer = _bufferFactory.Create( _size.Width, _size.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
 		foreach (Cell cell in voronoi.Cells) {
-			_rasterizer.Rasterize( cell.Polygon.Points, ( int x, int y ) => {
-				buffer[x, y] = cell.IsOpen ? 0xFF0000FFU : 0xA9A9A9FFU;
-
-			}, false );
+			_rasterizer.Rasterize(
+				cell.Polygon,
+				new BufferPixelWriter( buffer, cell.IsOpen ? 0xFF0000FFU : 0xA9A9A9FFU ),
+				false
+			);
 		}
 
 		IImageWriter writer = IImageWriter.CreatePng();
@@ -179,9 +176,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 		IVoronoi voronoi
 	) {
 		foreach (Cell cell in voronoi.Cells) {
-			_rasterizer.Rasterize( cell.Polygon.Points, ( int x, int y ) => {
-				buffer[x, y] = 0xA9A9A9FFU;
-			}, false );
+			_rasterizer.Rasterize( cell.Polygon, new BufferPixelWriter( buffer, 0xA9A9A9FFU ), false );
 		}
 
 		// Render the coords

@@ -1,6 +1,7 @@
 using Kiyote.Buffers;
 using Kiyote.Geometry.Randomization;
 using Kiyote.Geometry.Rasterizers;
+using Kiyote.Geometry.Visualizer;
 using Kiyote.Imaging;
 
 namespace Kiyote.Geometry.Noises.Visualizer;
@@ -11,7 +12,6 @@ public sealed class MidpointDisplacementNoisyEdgeFactoryVisualizer {
 	private readonly ISize _bounds;
 	private readonly INoisyEdgeFactory _edgeFactory;
 	private readonly IRasterizer _rasterizer;
-	private readonly IBufferFactory _bufferFactory;
 
 	public MidpointDisplacementNoisyEdgeFactoryVisualizer(
 		string outputFolder,
@@ -23,7 +23,6 @@ public sealed class MidpointDisplacementNoisyEdgeFactoryVisualizer {
 		IRandom random = new FastRandom();
 		_edgeFactory = new MidpointDisplacementNoisyEdgeFactory( random );
 		_rasterizer = new IntegerRasterizer();
-		_bufferFactory = IBufferFactory.CreateArrayFactory();
 	}
 
 	public void Visualize() {
@@ -32,7 +31,7 @@ public sealed class MidpointDisplacementNoisyEdgeFactoryVisualizer {
 
 	private void VisualizeCreate() {
 		Console.WriteLine( "MidpointDisplacementNoisyEdgeFactoryVisualizer.Create" );
-		IBuffer<uint> buffer = _bufferFactory.Create( _bounds.Width, _bounds.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new ArrayBuffer<uint>( _bounds.Width, _bounds.Height, 0x000000FFU );
 
 		int midX = (int)( _bounds.Width * 0.5f );
 		int xOffset = (int)( _bounds.Width * 0.1f );
@@ -43,18 +42,12 @@ public sealed class MidpointDisplacementNoisyEdgeFactoryVisualizer {
 
 		NoisyEdge noisyEdge = _edgeFactory.Create( toSplit, control, 0.5f, 6 );
 
-		_rasterizer.Rasterize( noisyEdge.Source.A, noisyEdge.Source.B, ( int x, int y ) => {
-			buffer[x, y] = 0xD3D3D3FFU;
-		} );
+		_rasterizer.Rasterize( noisyEdge.Source.A, noisyEdge.Source.B, new BufferPixelWriter( buffer, 0xD3D3D3FFU ) );
 
-		_rasterizer.Rasterize( control.A, control.B, ( int x, int y ) => {
-			buffer[x, y] = 0xA9A9A9FFU;
-		} );
+		_rasterizer.Rasterize( control.A, control.B, new BufferPixelWriter( buffer, 0xA9A9A9FFU ) );
 
 		foreach( Edge e in noisyEdge.Noise ) {
-			_rasterizer.Rasterize( e.A, e.B, ( int x, int y ) => {
-				buffer[x, y] = 0xFFFF00FFU;
-			} );
+			_rasterizer.Rasterize( e.A, e.B, new BufferPixelWriter( buffer, 0xFFFF00FFU ) );
 
 			buffer[e.A.X, e.A.Y] = 0xFF00FFFFU;
 			buffer[e.B.X, e.B.Y] = 0xFF00FFFFU;

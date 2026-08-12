@@ -1,4 +1,4 @@
-﻿namespace Kiyote.Geometry.Randomization.Tests;
+namespace Kiyote.Geometry.Randomization.Tests;
 
 [TestFixture]
 public sealed class FastRandomTests {
@@ -125,6 +125,22 @@ public sealed class FastRandomTests {
 		Assert.That( buffer[4], Is.EqualTo( 186 ) );
 		Assert.That( buffer[5], Is.EqualTo( 117 ) );
 		Assert.That( buffer[6], Is.EqualTo( 68 ) );
+	}
+
+	[Test]
+	public void NextBytes_FilledInChunks_MatchesSingleFill() {
+		// Bytes are drawn from a single word stream, so filling a buffer in one
+		// call must produce the same bytes as filling it a piece at a time.
+		byte[] expected = new byte[32];
+		_random.NextBytes( expected );
+
+		IRandom chunked = new FastRandom( 1 );
+		byte[] actual = new byte[32];
+		for( int offset = 0; offset < actual.Length; offset += 4 ) {
+			chunked.NextBytes( actual.AsSpan( offset, 4 ) );
+		}
+
+		Assert.That( actual, Is.EqualTo( expected ) );
 	}
 }
 
