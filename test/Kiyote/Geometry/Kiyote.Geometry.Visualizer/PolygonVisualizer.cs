@@ -11,8 +11,6 @@ public sealed class PolygonVisualizer {
 	private readonly string _outputFolder;
 	private readonly IRandom _random;
 
-	private readonly IBufferFactory _bufferFactory;
-
 	private readonly IRasterizer _rasterizer;
 
 	public PolygonVisualizer(
@@ -22,7 +20,6 @@ public sealed class PolygonVisualizer {
 		_outputFolder = outputFolder;
 		_bounds = bounds;
 		_random = new FastRandom();
-		_bufferFactory = IBufferFactory.CreateArrayFactory();
 		_rasterizer = new IntegerRasterizer();
 	}
 
@@ -34,7 +31,7 @@ public sealed class PolygonVisualizer {
 
 	private void VisualizeClip() {
 		Console.WriteLine( "Polygon.Clip" );
-		IBuffer<uint> buffer = _bufferFactory.Create( _bounds.Width, _bounds.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new ArrayBuffer<uint>( _bounds.Width, _bounds.Height, 0x000000FFU );
 
 		Polygon polygon1 = new Polygon( [
 			new Point( 200, 200 ),
@@ -50,18 +47,12 @@ public sealed class PolygonVisualizer {
 			new Point( 150, _bounds.Height - 300 )
 		] );
 
-		_rasterizer.Rasterize( polygon1.Points, ( int x, int y ) => {
-			buffer[x, y] = 0xFFFF00FFU;
-		}, false );
+		_rasterizer.Rasterize( polygon1, new BufferPixelWriter( buffer, 0xFFFF00FFU ), false );
 
-		_rasterizer.Rasterize( polygon2.Points, ( int x, int y ) => {
-			buffer[x, y] = 0xFFA500FFU;
-		}, false );
+		_rasterizer.Rasterize( polygon2, new BufferPixelWriter( buffer, 0xFFA500FFU ), false );
 
-		 polygon1.TryIntersect( polygon2, out Polygon polygon3 );
-		_rasterizer.Rasterize( polygon3.Points, ( int x, int y ) => {
-			buffer[x, y] = 0xFFFFFFFFU;
-		}, false );
+		polygon1.TryIntersect( polygon2, out Polygon polygon3 );
+		_rasterizer.Rasterize( polygon3, new BufferPixelWriter( buffer, 0xFFFFFFFFU ), false );
 
 		IImageWriter writer = IImageWriter.CreatePng();
 		writer.WriteImage( Path.Combine( _outputFolder, "PolygonClip.png" ), buffer );
@@ -69,7 +60,7 @@ public sealed class PolygonVisualizer {
 
 	private void VisualizeIntersections() {
 		Console.WriteLine( "Polygon.Intersections" );
-		IBuffer<uint> buffer = _bufferFactory.Create( _bounds.Width, _bounds.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new ArrayBuffer<uint>( _bounds.Width, _bounds.Height, 0x000000FFU );
 
 		Polygon polygon1 = new Polygon( [
 			new Point( 200, 200 ),
@@ -86,13 +77,9 @@ public sealed class PolygonVisualizer {
 		] );
 
 
-		_rasterizer.Rasterize( polygon1.Points, ( int x, int y ) => {
-			buffer[x, y] = 0xFFFF00FFU;
-		}, false );
+		_rasterizer.Rasterize( polygon1, new BufferPixelWriter( buffer, 0xFFFF00FFU ), false );
 
-		_rasterizer.Rasterize( polygon2.Points, ( int x, int y ) => {
-			buffer[x, y] = 0xFFFFFFFFU;
-		}, false );
+		_rasterizer.Rasterize( polygon2, new BufferPixelWriter( buffer, 0xFFFFFFFFU ), false );
 
 
 		if (polygon1.TryFindIntersections( polygon2, out IReadOnlyList<Point> intersections)) {
@@ -107,7 +94,7 @@ public sealed class PolygonVisualizer {
 
 	private void VisualizeContains() {
 		Console.WriteLine( "Polygon.Contains" );
-		IBuffer<uint> buffer = _bufferFactory.Create( _bounds.Width, _bounds.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new ArrayBuffer<uint>( _bounds.Width, _bounds.Height, 0x000000FFU );
 
 		Polygon polygon = new Polygon( [
 			new Point( 200, 200 ),
@@ -116,9 +103,7 @@ public sealed class PolygonVisualizer {
 			new Point( 200, _bounds.Height - 200 )
 		] );
 
-		_rasterizer.Rasterize( polygon.Points, (int x, int y) => {
-			buffer[x, y] = 0xFFFF00FFU;
-		}, false );
+		_rasterizer.Rasterize( polygon, new BufferPixelWriter( buffer, 0xFFFF00FFU ), false );
 
 		for( int i = 0; i < 5000; i++ ) {
 			int x = _random.NextInt( _bounds.Width );

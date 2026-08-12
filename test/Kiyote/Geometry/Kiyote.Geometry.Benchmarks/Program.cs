@@ -1,4 +1,4 @@
-﻿using BenchmarkDotNet.Exporters;
+using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Toolchains.InProcess.NoEmit;
@@ -15,16 +15,20 @@ ManualConfig config = DefaultConfig.Instance
 		 .WithLaunchCount( 1 )
 		 .WithToolchain( InProcessNoEmitToolchain.Instance ) );
 
-BenchmarkRunner.Run<D3DelaunayFactoryBenchmarks>( config );
-BenchmarkRunner.Run<D3VoronoiFactoryBenchmarks>( config );
-BenchmarkRunner.Run<MapboxDelaunatorFactoryBenchmarks>( config );
-BenchmarkRunner.Run<EdgeBenchmarks>( config );
-BenchmarkRunner.Run<FastPoissonDiscPointFactoryBenchmarks>( config );
-BenchmarkRunner.Run<FastRandomBenchmarks>( config );
-BenchmarkRunner.Run<FastRandomVsSystemBenchmarks>( config );
-BenchmarkRunner.Run<IntersectBenchmarks>( config );
-BenchmarkRunner.Run<PolygonBenchmarks>( config );
-BenchmarkRunner.Run<RectangleBenchmarks>( config );
-BenchmarkRunner.Run<SimpleQuadTreeNodeBenchmarks>( config );
-BenchmarkRunner.Run<MidpointDisplacementNoisyEdgeFactoryBenchmarks>( config );
+BenchmarkSwitcher
+	.FromTypes( [
+		typeof( D3DelaunayFactoryBenchmarks ),
+		typeof( D3VoronoiFactoryBenchmarks ),
+		typeof( MapboxDelaunatorFactoryBenchmarks ),
+		typeof( EdgeBenchmarks ),
+		typeof( FastPoissonDiscPointFactoryBenchmarks ),
+		typeof( FastRandomBenchmarks ),
+		typeof( FastRandomVsSystemBenchmarks ),
+		typeof( IntersectBenchmarks ),
+		typeof( PolygonBenchmarks ),
+		typeof( RectangleBenchmarks ),
+		typeof( SimpleQuadTreeNodeBenchmarks ),
+		typeof( MidpointDisplacementNoisyEdgeFactoryBenchmarks ),
+	] )
+	.RunAll( config, args );
 

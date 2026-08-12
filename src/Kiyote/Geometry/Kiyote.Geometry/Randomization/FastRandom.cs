@@ -1,3 +1,6 @@
+using System.Buffers.Binary;
+using System.Runtime.InteropServices;
+
 namespace Kiyote.Geometry.Randomization;
 
 /**
@@ -228,47 +231,65 @@ internal sealed class FastRandom : IRandom {
 	void IRandom.NextBytes(
 		Span<byte> buffer
 	) {
-		// Fill up the bulk of the buffer in chunks of 4 bytes at a time.
 		uint x = _x;
 		uint y = _y;
 		uint z = _z;
 		uint w = _w;
-		int i = 0;
 		uint t;
-		for( int bound = buffer.Length - 3; i < bound; ) {
-			// Generate 4 bytes. 
-			// Increased performance is achieved by generating 4 random bytes per loop.
-			// Also note that no mask needs to be applied to zero out the higher order bytes before
-			// casting because the cast ignores those bytes. Thanks to Stefan Troschütz for pointing this out.
+
+		// Fill the bulk of the buffer eight bytes at a time by combining two
+		// consecutive generated words into a single 64 bit store.  The words are
+		// still drawn from the generator in the exact same order, so the resulting
+		// byte sequence is identical to generating them one word at a time; we
+		// simply halve the number of stores and bounds checks.
+		Span<ulong> qwords = MemoryMarshal.Cast<byte, ulong>( buffer );
+		for( int i = 0; i < qwords.Length; i++ ) {
+			t = x ^ ( x << 11 );
+			x = y;
+			y = z;
+			z = w;
+			w = w ^ ( w >> 19 ) ^ t ^ ( t >> 8 );
+			uint low = w;
+
 			t = x ^ ( x << 11 );
 			x = y;
 			y = z;
 			z = w;
 			w = w ^ ( w >> 19 ) ^ t ^ ( t >> 8 );
 
-			buffer[i++] = (byte)w;
-			buffer[i++] = (byte)( w >> 8 );
-			buffer[i++] = (byte)( w >> 16 );
-			buffer[i++] = (byte)( w >> 24 );
+			// The first word occupies the lower addresses, matching the
+			// little-endian byte order the generator is defined to produce.  On
+			// little-endian hardware (the common case) the JIT elides this branch.
+			ulong value = low | ( (ulong)w << 32 );
+			qwords[i] = BitConverter.IsLittleEndian ? value : BinaryPrimitives.ReverseEndianness( value );
 		}
 
-		// Fill up any remaining bytes in the buffer.
-		if( i < buffer.Length ) {
-			// Generate 4 bytes.
+		// Fill up any remaining bytes (0..7) in the buffer.
+		Span<byte> rest = buffer[( qwords.Length * sizeof( ulong ) )..];
+
+		if( rest.Length >= sizeof( uint ) ) {
 			t = x ^ ( x << 11 );
 			x = y;
 			y = z;
 			z = w;
 			w = w ^ ( w >> 19 ) ^ t ^ ( t >> 8 );
 
-			buffer[i++] = (byte)w;
-			if( i < buffer.Length ) {
-				buffer[i++] = (byte)( w >> 8 );
-				if( i < buffer.Length ) {
-					buffer[i++] = (byte)( w >> 16 );
-				}
+			BinaryPrimitives.WriteUInt32LittleEndian( rest, w );
+			rest = rest[sizeof( uint )..];
+		}
+
+		if( rest.Length > 0 ) {
+			t = x ^ ( x << 11 );
+			x = y;
+			y = z;
+			z = w;
+			w = w ^ ( w >> 19 ) ^ t ^ ( t >> 8 );
+
+			for( int i = 0; i < rest.Length; i++ ) {
+				rest[i] = (byte)( w >> ( i * 8 ) );
 			}
 		}
+
 		_x = x;
 		_y = y;
 		_z = z;

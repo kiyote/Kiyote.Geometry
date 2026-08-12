@@ -6,5 +6,10 @@
 	<PropertyGroup>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-	</PropertyGroup>	
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="README.md" />
+		<None Include="$(MSBuildThisFileDirectory)..\..\..\..\LICENSE" Pack="true" PackagePath="LICENSE" Visible="false" />
+	</ItemGroup>
 </Project>

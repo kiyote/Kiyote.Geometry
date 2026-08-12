@@ -1,6 +1,3 @@
-![CI](https://github.com/kiyote/Kiyote.Geometry/actions/workflows/ci.yml/badge.svg?branch=main)
-![coverage](https://raw.githubusercontent.com/kiyote/Kiyote.Geometry/badges/.badges/main/coverage.svg)
-
 # Kiyote.Geometry
 
 Provides geometric algorithms for dependency-free operations.

@@ -1,6 +1,6 @@
 <Project>
 	<PropertyGroup>
-		<ProductVersion>0.23.0</ProductVersion>
+		<ProductVersion>0.24.0</ProductVersion>
 		<Version Condition=" '$(ProductVersion)' == '' ">0.0.1</Version>
 		<Version Condition=" '$(ProductVersion)' != '' ">$(ProductVersion)</Version>		
 	</PropertyGroup>
@@ -21,6 +21,15 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
+		<Authors>Todd Lang</Authors>
+		<Company>Todd Lang</Company>
+		<Copyright>Copyright (c) Todd Lang</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageProjectUrl>https://github.com/kiyote/Kiyote.Geometry</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/kiyote/Kiyote.Geometry</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>geometry;polygon;delaunay;voronoi;rasterizer</PackageTags>
+		<Description>Provides geometric algorithms for dependency-free operations.</Description>
 	</PropertyGroup>
 </Project>
