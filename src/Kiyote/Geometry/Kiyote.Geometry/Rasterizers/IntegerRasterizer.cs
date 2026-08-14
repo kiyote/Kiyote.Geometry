@@ -37,6 +37,26 @@ internal sealed class IntegerRasterizer : IRasterizer {
 				_scanlines[curY] = x;
 			}
 		}
+
+		/// <summary>
+		/// Ref structs cannot inherit the default implementation, so it is provided
+		/// explicitly.  Only the endpoints of a run can move the min/max, so the
+		/// interior of the run is skipped entirely.
+		/// </summary>
+		public void PixelSpan(
+			int xMin,
+			int xMax,
+			int y
+		) {
+			int curY = ( y - _smallY ) * 2;
+			if( xMin < _scanlines[curY] ) {
+				_scanlines[curY] = xMin;
+			}
+			curY += 1;
+			if( xMax > _scanlines[curY] ) {
+				_scanlines[curY] = xMax;
+			}
+		}
 	}
 
 	void IRasterizer.Rasterize<TPixelOperation>(
@@ -96,8 +116,8 @@ internal sealed class IntegerRasterizer : IRasterizer {
 			}
 
 			int y = polygon[0].Y;
-			for( int i = min; i <= max; i++ ) {
-				pixelAction.Pixel( i, y );
+			if( min <= max ) {
+				pixelAction.PixelSpan( min, max, y );
 			}
 			return;
 		}
@@ -129,10 +149,14 @@ internal sealed class IntegerRasterizer : IRasterizer {
 				);
 			}
 
-			// Go through each line and draw a horizonal line 
+			// Go through each line and draw a horizonal line.  Each scanline is a
+			// contiguous run, so it is handed over whole rather than one pixel at a
+			// time; sinks backed by contiguous storage can then fill it in one write.
 			for( int i = 0; i < delta_y; i++ ) {
-				for( int j = sl[( i * 2 ) + 0]; j <= sl[( i * 2 ) + 1]; j++ ) {
-					pixelAction.Pixel( j, i + small_y );
+				int xMin = sl[( i * 2 ) + 0];
+				int xMax = sl[( i * 2 ) + 1];
+				if( xMin <= xMax ) {
+					pixelAction.PixelSpan( xMin, xMax, i + small_y );
 				}
 			}
 		} finally {

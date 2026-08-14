@@ -4,6 +4,7 @@ using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Toolchains.InProcess.NoEmit;
 using Kiyote.Geometry.Benchmarks;
 using Kiyote.Geometry.Benchmarks.Noises;
+using Kiyote.Geometry.Benchmarks.Rasterizers;
 using Kiyote.Geometry.DelaunayVoronoi.Benchmarks;
 using Kiyote.Geometry.Randomization.Benchmarks;
 using Kiyote.Geometry.Trees.Benchmarks;
@@ -29,6 +30,8 @@ BenchmarkSwitcher
 		typeof( RectangleBenchmarks ),
 		typeof( SimpleQuadTreeNodeBenchmarks ),
 		typeof( MidpointDisplacementNoisyEdgeFactoryBenchmarks ),
+		typeof( IntegerRasterizerBenchmarks ),
 	] )
 	.RunAll( config, args );
+
 
