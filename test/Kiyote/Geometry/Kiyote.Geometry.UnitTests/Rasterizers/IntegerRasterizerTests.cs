@@ -578,4 +578,109 @@ public sealed class IntegerRasterizerTests {
 
 		AssertGridsMatch( edges, unfilled, size, "Tall polygon outline" );
 	}
+
+	/// <summary>
+	/// Records via an overridden <see cref="IPixelOperation.PixelSpan"/> so the run
+	/// based path can be compared against the default per-pixel implementation.
+	/// </summary>
+	private readonly struct SpanGridRecorder(
+		bool[,] grid,
+		List<int> runLengths
+	) : IPixelOperation {
+
+		public void Pixel(
+			int x,
+			int y
+		) {
+			grid[x, y] = true;
+		}
+
+		public void PixelSpan(
+			int xMin,
+			int xMax,
+			int y
+		) {
+			runLengths.Add( xMax - xMin + 1 );
+			for( int x = xMin; x <= xMax; x++ ) {
+				grid[x, y] = true;
+			}
+		}
+	}
+
+	[Test]
+	public void Rasterize_OverriddenPixelSpan_MatchesDefaultPixelSpan() {
+		List<Point> points = BoxPoints();
+
+		// A sink that overrides PixelSpan must observe exactly the same pixels as
+		// one that inherits the default per-pixel implementation.
+		bool[,] fromSpan = new bool[10, 10];
+		List<int> runs = [];
+		_rasterizer.Rasterize( points, new SpanGridRecorder( fromSpan, runs ) );
+
+		bool[,] fromPixel = new bool[10, 10];
+		_rasterizer.Rasterize( points, new GridRecorder( fromPixel ) );
+
+		AssertGridsMatch( fromPixel, fromSpan, 10, "Overridden PixelSpan" );
+		Assert.That( runs, Is.Not.Empty, "Filled rasterization should emit runs." );
+		Assert.That( runs, Has.All.GreaterThan( 0 ), "Runs should never be empty." );
+	}
+
+	[Test]
+	public void Rasterize_HorizontalLinePolygon_EmitsSingleRun() {
+		// The delta_y == 1 special case should hand over one run rather than
+		// looping a pixel at a time.
+		List<Point> points = [
+			new Point( 1, 5 ),
+			new Point( 8, 5 ),
+		];
+
+		bool[,] fromSpan = new bool[10, 10];
+		List<int> runs = [];
+		_rasterizer.Rasterize( points, new SpanGridRecorder( fromSpan, runs ) );
+
+		bool[,] fromPixel = new bool[10, 10];
+		_rasterizer.Rasterize( points, new GridRecorder( fromPixel ) );
+
+		AssertGridsMatch( fromPixel, fromSpan, 10, "Horizontal line run" );
+		Assert.That( runs, Has.Count.EqualTo( 1 ) );
+		Assert.That( runs[0], Is.EqualTo( 8 ) );
+	}
+
+	[Test]
+	public void Rasterize_UnfilledOverriddenPixelSpan_MatchesDefault() {
+		List<Point> points = BoxPoints();
+
+		// Outline tracing walks diagonally, so it must still go through Pixel and
+		// produce the same result as the default sink.
+		bool[,] fromSpan = new bool[10, 10];
+		List<int> runs = [];
+		_rasterizer.Rasterize( points, new SpanGridRecorder( fromSpan, runs ), false );
+
+		bool[,] fromPixel = new bool[10, 10];
+		_rasterizer.Rasterize( points, new GridRecorder( fromPixel ), false );
+
+		AssertGridsMatch( fromPixel, fromSpan, 10, "Unfilled overridden PixelSpan" );
+	}
+
+	[Test]
+	public void Rasterize_TallPolygonOverriddenPixelSpan_MatchesDefault() {
+		const int size = 200;
+		List<Point> points = [
+			new Point( 10, 5 ),
+			new Point( 150, 20 ),
+			new Point( 120, 190 ),
+			new Point( 20, 160 ),
+		];
+
+		// The pooled scanline path is where the run based fill actually pays off,
+		// so it needs the same equivalence guarantee.
+		bool[,] fromSpan = new bool[size, size];
+		List<int> runs = [];
+		_rasterizer.Rasterize( points, new SpanGridRecorder( fromSpan, runs ) );
+
+		bool[,] fromPixel = new bool[size, size];
+		_rasterizer.Rasterize( points, new GridRecorder( fromPixel ) );
+
+		AssertGridsMatch( fromPixel, fromSpan, size, "Tall polygon overridden PixelSpan" );
+	}
 }

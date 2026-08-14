@@ -11,6 +11,24 @@ public interface IPixelOperation {
 		int x,
 		int y
 	);
+
+	/// <summary>
+	/// Receives a contiguous horizontal run of pixels from <paramref name="xMin"/> to
+	/// <paramref name="xMax"/> inclusive, all on row <paramref name="y"/>.  Rasterizers
+	/// call this instead of <see cref="Pixel"/> whenever they already know a whole run,
+	/// which lets a sink backed by contiguous storage fill the run in one vectorized
+	/// write rather than one call per pixel.  The default implementation simply walks
+	/// the run, so implementing this is entirely optional.
+	/// </summary>
+	void PixelSpan(
+		int xMin,
+		int xMax,
+		int y
+	) {
+		for( int x = xMin; x <= xMax; x++ ) {
+			Pixel( x, y );
+		}
+	}
 }
 
 /// <summary>

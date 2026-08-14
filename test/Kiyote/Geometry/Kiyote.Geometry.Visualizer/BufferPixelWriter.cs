@@ -19,4 +19,19 @@ internal readonly struct BufferPixelWriter(
 	) {
 		buffer[x, y] = colour;
 	}
+
+	/// <summary>
+	/// A whole scanline lives in one contiguous row of the buffer, so the run is
+	/// filled with a single vectorized write instead of one indexer call per pixel.
+	/// </summary>
+	public void PixelSpan(
+		int xMin,
+		int xMax,
+		int y
+	) {
+		buffer
+			.GetRowSpan( y )
+			.Slice( xMin, xMax - xMin + 1 )
+			.Fill( colour );
+	}
 }
