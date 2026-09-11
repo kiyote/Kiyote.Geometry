@@ -1,7 +1,5 @@
-using Kiyote.Geometry.Visualizer.Randomization;
 using Kiyote.Geometry.Visualizer.DelaunayVoronoi;
 using Kiyote.Geometry.Visualizer.Rasterizers;
-using Kiyote.Geometry.Noises.Visualizer;
 
 namespace Kiyote.Geometry.Visualizer;
 
@@ -20,20 +18,6 @@ public static class Program {
 			bounds
 		);
 		pointVisualizer.Visualize();
-
-		// FastPoissonDiscPointFactory
-		var fastPoissonDiscPointFactory = new FastPoissonDiscPointFactoryVisualizer(
-			outputFolder,
-			bounds
-		);
-		fastPoissonDiscPointFactory.Visualize();
-
-		// FastRandom
-		var fastRandom = new FastRandomVisualizer(
-			outputFolder,
-			bounds
-		);
-		fastRandom.Visualize();
 
 		// D3DelaunayFactory
 		var d3DelaunayFactory = new D3DelaunayFactoryVisualizer(
@@ -56,12 +40,5 @@ public static class Program {
 			bounds
 		);
 		rasterizer.Visualize();
-
-		// MidpointDisplacementNoisyEdgeFactory
-		var midpointDisplacementNoisyEdgeFactory = new MidpointDisplacementNoisyEdgeFactoryVisualizer(
-			outputFolder,
-			bounds
-		);
-		midpointDisplacementNoisyEdgeFactory.Visualize();
 	}
 }

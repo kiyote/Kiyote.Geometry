@@ -5,7 +5,7 @@ namespace Kiyote.Geometry.Rasterizers;
 
 // Polygon rasterization ported from here: https://www.angelfire.com/linux/myp/ConvexPolRas/ConvexPolRas.cpp
 
-internal sealed class IntegerRasterizer : IRasterizer {
+public sealed class IntegerRasterizer : IRasterizer {
 
 	/// <summary>
 	/// Accumulates the minimum and maximum X of each scanline the traced line

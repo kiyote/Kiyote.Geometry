@@ -1,7 +1,6 @@
 using System.IO.Abstractions;
 using Kiyote.Buffers;
 using Kiyote.Geometry.DelaunayVoronoi;
-using Kiyote.Geometry.Randomization;
 using Kiyote.Geometry.Rasterizers;
 using Kiyote.Imaging;
 using Kiyote.Imaging.Png;
@@ -93,14 +92,22 @@ public sealed class IntegerRasterizerVisualizer {
 	public void VisualizeVoronoiEdges() {
 		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
-		IRandom random = new FastRandom();
-		IPointFactory pointFactory = new FastPoissonDiscPointFactory( random );
-		IReadOnlyList<Point> points = pointFactory.Fill( _size, 25, false );
+		int cellWidth = _size.Width / 20;
+		int cellHeight = _size.Height / 20;
+
+		Random random = new Random( 0xBADF00D );
+		List<Point> points = [];
+		for( int c = cellWidth / 2; c < _size.Width; c += cellWidth ) {
+			for( int r = cellHeight / 2; r < _size.Height; r += cellHeight ) {
+				points.Add( new Point( c, r ) );
+			}
+		}
+
 		IVoronoiFactory voronoiFactory = new D3VoronoiFactory();
 		IVoronoi voronoi = voronoiFactory.Create( new Rect( 0, 0, _size ), points );
 
 		foreach( Cell cell in voronoi.Cells ) {
-			byte value = (byte)random.NextInt( 255 );
+			byte value = (byte)random.Next( 255 );
 			uint color = (uint)( ( value << 24 ) | ( value << 16 ) | ( value << 8 ) | 0xFF );
 			_rasterizer.Rasterize( cell.Polygon, new BufferPixelWriter( buffer, color ) );
 		}

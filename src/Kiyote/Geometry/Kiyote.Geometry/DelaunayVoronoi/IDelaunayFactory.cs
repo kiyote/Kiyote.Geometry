@@ -1,12 +1,12 @@
-﻿namespace Kiyote.Geometry.DelaunayVoronoi;
+namespace Kiyote.Geometry.DelaunayVoronoi;
 
 public interface IDelaunayFactory {
 
-	public IDelaunay Create(
+	IDelaunay Create(
 		IReadOnlyList<Point> points
 	);
 
-	public IDelaunay Create(
+	IDelaunay Create(
 		IReadOnlyList<Point> points,
 		bool sanitizePoints
 	);

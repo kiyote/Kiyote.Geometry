@@ -1,6 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using Kiyote.Geometry.DelaunayVoronoi;
-using Kiyote.Geometry.Randomization;
 using Kiyote.Geometry.Rasterizers;
 using Kiyote.Geometry.Trees;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,15 +14,6 @@ public static class ExtensionMethods {
 		this IServiceCollection services
 	) {
 		 services.AddScoped<IRasterizer, IntegerRasterizer>();
-
-		return services;
-	}
-
-	public static IServiceCollection AddRandomization(
-		this IServiceCollection services
-	) {
-		 services.AddScoped<IPointFactory, FastPoissonDiscPointFactory>();
-		 services.AddScoped<IRandom, FastRandom>();
 
 		return services;
 	}

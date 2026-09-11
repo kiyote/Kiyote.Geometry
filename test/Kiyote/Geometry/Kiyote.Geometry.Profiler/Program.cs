@@ -1,9 +1,8 @@
-﻿using Kiyote.Geometry.DelaunayVoronoi.Profiler;
+using Kiyote.Geometry.DelaunayVoronoi.Profiler;
 using Kiyote.Geometry.Profiler;
-using Kiyote.Geometry.Randomization.Profiler;
 using Kiyote.Geometry.Trees.Profiler;
 
-var profiler = new FastPoissonDiscPointFactoryProfiler();
+var profiler = new D3DelaunayFactoryProfiler();
 Console.WriteLine( "Press a key to execute..." );
 Console.ReadKey();
 profiler.Profile();
