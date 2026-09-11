@@ -1,6 +1,9 @@
-﻿namespace Kiyote.Geometry.UnitTests;
+using System.Diagnostics.CodeAnalysis;
+
+namespace Kiyote.Geometry.UnitTests;
 
 [TestFixture]
+[ExcludeFromCodeCoverage]
 internal sealed class RectTests {
 
 	[TestCase( 0, 0, 10, 10, 9, 9 )]
@@ -144,6 +147,140 @@ internal sealed class RectTests {
 		Rect r1 = CreateRect();
 		Rect r2 = new Rect( x, y, w, h );
 		Assert.That( r1.Contains( r2 ), Is.EqualTo( expected ) );
+	}
+
+	[Test]
+	public void Ctor_NegativeWidth_ThrowsException() {
+		Assert.Throws<InvalidOperationException>( () => new Rect( 0, 0, -1, 10 ) );
+	}
+
+	[Test]
+	public void Ctor_ZeroWidth_CollapsesToOrigin() {
+		Rect r = new Rect( 5, 7, 0, 0 );
+
+		Assert.That( r.X2, Is.EqualTo( 5 ) );
+		Assert.That( r.Y2, Is.EqualTo( 7 ) );
+	}
+
+	[Test]
+	public void Ctor_CoordsAndSize_MatchesWidthHeight() {
+		Rect r = new Rect( 1, 2, new Rect( 0, 0, 10, 20 ) );
+
+		Assert.That( r.Width, Is.EqualTo( 10 ) );
+		Assert.That( r.Height, Is.EqualTo( 20 ) );
+	}
+
+	[Test]
+	public void IsEquivalentTo_IRectInterface_SameBounds_ReturnsTrue() {
+		Rect r1 = CreateRect();
+		IRect r2 = new Rect( 10, 10, 50, 50 );
+
+		Assert.That( r1.IsEquivalentTo( r2 ), Is.True );
+	}
+
+	[Test]
+	public void IsEquivalentTo_IRectInterface_DifferentBounds_ReturnsFalse() {
+		Rect r1 = CreateRect();
+		IRect r2 = new Rect( 0, 0, 5, 5 );
+
+		Assert.That( r1.IsEquivalentTo( r2 ), Is.False );
+	}
+
+	[Test]
+	public void Equals_SameRect_ReturnsTrue() {
+		Rect r1 = CreateRect();
+		object r2 = new Rect( 10, 10, 50, 50 );
+
+		Assert.That( r1.Equals( r2 ), Is.True );
+	}
+
+	[Test]
+	public void Equals_DifferentRect_ReturnsFalse() {
+		Rect r1 = CreateRect();
+		object r2 = new Rect( 0, 0, 50, 50 );
+
+		Assert.That( r1.Equals( r2 ), Is.False );
+	}
+
+	[Test]
+	public void Equals_NotARect_ReturnsFalse() {
+		Rect r1 = CreateRect();
+
+		Assert.That( r1.Equals( "not a rect" ), Is.False );
+	}
+
+	[Test]
+	public void Equals_IEquatableSameRect_ReturnsTrue() {
+		IEquatable<Rect> r1 = CreateRect();
+
+		Assert.That( r1.Equals( new Rect( 10, 10, 50, 50 ) ), Is.True );
+	}
+
+	[Test]
+	public void Equals_IEquatableDifferentRect_ReturnsFalse() {
+		IEquatable<Rect> r1 = CreateRect();
+
+		Assert.That( r1.Equals( new Rect( 0, 0, 1, 1 ) ), Is.False );
+	}
+
+	[Test]
+	public void GetHashCode_EquivalentRects_HashesMatch() {
+		Rect r1 = CreateRect();
+		Rect r2 = new Rect( 10, 10, 50, 50 );
+
+		Assert.That( r1.GetHashCode(), Is.EqualTo( r2.GetHashCode() ) );
+	}
+
+	[Test]
+	public void OperatorEquality_SameRect_ReturnsTrue() {
+		Assert.That( CreateRect() == new Rect( 10, 10, 50, 50 ), Is.True );
+	}
+
+	[Test]
+	public void OperatorEquality_DifferentRect_ReturnsFalse() {
+		Assert.That( CreateRect() == new Rect( 0, 0, 50, 50 ), Is.False );
+	}
+
+	[Test]
+	public void OperatorInequality_DifferentRect_ReturnsTrue() {
+		Assert.That( CreateRect() != new Rect( 0, 0, 50, 50 ), Is.True );
+	}
+
+	[Test]
+	public void OperatorInequality_SameRect_ReturnsFalse() {
+		Assert.That( CreateRect() != new Rect( 10, 10, 50, 50 ), Is.False );
+	}
+
+	[TestCase( 10, 10, 50, 50, true )]
+	[TestCase( 100, 100, 10, 10, false )]
+	[TestCase( 55, 55, 20, 20, true )]
+	public void HasOverlap_TestCases_ExpectedResult(
+		int x,
+		int y,
+		int w,
+		int h,
+		bool expected
+	) {
+		Rect r1 = CreateRect();
+		IRect r2 = new Rect( x, y, w, h );
+
+		Assert.That( r1.HasOverlap( r2 ), Is.EqualTo( expected ) );
+	}
+
+	[Test]
+	public void Contains_RectStruct_ContainedRect_ReturnsTrue() {
+		Rect r1 = CreateRect();
+		Rect r2 = new Rect( 11, 11, 10, 10 );
+
+		Assert.That( r1.Contains( r2 ), Is.True );
+	}
+
+	[Test]
+	public void Contains_IRectInterface_ContainedRect_ReturnsTrue() {
+		Rect r1 = CreateRect();
+		IRect r2 = new Rect( 11, 11, 10, 10 );
+
+		Assert.That( r1.Contains( r2 ), Is.True );
 	}
 
 	private static Rect CreateRect() {

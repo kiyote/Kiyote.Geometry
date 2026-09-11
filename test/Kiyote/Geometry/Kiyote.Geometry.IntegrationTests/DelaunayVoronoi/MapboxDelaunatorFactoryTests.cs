@@ -1,6 +1,9 @@
-﻿namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
+using System.Diagnostics.CodeAnalysis;
+
+namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
 
 [TestFixture]
+[ExcludeFromCodeCoverage]
 public sealed class MapboxDelaunatorFactoryTests {
 
 	[Test]

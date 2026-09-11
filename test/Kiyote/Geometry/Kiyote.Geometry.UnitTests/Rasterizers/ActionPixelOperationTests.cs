@@ -1,6 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Kiyote.Geometry.Rasterizers.Tests;
 
 [TestFixture]
+[ExcludeFromCodeCoverage]
 public sealed class ActionPixelOperationTests {
 
 	[Test]

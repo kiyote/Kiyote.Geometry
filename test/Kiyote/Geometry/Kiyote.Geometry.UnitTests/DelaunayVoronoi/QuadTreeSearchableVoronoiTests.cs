@@ -1,8 +1,10 @@
-﻿using Kiyote.Geometry.Trees;
+using System.Diagnostics.CodeAnalysis;
+using Kiyote.Geometry.Trees;
 
 namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
 
 [TestFixture]
+[ExcludeFromCodeCoverage]
 public sealed class QuadTreeSearchableVoronoiTests {
 
 	private Rect _area;

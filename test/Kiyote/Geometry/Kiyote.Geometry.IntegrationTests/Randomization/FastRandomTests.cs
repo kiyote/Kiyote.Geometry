@@ -1,6 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Kiyote.Geometry.Randomization.Tests;
 
 [TestFixture]
+[ExcludeFromCodeCoverage]
 public sealed class FastRandomTests {
 
 	private IRandom _random;

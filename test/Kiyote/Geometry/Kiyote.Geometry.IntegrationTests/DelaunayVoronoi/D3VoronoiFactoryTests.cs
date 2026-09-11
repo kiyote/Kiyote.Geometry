@@ -1,8 +1,10 @@
-﻿using Kiyote.Geometry.Randomization;
+using System.Diagnostics.CodeAnalysis;
+using Kiyote.Geometry.Randomization;
 
 namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
 
 [TestFixture]
+[ExcludeFromCodeCoverage]
 public sealed class D3VoronoiFactoryTests {
 
 	private IVoronoiFactory _voronoiFactory;

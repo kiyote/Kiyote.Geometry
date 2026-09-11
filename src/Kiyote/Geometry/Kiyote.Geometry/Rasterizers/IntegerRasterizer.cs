@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Kiyote.Geometry.Rasterizers;
 
@@ -39,10 +40,13 @@ internal sealed class IntegerRasterizer : IRasterizer {
 		}
 
 		/// <summary>
-		/// Ref structs cannot inherit the default implementation, so it is provided
-		/// explicitly.  Only the endpoints of a run can move the min/max, so the
-		/// interior of the run is skipped entirely.
+		/// Ref structs cannot inherit the default implementation (CS9245), so it must
+		/// be provided explicitly even though <see cref="TraceLine"/> only ever calls
+		/// <see cref="Pixel"/>, leaving this unreachable.  Were it to be called, only
+		/// the endpoints of a run can move the min/max, so the interior of the run is
+		/// skipped entirely.
 		/// </summary>
+		[ExcludeFromCodeCoverage( Justification = "Required by CS9245 but unreachable; TraceLine only calls Pixel." )]
 		public void PixelSpan(
 			int xMin,
 			int xMax,

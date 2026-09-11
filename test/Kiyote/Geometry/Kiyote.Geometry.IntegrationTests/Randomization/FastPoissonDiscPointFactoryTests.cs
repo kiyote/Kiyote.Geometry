@@ -1,6 +1,9 @@
-﻿namespace Kiyote.Geometry.Randomization.Tests;
+using System.Diagnostics.CodeAnalysis;
+
+namespace Kiyote.Geometry.Randomization.Tests;
 
 [TestFixture]
+[ExcludeFromCodeCoverage]
 public sealed class FastPoissonDiscPointFactoryTests {
 	private IRandom _random;
 	private IPointFactory _pointFactory;

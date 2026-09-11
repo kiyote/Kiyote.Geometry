@@ -1,7 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Kiyote.Geometry.Rasterizers.Tests;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage( "Performance", "CA1814:Prefer jagged arrays over multidimensional", Justification = "Simplicity for test" )]
 [TestFixture]
+[ExcludeFromCodeCoverage]
 public sealed class IntegerRasterizerTests {
 
 	private IRasterizer _rasterizer;

@@ -1,9 +1,11 @@
-﻿using Kiyote.Geometry.Trees;
+using System.Diagnostics.CodeAnalysis;
+using Kiyote.Geometry.Trees;
 using Moq;
 
 namespace Kiyote.Geometry.DelaunayVoronoi.UnitTests;
 
 [TestFixture]
+[ExcludeFromCodeCoverage]
 public sealed class QuadTreeSearchableVoronoiFactoryTests {
 
 	private Mock<IQuadTreeFactory> _treeFactory;

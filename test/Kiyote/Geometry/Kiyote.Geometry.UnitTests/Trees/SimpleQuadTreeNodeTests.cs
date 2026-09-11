@@ -1,7 +1,10 @@
-﻿
+
+using System.Diagnostics.CodeAnalysis;
+
 namespace Kiyote.Geometry.Trees.UnitTests;
 
 [TestFixture]
+[ExcludeFromCodeCoverage]
 internal sealed class SimpleQuadTreeNodeTests {
 
 	private Rect _bounds;

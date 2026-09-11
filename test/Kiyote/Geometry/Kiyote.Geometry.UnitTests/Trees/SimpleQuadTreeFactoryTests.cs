@@ -1,6 +1,9 @@
-﻿namespace Kiyote.Geometry.Trees.UnitTests;
+using System.Diagnostics.CodeAnalysis;
+
+namespace Kiyote.Geometry.Trees.UnitTests;
 
 [TestFixture]
+[ExcludeFromCodeCoverage]
 public sealed class SimpleQuadTreeFactoryTests {
 
 	private IQuadTreeFactory _factory;
