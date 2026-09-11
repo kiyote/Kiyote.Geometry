@@ -1,21 +1,24 @@
-﻿using Kiyote.Geometry.Randomization;
-
 namespace Kiyote.Geometry.DelaunayVoronoi.Profiler;
 
 public sealed class D3DelaunayFactoryProfiler {
 
 	public const int Iterations = 10000;
 	public const int Separation = 5;
-	private readonly IReadOnlyList<Point> _points;
 	private readonly double[] _coords;
 	private readonly MapboxDelaunator _delaunator;
 
 	public D3DelaunayFactoryProfiler() {
 		ISize size = new Point( 1000, 1000 );
-		IRandom random = new FastRandom();
-		IPointFactory pointFactory = new FastPoissonDiscPointFactory( random );
-		_points = pointFactory.Fill( size, Separation );
-		_coords = _points.ToCoords();
+		int cellWidth = size.Width / 20;
+		int cellHeight = size.Height / 20;
+
+		List<Point> points = [];
+		for (int c = cellWidth / 2; c < size.Width; c += cellWidth ) {
+			for (int r = cellHeight / 2; r < size.Height; r += cellHeight ) {
+				points.Add( new Point( c, r ) );
+			}
+		}
+		_coords = points.ToCoords();
 		_delaunator = MapboxDelaunatorFactory.Create( _coords );
 	}
 

@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using Kiyote.Geometry.Randomization;
 
 namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
 
@@ -8,20 +7,26 @@ namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
 public sealed class D3VoronoiFactoryTests {
 
 	private IVoronoiFactory _voronoiFactory;
-	private IPointFactory _pointFactory;
 
 	[SetUp]
 	public void SetUp() {
-		IRandom random = new FastRandom();
-		_pointFactory = new FastPoissonDiscPointFactory( random );
 		_voronoiFactory = new D3VoronoiFactory();
 	}
 
 	[Test]
 	public void Create_HappyPath_DelaunayCreated() {
 		ISize size = new Point( 1000, 1000 );
+		int cellWidth = size.Width / 20;
+		int cellHeight = size.Height / 20;
+
+		List<Point> points = [];
+		for( int c = cellWidth / 2; c < size.Width; c += cellWidth ) {
+			for( int r = cellHeight / 2; r < size.Height; r += cellHeight ) {
+				points.Add( new Point( c, r ) );
+			}
+		}
+
 		Rect bounds = new Rect( 0, 0, size );
-		IReadOnlyList<Point> points = _pointFactory.Fill( size, 25 );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
 		Assert.That( voronoi, Is.Not.Null );

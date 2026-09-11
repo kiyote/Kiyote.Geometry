@@ -1,6 +1,6 @@
+using System;
 using System.IO.Abstractions;
 using Kiyote.Buffers;
-using Kiyote.Geometry.Randomization;
 using Kiyote.Geometry.Rasterizers;
 using Kiyote.Imaging;
 using Kiyote.Imaging.Png;
@@ -11,11 +11,12 @@ public sealed class PolygonVisualizer {
 
 	private readonly ISize _bounds;
 	private readonly string _outputFolder;
-	private readonly IRandom _random;
 
 	private readonly IRasterizer _rasterizer;
 
 	private readonly IFileSystem _fileSystem;
+
+	private readonly Random _random;
 
 	public PolygonVisualizer(
 		string outputFolder,
@@ -23,7 +24,7 @@ public sealed class PolygonVisualizer {
 	) {
 		_outputFolder = outputFolder;
 		_bounds = bounds;
-		_random = new FastRandom();
+		_random = new Random( 0xBADF00D );
 		_rasterizer = new IntegerRasterizer();
 		_fileSystem = new FileSystem();
 	}
@@ -111,8 +112,8 @@ public sealed class PolygonVisualizer {
 		_rasterizer.Rasterize( polygon, new BufferPixelWriter( buffer, 0xFFFF00FFU ), false );
 
 		for( int i = 0; i < 5000; i++ ) {
-			int x = _random.NextInt( _bounds.Width );
-			int y = _random.NextInt( _bounds.Height );
+			int x = _random.Next( _bounds.Width );
+			int y = _random.Next( _bounds.Height );
 			Point p = new Point( x, y );
 
 			buffer[x, y] = polygon.Contains( p ) ? 0x00FF00FFU : 0xFF0000FFU;

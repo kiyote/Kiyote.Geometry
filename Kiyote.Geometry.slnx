@@ -1,0 +1,36 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="addlocal.bat" />
+    <File Path="BENCHMARK.md" />
+    <File Path="DEVELOPMENT.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="forceclean.ps1" />
+    <File Path="LICENSE" />
+    <File Path="nuget.config" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/Solution Items/.github/">
+    <File Path=".github/dependabot.yaml" />
+  </Folder>
+  <Folder Name="/Solution Items/.github/workflows/">
+    <File Path=".github/workflows/ci.yml" />
+    <File Path=".github/workflows/release.yml" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Kiyote/" />
+  <Folder Name="/src/Kiyote/Geometry/">
+    <Project Path="src/Kiyote/Geometry/Kiyote.Geometry/Kiyote.Geometry.csproj" />
+  </Folder>
+  <Folder Name="/test/" />
+  <Folder Name="/test/Kiyote/" />
+  <Folder Name="/test/Kiyote/Geometry/">
+    <Project Path="test/Kiyote/Geometry/Kiyote.Geometry.Benchmarks/Kiyote.Geometry.Benchmarks.csproj" />
+    <Project Path="test/Kiyote/Geometry/Kiyote.Geometry.IntegrationTests/Kiyote.Geometry.IntegrationTests.csproj" />
+    <Project Path="test/Kiyote/Geometry/Kiyote.Geometry.Profiler/Kiyote.Geometry.Profiler.csproj" />
+    <Project Path="test/Kiyote/Geometry/Kiyote.Geometry.UnitTests/Kiyote.Geometry.UnitTests.csproj" />
+    <Project Path="test/Kiyote/Geometry/Kiyote.Geometry.Visualizer/Kiyote.Geometry.Visualizer.csproj" />
+  </Folder>
+</Solution>

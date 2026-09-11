@@ -1,4 +1,3 @@
-﻿using Kiyote.Geometry.Randomization;
 
 namespace Kiyote.Geometry.Benchmarks;
 
@@ -12,7 +11,6 @@ public class PolygonBenchmarks {
 	private readonly Point _p4;
 	private readonly Point[] _polyPoints;
 
-	private readonly IReadOnlyList<Point> _points;
 	private readonly Polygon _polygon;
 	private readonly Polygon _other;
 	private readonly Polygon _farOther;
@@ -24,10 +22,6 @@ public class PolygonBenchmarks {
 
 	public PolygonBenchmarks() {
 		ISize size = new Point( 1000, 1000 );
-		IPointFactory pointFactory = new FastPoissonDiscPointFactory(
-			new FastRandom()
-		);
-		_points = pointFactory.Fill( size, 5 );
 
 		_p1 = new Point( 200, 200 );
 		_p2 = new Point( size.Width - 200, 200 );
@@ -88,11 +82,6 @@ public class PolygonBenchmarks {
 	[Benchmark]
 	public void Ctor() {
 		_ = new Polygon( _polyPoints );
-	}
-
-	[Benchmark]
-	public void Contains_Point() {
-		_polygon.Contains( _points[0] );
 	}
 
 	[Benchmark]

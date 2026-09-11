@@ -1,7 +1,6 @@
 using System.IO.Abstractions;
 using Kiyote.Buffers;
 using Kiyote.Geometry.DelaunayVoronoi;
-using Kiyote.Geometry.Randomization;
 using Kiyote.Geometry.Rasterizers;
 using Kiyote.Imaging;
 using Kiyote.Imaging.Png;
@@ -55,10 +54,17 @@ public sealed class D3DelaunayFactoryVisualizer {
 	}
 
 	private void VisualizeRandom() {
-		IRandom random = new FastRandom();
-		IPointFactory pointFactory = new FastPoissonDiscPointFactory( random );
 
-		IReadOnlyList<Point> points = pointFactory.Fill( new Point( _size.Width, _size.Height ), 25 );
+		int cellWidth = _size.Width / 20;
+		int cellHeight = _size.Height / 20;
+
+		List<Point> points = [];
+		for( int c = cellWidth / 2; c < _size.Width; c += cellWidth ) {
+			for( int r = cellHeight / 2; r < _size.Height; r += cellHeight ) {
+				points.Add( new Point( c, r ) );
+			}
+		}
+
 		IDelaunay delaunay = _delaunayFactory.Create( points );
 
 		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );

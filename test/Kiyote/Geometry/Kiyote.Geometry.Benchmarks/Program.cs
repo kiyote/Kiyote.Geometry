@@ -3,10 +3,8 @@ using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Toolchains.InProcess.NoEmit;
 using Kiyote.Geometry.Benchmarks;
-using Kiyote.Geometry.Benchmarks.Noises;
 using Kiyote.Geometry.Benchmarks.Rasterizers;
 using Kiyote.Geometry.DelaunayVoronoi.Benchmarks;
-using Kiyote.Geometry.Randomization.Benchmarks;
 using Kiyote.Geometry.Trees.Benchmarks;
 
 ManualConfig config = DefaultConfig.Instance
@@ -22,14 +20,10 @@ BenchmarkSwitcher
 		typeof( D3VoronoiFactoryBenchmarks ),
 		typeof( MapboxDelaunatorFactoryBenchmarks ),
 		typeof( EdgeBenchmarks ),
-		typeof( FastPoissonDiscPointFactoryBenchmarks ),
-		typeof( FastRandomBenchmarks ),
-		typeof( FastRandomVsSystemBenchmarks ),
 		typeof( IntersectBenchmarks ),
 		typeof( PolygonBenchmarks ),
 		typeof( RectangleBenchmarks ),
 		typeof( SimpleQuadTreeNodeBenchmarks ),
-		typeof( MidpointDisplacementNoisyEdgeFactoryBenchmarks ),
 		typeof( IntegerRasterizerBenchmarks ),
 	] )
 	.RunAll( config, args );

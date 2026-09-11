@@ -1,4 +1,3 @@
-﻿using Kiyote.Geometry.Randomization;
 
 namespace Kiyote.Geometry.Trees.Profiler;
 
@@ -12,12 +11,12 @@ internal sealed class SimpleQuadTreeNodeProfiler {
 		_bounds = new Rect( 0, 0, 1920, 1080 );
 		_node = new SimpleQuadTreeNode<Rect>( _bounds );
 
-		IRandom random = new FastRandom( 0xBADF00D );
+		Random random = new Random( 0xBADF00D );
 		for( int i = 0; i < 10000; i++ ) {
-			int x = random.NextInt( 0, 980 );
-			int y = random.NextInt( 0, 980 );
-			int w = random.NextInt( 5, 20 );
-			int h = random.NextInt( 5, 20 );
+			int x = random.Next( 0, 980 );
+			int y = random.Next( 0, 980 );
+			int w = random.Next( 5, 20 );
+			int h = random.Next( 5, 20 );
 			_node.Insert( new Rect( x, y, w, h ) );
 		}
 
