@@ -1,6 +1,9 @@
-﻿namespace Kiyote.Geometry.DelaunayVoronoi.UnitTests;
+using System.Diagnostics.CodeAnalysis;
+
+namespace Kiyote.Geometry.DelaunayVoronoi.UnitTests;
 
 [TestFixture]
+[ExcludeFromCodeCoverage]
 public sealed class DelaunayTests {
 
 	[Test]

@@ -1,8 +1,10 @@
+using System.IO.Abstractions;
 using Kiyote.Buffers;
 using Kiyote.Geometry.Randomization;
 using Kiyote.Geometry.Rasterizers;
 using Kiyote.Geometry.Visualizer;
 using Kiyote.Imaging;
+using Kiyote.Imaging.Png;
 
 namespace Kiyote.Geometry.Noises.Visualizer;
 
@@ -12,6 +14,8 @@ public sealed class MidpointDisplacementNoisyEdgeFactoryVisualizer {
 	private readonly ISize _bounds;
 	private readonly INoisyEdgeFactory _edgeFactory;
 	private readonly IRasterizer _rasterizer;
+
+	private readonly IFileSystem _fileSystem;
 
 	public MidpointDisplacementNoisyEdgeFactoryVisualizer(
 		string outputFolder,
@@ -23,6 +27,7 @@ public sealed class MidpointDisplacementNoisyEdgeFactoryVisualizer {
 		IRandom random = new FastRandom();
 		_edgeFactory = new MidpointDisplacementNoisyEdgeFactory( random );
 		_rasterizer = new IntegerRasterizer();
+		_fileSystem = new FileSystem();
 	}
 
 	public void Visualize() {
@@ -58,7 +63,7 @@ public sealed class MidpointDisplacementNoisyEdgeFactoryVisualizer {
 		buffer[toSplit.A.X, toSplit.A.Y] = 0x0000FFFFU;
 		buffer[toSplit.B.X, toSplit.B.Y] = 0x0000FFFFU;
 
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter( _fileSystem );
 		writer.WriteImage( Path.Combine( _outputFolder, "MidpointDisplacementNoisyEdgeFactoryVisualizerCreate.png" ), buffer );
 	}
 }

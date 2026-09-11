@@ -1,6 +1,9 @@
-﻿namespace Kiyote.Geometry.UnitTests;
+using System.Diagnostics.CodeAnalysis;
+
+namespace Kiyote.Geometry.UnitTests;
 
 [TestFixture]
+[ExcludeFromCodeCoverage]
 public sealed class IntersectTests {
 
 	[TestCase(0, 0, 0, 0, 0, 0, 10, 10)]

@@ -1,7 +1,9 @@
+using System.IO.Abstractions;
 using Kiyote.Buffers;
 using Kiyote.Geometry.Randomization;
 using Kiyote.Geometry.Rasterizers;
 using Kiyote.Imaging;
+using Kiyote.Imaging.Png;
 
 namespace Kiyote.Geometry.Visualizer.Randomization;
 
@@ -11,6 +13,7 @@ public sealed class FastPoissonDiscPointFactoryVisualizer {
 	private readonly IPointFactory _pointFactory;
 	private readonly ISize _size;
 	private readonly IRasterizer _rasterizer;
+	private readonly IFileSystem _fileSystem;
 
 	public FastPoissonDiscPointFactoryVisualizer(
 		string outputFolder,
@@ -21,6 +24,7 @@ public sealed class FastPoissonDiscPointFactoryVisualizer {
 		IRandom random = new FastRandom();
 		_pointFactory = new FastPoissonDiscPointFactory( random );
 		_rasterizer = new IntegerRasterizer();
+		_fileSystem = new FileSystem();
 	}
 
 	public void Visualize() {
@@ -37,7 +41,7 @@ public sealed class FastPoissonDiscPointFactoryVisualizer {
 			buffer[p.X, p.Y] = true;
 		}
 
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter( _fileSystem );
 		writer.WriteImage( Path.Combine( _outputFolder, "FastPoissonDiscPointFactory.png" ), buffer );
 	}
 
@@ -79,7 +83,7 @@ public sealed class FastPoissonDiscPointFactoryVisualizer {
 			}
 		}
 
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter( _fileSystem );
 		writer.WriteImage( Path.Combine( _outputFolder, "FastPoissonDiscPointFactory_Heatmap.png" ), buffer );
 	}
 }

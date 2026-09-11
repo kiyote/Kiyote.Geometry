@@ -1,9 +1,11 @@
-﻿using Kiyote.Geometry.Randomization;
+using System.Diagnostics.CodeAnalysis;
+using Kiyote.Geometry.Randomization;
 using Moq;
 
 namespace Kiyote.Geometry.Noises.UnitTests;
 
 [TestFixture]
+[ExcludeFromCodeCoverage]
 public sealed class MidpointDisplacementNoisyEdgeFactoryTests {
 
 	private Mock<IRandom> _random;

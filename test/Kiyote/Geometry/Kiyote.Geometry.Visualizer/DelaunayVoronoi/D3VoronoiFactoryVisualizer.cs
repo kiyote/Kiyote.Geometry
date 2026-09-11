@@ -1,8 +1,10 @@
+using System.IO.Abstractions;
 using Kiyote.Buffers;
 using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
 using Kiyote.Geometry.Rasterizers;
 using Kiyote.Imaging;
+using Kiyote.Imaging.Png;
 
 namespace Kiyote.Geometry.Visualizer.DelaunayVoronoi;
 
@@ -13,6 +15,8 @@ public sealed class D3VoronoiFactoryVisualizer {
 	private readonly IVoronoiFactory _voronoiFactory;
 	private readonly IRasterizer _rasterizer;
 
+	private readonly IFileSystem _fileSystem;
+
 	public D3VoronoiFactoryVisualizer(
 		string outputFolder,
 		ISize size
@@ -22,6 +26,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 
 		_voronoiFactory = new D3VoronoiFactory();
 		_rasterizer = new IntegerRasterizer();
+		_fileSystem = new FileSystem();
 	}
 
 	public void Visualize() {
@@ -50,7 +55,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 
 		Render( buffer, voronoi );
 
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter( _fileSystem );
 		writer.WriteImage( Path.Combine( _outputFolder, "D3VoronoiFactory_Square.png" ), buffer );
 	}
 
@@ -107,7 +112,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 
 		Render( buffer, voronoi );
 
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter( _fileSystem );
 		writer.WriteImage( Path.Combine( _outputFolder, "D3VoronoiFactory_Grid.png" ), buffer );
 	}
 
@@ -123,7 +128,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 
 		Render( buffer, voronoi );
 
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter( _fileSystem );
 		writer.WriteImage( Path.Combine( _outputFolder, "D3VoronoiFactory_Random.png" ), buffer );
 	}
 
@@ -145,7 +150,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 			_rasterizer.Rasterize( neighbour.Polygon, new BufferPixelWriter( buffer, 0xFF0000FFU ), false );
 		}
 
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter(_fileSystem);
 		writer.WriteImage( Path.Combine( _outputFolder, "D3VoronoiFactory_Neighbours.png" ), buffer );
 	}
 
@@ -167,7 +172,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 			);
 		}
 
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter( _fileSystem );
 		writer.WriteImage( Path.Combine( _outputFolder, "D3VoronoiFactory_Open.png" ), buffer );
 	}
 

@@ -1,8 +1,10 @@
+using System.IO.Abstractions;
 using Kiyote.Buffers;
 using Kiyote.Geometry.DelaunayVoronoi;
 using Kiyote.Geometry.Randomization;
 using Kiyote.Geometry.Rasterizers;
 using Kiyote.Imaging;
+using Kiyote.Imaging.Png;
 
 namespace Kiyote.Geometry.Visualizer.DelaunayVoronoi;
 
@@ -13,6 +15,8 @@ public sealed class D3DelaunayFactoryVisualizer {
 	private readonly IDelaunayFactory _delaunayFactory;
 	private readonly IRasterizer _rasterizer;
 
+	private readonly IFileSystem _fileSystem;
+
 	public D3DelaunayFactoryVisualizer(
 		string outputFolder,
 		ISize size
@@ -21,6 +25,7 @@ public sealed class D3DelaunayFactoryVisualizer {
 		_size = size;
 		_delaunayFactory = new D3DelaunayFactory();
 		_rasterizer = new IntegerRasterizer();
+		_fileSystem = new FileSystem();
 	}
 
 	public void Visualize() {
@@ -45,7 +50,7 @@ public sealed class D3DelaunayFactoryVisualizer {
 
 		Render( buffer, delaunay );
 
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter( _fileSystem );
 		writer.WriteImage( Path.Combine( _outputFolder, "D3DelaunayFactory_Square.png" ), buffer );
 	}
 
@@ -60,7 +65,7 @@ public sealed class D3DelaunayFactoryVisualizer {
 
 		Render( buffer, delaunay );
 
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter( _fileSystem );
 		writer.WriteImage( Path.Combine( _outputFolder, "D3DelaunayFactory_Random.png" ), buffer );
 	}
 
