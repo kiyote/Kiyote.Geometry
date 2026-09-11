@@ -1,7 +1,9 @@
+using System.IO.Abstractions;
 using Kiyote.Buffers;
 using Kiyote.Geometry.Randomization;
 using Kiyote.Geometry.Rasterizers;
 using Kiyote.Imaging;
+using Kiyote.Imaging.Png;
 
 namespace Kiyote.Geometry.Visualizer;
 
@@ -13,6 +15,8 @@ public sealed class PolygonVisualizer {
 
 	private readonly IRasterizer _rasterizer;
 
+	private readonly IFileSystem _fileSystem;
+
 	public PolygonVisualizer(
 		string outputFolder,
 		ISize bounds
@@ -21,6 +25,7 @@ public sealed class PolygonVisualizer {
 		_bounds = bounds;
 		_random = new FastRandom();
 		_rasterizer = new IntegerRasterizer();
+		_fileSystem = new FileSystem();
 	}
 
 	public void Visualize() {
@@ -54,7 +59,7 @@ public sealed class PolygonVisualizer {
 		polygon1.TryIntersect( polygon2, out Polygon polygon3 );
 		_rasterizer.Rasterize( polygon3, new BufferPixelWriter( buffer, 0xFFFFFFFFU ), false );
 
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter( _fileSystem );
 		writer.WriteImage( Path.Combine( _outputFolder, "PolygonClip.png" ), buffer );
 	}
 
@@ -88,7 +93,7 @@ public sealed class PolygonVisualizer {
 			}
 		}
 
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter( _fileSystem );
 		writer.WriteImage( Path.Combine( _outputFolder, "PolygonIntersections.png" ), buffer );
 	}
 
@@ -113,7 +118,7 @@ public sealed class PolygonVisualizer {
 			buffer[x, y] = polygon.Contains( p ) ? 0x00FF00FFU : 0xFF0000FFU;
 		}
 
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter( _fileSystem );
 		writer.WriteImage( Path.Combine( _outputFolder, "PolygonContains.png" ), buffer );
 	}
 }

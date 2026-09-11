@@ -1,6 +1,8 @@
+using System.IO.Abstractions;
 using Kiyote.Geometry.Randomization;
 using Kiyote.Buffers;
 using Kiyote.Imaging;
+using Kiyote.Imaging.Png;
 using Kiyote.Geometry.Rasterizers;
 
 namespace Kiyote.Geometry.Visualizer.Randomization;
@@ -12,6 +14,7 @@ public sealed class FastRandomVisualizer {
 	private readonly IRandom _random;
 	private readonly int _count;
 	private readonly IRasterizer _rasterizer;
+	private readonly IFileSystem _fileSystem;
 
 	public FastRandomVisualizer(
 		string outputFolder,
@@ -22,6 +25,7 @@ public sealed class FastRandomVisualizer {
 		_random = new FastRandom();
 		_count = bounds.Width * bounds.Height / 100;
 		_rasterizer = new IntegerRasterizer();
+		_fileSystem = new FileSystem();
 	}
 
 	public void Visualize() {
@@ -43,7 +47,7 @@ public sealed class FastRandomVisualizer {
 			int y = (int)( _random.NextInt() / (float)int.MaxValue * ( _bounds.Height - 1 ) );
 			buffer[x, y] = 0xFF;
 		}
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter( _fileSystem );
 		writer.WriteImage( Path.Combine( _outputFolder, "FastRandom_NextInt.png" ), buffer );
 	}
 
@@ -55,7 +59,7 @@ public sealed class FastRandomVisualizer {
 			int y = _random.NextInt( _bounds.Height / 2 );
 			buffer[x, y] = 0xFF;
 		}
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter( _fileSystem );
 		writer.WriteImage( Path.Combine( _outputFolder, "FastRandom_NextIntUpperBound.png" ), buffer );
 	}
 
@@ -67,7 +71,7 @@ public sealed class FastRandomVisualizer {
 			int y = _random.NextInt( _bounds.Height / 4, _bounds.Height / 4 * 3 );
 			buffer[x, y] = 0xFF;
 		}
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter(_fileSystem);
 		writer.WriteImage( Path.Combine( _outputFolder, "FastRandom_NextIntLowerBoundUpperBound.png" ), buffer );
 	}
 
@@ -79,7 +83,7 @@ public sealed class FastRandomVisualizer {
 			int y = (int)( _random.NextUInt() / (float)uint.MaxValue * ( _bounds.Height - 1 ) );
 			buffer[x, y] = 0xFF;
 		}
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter(_fileSystem);
 		writer.WriteImage( Path.Combine( _outputFolder, "FastRandom_NextUInt.png" ), buffer );
 	}
 
@@ -93,7 +97,7 @@ public sealed class FastRandomVisualizer {
 			int y = (int)( dy * ( _bounds.Height - 1 ) );
 			buffer[x, y] = 0xFF;
 		}
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter(_fileSystem);
 		writer.WriteImage( Path.Combine( _outputFolder, "FastRandom_NextDouble.png" ), buffer );
 	}
 
@@ -107,7 +111,7 @@ public sealed class FastRandomVisualizer {
 			int y = (int)( dy * ( _bounds.Height - 1 ) );
 			buffer[x, y] = 0xFF;
 		}
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter(_fileSystem);
 		writer.WriteImage( Path.Combine( _outputFolder, "FastRandom_NextFloat.png" ), buffer );
 	}
 
@@ -121,7 +125,7 @@ public sealed class FastRandomVisualizer {
 			int y = (int)( dy * ( _bounds.Height - 1 ) );
 			buffer[x, y] = 0xFF;
 		}
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter(_fileSystem);
 		writer.WriteImage( Path.Combine( _outputFolder, "FastRandom_NextFloatLowerBoundUpperBound.png" ), buffer );
 	}
 
@@ -135,7 +139,7 @@ public sealed class FastRandomVisualizer {
 			int y = (int)( bytes[i + 1] / (float)byte.MaxValue * ( _bounds.Height - 1 ) );
 			buffer[x, y] = 0xFF;
 		}
-		IImageWriter writer = IImageWriter.CreatePng();
+		IImageWriter writer = new PngWriter(_fileSystem);
 		writer.WriteImage( Path.Combine( _outputFolder, "FastRandom_NextBytes.png" ), buffer );
 	}
 }
