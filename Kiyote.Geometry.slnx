@@ -4,6 +4,7 @@
     <File Path=".gitignore" />
     <File Path="addlocal.bat" />
     <File Path="BENCHMARK.md" />
+    <File Path="CODEOWNERS" />
     <File Path="DEVELOPMENT.md" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
