@@ -2,7 +2,6 @@
 namespace Kiyote.Geometry.Trees.Benchmarks;
 
 [MemoryDiagnoser( false )]
-[MarkdownExporterAttribute.GitHub]
 public class SimpleQuadTreeNodeBenchmarks {
 
 	private readonly IRect _bounds;

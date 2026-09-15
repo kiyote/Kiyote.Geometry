@@ -1,7 +1,6 @@
-﻿namespace Kiyote.Geometry.Benchmarks;
+namespace Kiyote.Geometry.Benchmarks;
 
 [MemoryDiagnoser( false )]
-[MarkdownExporterAttribute.GitHub]
 public class IntersectBenchmarks {
 
 	[Benchmark]

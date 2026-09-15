@@ -1,7 +1,6 @@
-﻿namespace Kiyote.Geometry.Benchmarks;
+namespace Kiyote.Geometry.Benchmarks;
 
 [MemoryDiagnoser( false )]
-[MarkdownExporterAttribute.GitHub]
 public class EdgeBenchmarks {
 
 	private readonly int _p1X;

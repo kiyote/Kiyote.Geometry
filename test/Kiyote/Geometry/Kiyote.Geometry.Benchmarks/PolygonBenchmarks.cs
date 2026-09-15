@@ -2,7 +2,6 @@
 namespace Kiyote.Geometry.Benchmarks;
 
 [MemoryDiagnoser( false )]
-[MarkdownExporterAttribute.GitHub]
 public class PolygonBenchmarks {
 
 	private readonly Point _p1;

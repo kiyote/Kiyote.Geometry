@@ -1,7 +1,6 @@
-﻿namespace Kiyote.Geometry.DelaunayVoronoi.Benchmarks;
+namespace Kiyote.Geometry.DelaunayVoronoi.Benchmarks;
 
 [MemoryDiagnoser( false )]
-[MarkdownExporterAttribute.GitHub]
 public class MapboxDelaunatorFactoryBenchmarks {
 
 	public const int DistanceApart = 5;

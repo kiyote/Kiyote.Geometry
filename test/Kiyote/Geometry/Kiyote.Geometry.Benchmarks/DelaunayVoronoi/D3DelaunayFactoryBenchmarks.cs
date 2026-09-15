@@ -1,8 +1,7 @@
-﻿namespace Kiyote.Geometry.DelaunayVoronoi.Benchmarks;
+namespace Kiyote.Geometry.DelaunayVoronoi.Benchmarks;
 
 [MemoryDiagnoser( false )]
 [GroupBenchmarksBy( BenchmarkLogicalGroupRule.ByCategory )]
-[MarkdownExporterAttribute.GitHub]
 public class D3DelaunayFactoryBenchmarks {
 
 	public const int DistanceApart = 5;

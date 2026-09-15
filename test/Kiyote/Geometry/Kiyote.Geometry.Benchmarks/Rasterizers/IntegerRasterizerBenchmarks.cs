@@ -7,7 +7,6 @@ namespace Kiyote.Geometry.Benchmarks.Rasterizers;
 /// runs, which is what an overridden <see cref="IPixelOperation.PixelSpan"/> enables.
 /// </summary>
 [MemoryDiagnoser( false )]
-[MarkdownExporterAttribute.GitHub]
 public class IntegerRasterizerBenchmarks {
 
 	private const int Size = 1000;
