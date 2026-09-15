@@ -58,7 +58,7 @@ jobs:
       - name: Create Orphan Branch
         shell: bash
         run: |
-          chmod a+x ${{ github.workspace }}/create-orpha-branch.sh
+          chmod a+x ${{ github.workspace }}/create-orphan-branch.sh
           ${{ github.workspace }}/create-orphan-branch.sh badges ${{ github.ref_name }}
 
       - name: Make Coverage Badge      
