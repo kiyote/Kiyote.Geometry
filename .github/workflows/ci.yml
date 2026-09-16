@@ -7,7 +7,7 @@ on:
     - '.github/workflows/ci.yml'
     - 'src/**'
     - 'test/**'
-    - 'Kiyote.Geometry.sln'
+    - 'Kiyote.Geometry.slnx'
     - 'Directory.Packages.props'
     - 'Directory.Build.props'
     - 'nuget.config'
