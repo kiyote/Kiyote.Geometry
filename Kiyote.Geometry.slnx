@@ -5,6 +5,7 @@
     <File Path="addlocal.bat" />
     <File Path="BENCHMARK.md" />
     <File Path="CODEOWNERS" />
+    <File Path="create-orphan-branch.sh" />
     <File Path="DEVELOPMENT.md" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />

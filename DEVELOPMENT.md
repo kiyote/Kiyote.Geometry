@@ -1,6 +1,11 @@
 # Notes
 
-Github action failing with permission denied?
+## Clean up filemodes
+`find . -type f -not -path '*/.git' -exec chmod 644 {} +`
+
+`find . -type d -not -path '*/.git*' -exec chmod 755 {} +`
+
+## Github action failing with permission denied?
 ```
 git update-index --add --chmod=+x ./create-orphan-branch.sh
 ```
@@ -8,11 +13,11 @@ git update-index --add --chmod=+x ./create-orphan-branch.sh
 Still failing?  Try running the `./create-orphan-branch.sh` locally once.
 
 
-Coverage badge failing to be pushed?
+## Coverage badge failing to be pushed?
 
 Give the workflow the `contents: write` permission.
 
 
-Coverage showing as 0%
+## Coverage showing as 0%
 
 Add the `coverlet.collector` package to your test project and run tests with `dotnet test --collect:"XPlat Code Coverage"`.
