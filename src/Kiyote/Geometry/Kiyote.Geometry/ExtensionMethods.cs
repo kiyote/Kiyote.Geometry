@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using Kiyote.Geometry.DelaunayVoronoi;
-using Kiyote.Geometry.Grids;
 using Kiyote.Geometry.Rasterizers;
 using Kiyote.Geometry.Trees;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +15,6 @@ public static class ExtensionMethods {
 		return services
 			.AddDelaunayVoronoi()
 			.AddRasterizer()
-			.AddGridAnalyzer()
 			.AddTrees();
 	}
 }

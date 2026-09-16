@@ -5,7 +5,6 @@ using BenchmarkDotNet.Toolchains.InProcess.NoEmit;
 using Kiyote.Geometry.Benchmarks;
 using Kiyote.Geometry.Benchmarks.Rasterizers;
 using Kiyote.Geometry.DelaunayVoronoi.Benchmarks;
-using Kiyote.Geometry.Grids.Benchmarks;
 using Kiyote.Geometry.Trees.Benchmarks;
 
 ManualConfig config = DefaultConfig.Instance
@@ -17,16 +16,15 @@ ManualConfig config = DefaultConfig.Instance
 
 BenchmarkSwitcher
 	.FromTypes( [
-		//typeof( D3DelaunayFactoryBenchmarks ),
-		//typeof( D3VoronoiFactoryBenchmarks ),
-		//typeof( MapboxDelaunatorFactoryBenchmarks ),
-		//typeof( EdgeBenchmarks ),
-		//typeof( IntersectBenchmarks ),
-		//typeof( PolygonBenchmarks ),
-		//typeof( RectangleBenchmarks ),
-		//typeof( SimpleQuadTreeNodeBenchmarks ),
-		//typeof( IntegerRasterizerBenchmarks ),
-		typeof( GridAnalyzerBenchmarks ),
+		typeof( D3DelaunayFactoryBenchmarks ),
+		typeof( D3VoronoiFactoryBenchmarks ),
+		typeof( MapboxDelaunatorFactoryBenchmarks ),
+		typeof( EdgeBenchmarks ),
+		typeof( IntersectBenchmarks ),
+		typeof( PolygonBenchmarks ),
+		typeof( RectangleBenchmarks ),
+		typeof( SimpleQuadTreeNodeBenchmarks ),
+		typeof( IntegerRasterizerBenchmarks ),
 	] )
 	.RunAll( config, args );
 

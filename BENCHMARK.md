@@ -123,8 +123,3 @@ LaunchCount=1  WarmupCount=10
 |--------------------------- |-----------:|---------:|---------:|----------:|
 | Create_Amplitude05_Levels3 |   537.0 ns | 47.82 ns | 42.39 ns |     912 B |
 | Create_Amplitude05_Levels4 | 1,145.9 ns | 51.28 ns | 47.96 ns |    1680 B |
-
-# GridAnalyzer
-| Method   | Mean     | Error   | StdDev  | Allocated |
-|--------- |---------:|--------:|--------:|----------:|
-| IsSealed | 337.5 us | 5.00 us | 4.68 us |         - |
