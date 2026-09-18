@@ -18,7 +18,7 @@ public interface IGridSampler<TCoordinate, TValue> {
 		TCoordinate column,
 		TCoordinate row
 	) where TGrid : IGrid<TValue> {
-		return Sample( grid, column, row );
+		return Sample( (IGrid<TValue>)grid, column, row );
 	}
 
 }
