@@ -1,6 +1,6 @@
 namespace Kiyote.Geometry.Grids;
 
-public sealed class CompositeGrid<T> : IGrid<T> {
+public sealed class CompositeGrid<T> : IMutableGrid<T> {
 
 	private readonly List<Attachment> _attachments;
 	private int _left;
@@ -14,13 +14,25 @@ public sealed class CompositeGrid<T> : IGrid<T> {
 		_attachments = [];
 	}
 
-	T? IGrid<T>.this[int column, int row] {
+	T? IGrid<T>.this[int column, int row] => ( (IMutableGrid<T>)this )[column, row];
+
+	T? IMutableGrid<T>.this[int column, int row] {
 		get {
 			Attachment? attachment = Find( column, row );
 			if( attachment is null ) {
 				return default;
 			}
 			return attachment.Grid[column - attachment.Column, row - attachment.Row];
+		}
+		set {
+			Attachment? attachment = Find( column, row );
+			if( attachment is null ) {
+				return;
+			}
+			if( attachment.Grid is not IMutableGrid<T> mutableGrid ) {
+				throw new InvalidOperationException( "The attached grid at the specified location is not mutable." );
+			}
+			mutableGrid[column - attachment.Column, row - attachment.Row] = value;
 		}
 	}
 
