@@ -1,8 +1,6 @@
-using Kiyote.Geometry.Grids;
-
 namespace Kiyote.Geometry.Grids.Connectivity;
 
-internal interface IConnectivityGrid<TCell> : IGrid<Direction> {
+public interface IConnectivityGrid<TCell> : IGrid<Direction> {
 
 	/// <summary>
 	/// Attaches a data grid whose connectivity will be tracked by this grid.  A
