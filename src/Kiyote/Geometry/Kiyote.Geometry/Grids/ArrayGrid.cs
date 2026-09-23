@@ -44,7 +44,7 @@ public sealed class ArrayGrid<T> : IMutableGrid<T> {
 		}
 		set {
 			if( !TryGetIndices( column, row, out int c, out int r ) ) {
-				throw new ArgumentOutOfRangeException( nameof( column ), "The specified location is outside the bounds of the grid." );
+				throw new InvalidOperationException( "Attempt to access ArrayGrid out of bounds." );
 			}
 			_cells[r][c] = value;
 		}

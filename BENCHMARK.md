@@ -123,3 +123,8 @@ LaunchCount=1  WarmupCount=10
 |--------------------------- |-----------:|---------:|---------:|----------:|
 | Create_Amplitude05_Levels3 |   537.0 ns | 47.82 ns | 42.39 ns |     912 B |
 | Create_Amplitude05_Levels4 | 1,145.9 ns | 51.28 ns | 47.96 ns |    1680 B |
+
+# ConnectivityGrid
+| Method             | Mean     | Error    | StdDev   | Allocated |
+|------------------- |---------:|---------:|---------:|----------:|
+| UpdateConnectivity | 21.00 us | 0.196 us | 0.174 us |         - |
