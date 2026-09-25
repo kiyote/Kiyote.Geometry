@@ -22,7 +22,7 @@ public sealed class ConnectivityGridTests {
 
 	[Test]
 	public void TryAttach_FreshGrid_ReturnsTrue() {
-		ArrayGrid<bool> childGrid = new ArrayGrid<bool>( 1, 1 );
+		RaggedArrayGrid<bool> childGrid = new RaggedArrayGrid<bool>( 1, 1 );
 
 		bool actual = _grid.TryAttach( childGrid, 0, 0 );
 
@@ -31,7 +31,7 @@ public sealed class ConnectivityGridTests {
 
 	[Test]
 	public void TryAttach_SameGridTwice_ReturnsFalse() {
-		ArrayGrid<bool> childGrid = new ArrayGrid<bool>( 1, 1 );
+		RaggedArrayGrid<bool> childGrid = new RaggedArrayGrid<bool>( 1, 1 );
 		_ = _grid.TryAttach( childGrid, 0, 0 );
 
 		bool actual = _grid.TryAttach( childGrid, 0, 0 );
@@ -41,8 +41,8 @@ public sealed class ConnectivityGridTests {
 
 	[Test]
 	public void TryAttach_OverlappingGrids_ReturnsFalse() {
-		ArrayGrid<bool> childGrid1 = new ArrayGrid<bool>( 2, 2 );
-		ArrayGrid<bool> childGrid2 = new ArrayGrid<bool>( 2, 2 );
+		RaggedArrayGrid<bool> childGrid1 = new RaggedArrayGrid<bool>( 2, 2 );
+		RaggedArrayGrid<bool> childGrid2 = new RaggedArrayGrid<bool>( 2, 2 );
 		_ = _grid.TryAttach( childGrid1, 0, 0 );
 
 		bool actual = _grid.TryAttach( childGrid2, 1, 1 );
@@ -52,7 +52,7 @@ public sealed class ConnectivityGridTests {
 
 	[Test]
 	public void TryAttach_GridAttached_GridDimensionsUpdate() {
-		ArrayGrid<bool> childGrid = new ArrayGrid<bool>( 1, 2 );
+		RaggedArrayGrid<bool> childGrid = new RaggedArrayGrid<bool>( 1, 2 );
 		_ = _grid.TryAttach( childGrid, 1, 1 );
 
 		using( Assert.EnterMultipleScope() ) {
@@ -65,8 +65,8 @@ public sealed class ConnectivityGridTests {
 
 	[Test]
 	public void TryAttach_GridsAttached_GridDimensionsUpdate() {
-		ArrayGrid<bool> childGrid1 = new ArrayGrid<bool>( 2, 2 );
-		ArrayGrid<bool> childGrid2 = new ArrayGrid<bool>( 3, 2 );
+		RaggedArrayGrid<bool> childGrid1 = new RaggedArrayGrid<bool>( 2, 2 );
+		RaggedArrayGrid<bool> childGrid2 = new RaggedArrayGrid<bool>( 3, 2 );
 		_ = _grid.TryAttach( childGrid1, 1, 1 );
 		_ = _grid.TryAttach( childGrid2, 6, 6 );
 
@@ -80,8 +80,8 @@ public sealed class ConnectivityGridTests {
 
 	[Test]
 	public void TryDetach_GridsAttached_GridDimensionsUpdate() {
-		ArrayGrid<bool> childGrid1 = new ArrayGrid<bool>( 2, 2 );
-		ArrayGrid<bool> childGrid2 = new ArrayGrid<bool>( 3, 2 );
+		RaggedArrayGrid<bool> childGrid1 = new RaggedArrayGrid<bool>( 2, 2 );
+		RaggedArrayGrid<bool> childGrid2 = new RaggedArrayGrid<bool>( 3, 2 );
 		_ = _grid.TryAttach( childGrid1, 1, 1 );
 		_ = _grid.TryAttach( childGrid2, 6, 6 );
 
@@ -97,7 +97,7 @@ public sealed class ConnectivityGridTests {
 
 	[Test]
 	public void TryDetach_NothingAttached_ReturnsFalse() {
-		ArrayGrid<bool> childGrid = new ArrayGrid<bool>( 1, 1 );
+		RaggedArrayGrid<bool> childGrid = new RaggedArrayGrid<bool>( 1, 1 );
 
 		bool actual = _grid.TryDetach( childGrid );
 
@@ -106,7 +106,7 @@ public sealed class ConnectivityGridTests {
 
 	[Test]
 	public void TryDetach_GridAttached_ReturnsTrue() {
-		ArrayGrid<bool> childGrid = new ArrayGrid<bool>( 1, 1 );
+		RaggedArrayGrid<bool> childGrid = new RaggedArrayGrid<bool>( 1, 1 );
 		_ = _grid.TryAttach( childGrid, 0, 0 );
 
 		bool actual = _grid.TryDetach( childGrid );
@@ -117,7 +117,7 @@ public sealed class ConnectivityGridTests {
 
 	[Test]
 	public void TryDetach_DetachDetachedGrid_ReturnsFalse() {
-		ArrayGrid<bool> childGrid = new ArrayGrid<bool>( 1, 1 );
+		RaggedArrayGrid<bool> childGrid = new RaggedArrayGrid<bool>( 1, 1 );
 		_ = _grid.TryAttach( childGrid, 0, 0 );
 		_ = _grid.TryDetach( childGrid );
 
@@ -128,7 +128,7 @@ public sealed class ConnectivityGridTests {
 	
 	[Test]
 	public void IsConnectedTo_AdjacentRealCells_ReturnsTrue () {
-		ArrayGrid<bool> childGrid = new ArrayGrid<bool>( 2, 1 );
+		RaggedArrayGrid<bool> childGrid = new RaggedArrayGrid<bool>( 2, 1 );
 		_ = _grid.TryAttach( childGrid, 0, 0 );
 
 		Assert.That( _grid.IsConnectedTo( _strategy, 0, 0, 1, 0 ), Is.True );

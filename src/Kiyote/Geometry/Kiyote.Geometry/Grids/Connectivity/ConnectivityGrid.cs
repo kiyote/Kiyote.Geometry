@@ -89,7 +89,7 @@ public sealed class ConnectivityGrid<TCell> : IConnectivityGrid<TCell>, IMutable
 		// Cache must be zero-based: CompositeGrid.TryAttach positions a child using
 		// `column + grid.Column`, so if Cache already declared its own origin as
 		// (column, row) it would end up placed twice as far from the origin.
-		ArrayGrid<Direction> cache = new( grid.Width, grid.Height );
+		RaggedArrayGrid<Direction> cache = new( grid.Width, grid.Height );
 		if( !( (IGrid<Direction>)_composite ).TryAttach( cache, column, row ) ) {
 			return false;
 		}

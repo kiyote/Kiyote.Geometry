@@ -3,17 +3,17 @@ namespace Kiyote.Geometry.Grids;
 /// <summary>
 /// A leaf <see cref="IMutableGrid{T}"/> backed by a ragged array of cells.
 /// </summary>
-public sealed class ArrayGrid<T> : IMutableGrid<T> {
+public sealed class FlatArrayGrid<T> : IMutableGrid<T> {
 
-	private readonly T?[][] _cells;
+	private readonly T?[] _cells;
 
-	public ArrayGrid(
+	public FlatArrayGrid(
 		int width,
 		int height
 	) : this( 0, 0, width, height ) {
 	}
 
-	public ArrayGrid(
+	public FlatArrayGrid(
 		int column,
 		int row,
 		int width,
@@ -27,10 +27,7 @@ public sealed class ArrayGrid<T> : IMutableGrid<T> {
 		Width = width;
 		Height = height;
 
-		_cells = new T?[height][];
-		for( int r = 0; r < height; r++ ) {
-			_cells[r] = new T?[width];
-		}
+		_cells = new T?[width * height];
 	}
 
 	T? IGrid<T>.this[int column, int row] => ( (IMutableGrid<T>)this )[column, row];
@@ -40,13 +37,13 @@ public sealed class ArrayGrid<T> : IMutableGrid<T> {
 			if( !TryGetIndices( column, row, out int c, out int r ) ) {
 				return default;
 			}
-			return _cells[r][c];
+			return _cells[(r * Width) + c];
 		}
 		set {
 			if( !TryGetIndices( column, row, out int c, out int r ) ) {
 				throw new InvalidOperationException( "Attempt to access ArrayGrid out of bounds." );
 			}
-			_cells[r][c] = value;
+			_cells[(r * Width) + c] = value;
 		}
 	}
 

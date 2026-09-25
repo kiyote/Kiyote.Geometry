@@ -31,7 +31,7 @@ public sealed class IntegerRasterizerVisualizer {
 	}
 
 	public void VisualizeLines() {
-		IBuffer<uint> buffer = new ArrayBuffer<uint>( 50, 50, 0x000000FFU );
+		IBuffer<uint> buffer = new RaggedArrayBuffer<uint>( 50, 50, 0x000000FFU );
 
 		Point p1 = new Point( 632, 537 );
 		Point p2 = new Point( 648, 551 );
@@ -60,7 +60,7 @@ public sealed class IntegerRasterizerVisualizer {
 		];
 
 		for( int j = 0; j < size; j++ ) {
-			IBuffer<uint> buffer = new ArrayBuffer<uint>( size, size, 0x000000FFU );
+			IBuffer<uint> buffer = new RaggedArrayBuffer<uint>( size, size, 0x000000FFU );
 
 			_rasterizer.Rasterize( points, new BufferPixelWriter( buffer, 0x696969FFU ) );
 
@@ -90,7 +90,7 @@ public sealed class IntegerRasterizerVisualizer {
 	}
 
 	public void VisualizeVoronoiEdges() {
-		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new RaggedArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
 		int cellWidth = _size.Width / 20;
 		int cellHeight = _size.Height / 20;

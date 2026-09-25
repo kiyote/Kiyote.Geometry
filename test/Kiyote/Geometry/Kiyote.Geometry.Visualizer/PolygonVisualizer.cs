@@ -37,7 +37,7 @@ public sealed class PolygonVisualizer {
 
 	private void VisualizeClip() {
 		Console.WriteLine( "Polygon.Clip" );
-		IBuffer<uint> buffer = new ArrayBuffer<uint>( _bounds.Width, _bounds.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new RaggedArrayBuffer<uint>( _bounds.Width, _bounds.Height, 0x000000FFU );
 
 		Polygon polygon1 = new Polygon( [
 			new Point( 200, 200 ),
@@ -66,7 +66,7 @@ public sealed class PolygonVisualizer {
 
 	private void VisualizeIntersections() {
 		Console.WriteLine( "Polygon.Intersections" );
-		IBuffer<uint> buffer = new ArrayBuffer<uint>( _bounds.Width, _bounds.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new RaggedArrayBuffer<uint>( _bounds.Width, _bounds.Height, 0x000000FFU );
 
 		Polygon polygon1 = new Polygon( [
 			new Point( 200, 200 ),
@@ -100,7 +100,7 @@ public sealed class PolygonVisualizer {
 
 	private void VisualizeContains() {
 		Console.WriteLine( "Polygon.Contains" );
-		IBuffer<uint> buffer = new ArrayBuffer<uint>( _bounds.Width, _bounds.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new RaggedArrayBuffer<uint>( _bounds.Width, _bounds.Height, 0x000000FFU );
 
 		Polygon polygon = new Polygon( [
 			new Point( 200, 200 ),

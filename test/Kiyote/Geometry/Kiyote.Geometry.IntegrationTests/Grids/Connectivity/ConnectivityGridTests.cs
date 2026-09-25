@@ -206,7 +206,7 @@ public sealed class ConnectivityGridTests {
 		int width,
 		int height
 	) {
-		IMutableGrid<TestGridCell> block = new ArrayGrid<TestGridCell>( width, height );
+		IMutableGrid<TestGridCell> block = new RaggedArrayGrid<TestGridCell>( width, height );
 		for( int r = 0; r < height; r++ ) {
 			for( int c = 0; c < width; c++ ) {
 				block[c, r] = new TestGridCell( true );

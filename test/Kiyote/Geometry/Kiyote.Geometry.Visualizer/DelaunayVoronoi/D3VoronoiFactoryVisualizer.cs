@@ -50,7 +50,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new RaggedArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
 		Render( buffer, voronoi );
 
@@ -107,7 +107,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new RaggedArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
 		Render( buffer, voronoi );
 
@@ -129,7 +129,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new RaggedArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
 		Render( buffer, voronoi );
 
@@ -151,7 +151,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new RaggedArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
 		Render( buffer, voronoi );
 
@@ -179,7 +179,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Rect bounds = new Rect( 0, 0, _size );
 		IVoronoi voronoi = _voronoiFactory.Create( bounds, points );
 
-		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new RaggedArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
 		foreach (Cell cell in voronoi.Cells) {
 			_rasterizer.Rasterize(

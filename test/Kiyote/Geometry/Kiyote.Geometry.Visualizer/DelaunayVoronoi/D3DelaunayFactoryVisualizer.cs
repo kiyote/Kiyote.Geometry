@@ -45,7 +45,7 @@ public sealed class D3DelaunayFactoryVisualizer {
 		];
 		IDelaunay delaunay = _delaunayFactory.Create( points );
 
-		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new RaggedArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
 		Render( buffer, delaunay );
 
@@ -67,7 +67,7 @@ public sealed class D3DelaunayFactoryVisualizer {
 
 		IDelaunay delaunay = _delaunayFactory.Create( points );
 
-		IBuffer<uint> buffer = new ArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
+		IBuffer<uint> buffer = new RaggedArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
 		Render( buffer, delaunay );
 

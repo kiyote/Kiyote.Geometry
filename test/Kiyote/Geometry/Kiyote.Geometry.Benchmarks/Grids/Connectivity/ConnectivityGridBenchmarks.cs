@@ -24,9 +24,9 @@ public class ConnectivityGridBenchmarks {
 	public ConnectivityGridBenchmarks() {
 		_strategy = new ConnectivityStrategy();
 		_grid = new ConnectivityGrid<bool>();
-		ArrayGrid<bool> block1 = new ArrayGrid<bool>( 10, 10 );
-		ArrayGrid<bool> block2 = new ArrayGrid<bool>( 2, 10 );
-		ArrayGrid<bool> block3 = new ArrayGrid<bool>( 10, 10 );
+		RaggedArrayGrid<bool> block1 = new RaggedArrayGrid<bool>( 10, 10 );
+		RaggedArrayGrid<bool> block2 = new RaggedArrayGrid<bool>( 2, 10 );
+		RaggedArrayGrid<bool> block3 = new RaggedArrayGrid<bool>( 10, 10 );
 
 		_grid.TryAttach( block1, 0, 0 );
 		_grid.TryAttach( block2, 10, 9 );
