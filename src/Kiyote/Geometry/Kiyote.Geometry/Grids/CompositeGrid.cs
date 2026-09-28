@@ -9,6 +9,7 @@ public sealed class CompositeGrid<T> : IMutableGrid<T> {
 	private int _bottom;
 	private int _width;
 	private int _height;
+	private int _version;
 
 	public CompositeGrid() {
 		_attachments = [];
@@ -84,6 +85,19 @@ public sealed class CompositeGrid<T> : IMutableGrid<T> {
 
 	int IGrid<T>.Height => _height;
 
+	// The reported version is _version plus the sum of the attached grids' versions,
+	// so changes in nested grids are reflected here.  On attach/detach _version is
+	// adjusted so the total always advances by exactly one.
+	int IGrid<T>.Version {
+		get {
+			int version = _version;
+			foreach( Attachment attachment in _attachments ) {
+				version = unchecked(version + attachment.Grid.Version);
+			}
+			return version;
+		}
+	}
+
 	bool IGrid<T>.TryAttach(
 		IGrid<T> grid,
 		int column,
@@ -120,6 +134,7 @@ public sealed class CompositeGrid<T> : IMutableGrid<T> {
 		}
 
 		_attachments.Add( candidate );
+		_version = unchecked(_version + 1 - grid.Version);
 		UpdateBounds();
 		return true;
 	}
@@ -131,6 +146,7 @@ public sealed class CompositeGrid<T> : IMutableGrid<T> {
 		for( int i = 0; i < _attachments.Count; i++ ) {
 			if( ReferenceEquals( _attachments[i].Grid, grid ) ) {
 				_attachments.RemoveAt( i );
+				_version = unchecked(_version + 1 + grid.Version);
 				UpdateBounds();
 				return true;
 			}

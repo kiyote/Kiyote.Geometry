@@ -22,6 +22,15 @@ public interface IGrid<T> {
 
 	int Height { get; }
 
+	/// <summary>
+	/// A structural version stamp.  Changes whenever the set of grids attached to
+	/// this grid, or to any grid nested within it, changes.  Leaf grids that
+	/// cannot host other grids report a constant value.  Consumers can cache
+	/// derived data (such as a compiled topology) and compare against this value
+	/// to detect when that data has become stale.
+	/// </summary>
+	int Version { get; }
+
 	IGrid<T>? GetGrid(
 		int column,
 		int row

@@ -33,6 +33,8 @@ public sealed class TestGrid<TValue> : IGrid<TValue> {
 
 	public int Height { get; }
 
+	public int Version => 0;
+
 	public TValue this[int column, int row] {
 		get {
 			if( !Contains( column, row ) ) {

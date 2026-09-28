@@ -1,9 +1,9 @@
 namespace Kiyote.Geometry.Grids;
 
 /// <summary>
-/// A leaf <see cref="IMutableGrid{T}"/> backed by a ragged array of cells.
+/// A leaf <see cref="IDenseGrid{T}"/> backed by a flat, row-major array of cells.
 /// </summary>
-public sealed class FlatArrayGrid<T> : IMutableGrid<T> {
+public sealed class FlatArrayGrid<T> : IDenseGrid<T> {
 
 	private readonly T?[] _cells;
 
@@ -54,6 +54,12 @@ public sealed class FlatArrayGrid<T> : IMutableGrid<T> {
 	int IGrid<T>.Width => Width;
 
 	int IGrid<T>.Height => Height;
+
+	int IGrid<T>.Version => 0;
+
+	Span<T?> IDenseGrid<T>.Cells => _cells;
+
+	int IDenseGrid<T>.Stride => Width;
 
 	private int Column { get; }
 

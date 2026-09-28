@@ -58,6 +58,8 @@ public sealed class RaggedArrayGrid<T> : IMutableGrid<T> {
 
 	int IGrid<T>.Height => Height;
 
+	int IGrid<T>.Version => 0;
+
 	private int Column { get; }
 
 	private int Row { get; }

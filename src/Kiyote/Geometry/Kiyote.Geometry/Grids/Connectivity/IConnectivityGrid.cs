@@ -26,7 +26,8 @@ public interface IConnectivityGrid<TCell> : IGrid<Direction> {
 	/// <paramref name="connectivity"/> to determine whether each pair of
 	/// neighbouring cells is connected.
 	/// </summary>
-	/// <returns><see langword="true"/> if any cached value changed.</returns>
+	/// <returns><see langword="true"/> if any cached value changed.  When a value
+	/// changes, <see cref="IGrid{T}.Version"/> is advanced.</returns>
 	bool UpdateConnectivity<TConnectivityStrategy>(
 		TConnectivityStrategy connectivity
 	) where TConnectivityStrategy : IConnectivityStrategy<TCell>;
@@ -56,5 +57,14 @@ public interface IConnectivityGrid<TCell> : IGrid<Direction> {
 		int destinationColumn,
 		int destinationRow
 	) where TConnectivityStrategy : IConnectivityStrategy<TCell>;
+
+	/// <summary>
+	/// Builds an immutable snapshot of the attached grids and their cached
+	/// connectivity, suitable for fast per-cell simulation.  The snapshot's
+	/// <see cref="GridTopology{TCell}.Version"/> matches this grid's
+	/// <see cref="IGrid{T}.Version"/> at the time of the call; rebuild whenever
+	/// grids are attached/detached or connectivity is updated.
+	/// </summary>
+	GridTopology<TCell> BuildTopology();
 
 }

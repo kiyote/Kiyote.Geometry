@@ -15,6 +15,7 @@ public sealed class ConnectivityGrid<TCell> : IConnectivityGrid<TCell>, IMutable
 
 	private readonly CompositeGrid<Direction> _composite;
 	private readonly List<Source> _sources;
+	private int _connectivityVersion;
 
 	public ConnectivityGrid() {
 		_composite = new CompositeGrid<Direction>();
@@ -35,6 +36,8 @@ public sealed class ConnectivityGrid<TCell> : IConnectivityGrid<TCell>, IMutable
 	int IGrid<Direction>.Width => ( (IGrid<Direction>)_composite ).Width;
 
 	int IGrid<Direction>.Height => ( (IGrid<Direction>)_composite ).Height;
+
+	int IGrid<Direction>.Version => unchecked(( (IGrid<Direction>)_composite ).Version + _connectivityVersion);
 
 	IGrid<Direction>? IGrid<Direction>.GetGrid(
 		int column,
@@ -89,7 +92,7 @@ public sealed class ConnectivityGrid<TCell> : IConnectivityGrid<TCell>, IMutable
 		// Cache must be zero-based: CompositeGrid.TryAttach positions a child using
 		// `column + grid.Column`, so if Cache already declared its own origin as
 		// (column, row) it would end up placed twice as far from the origin.
-		RaggedArrayGrid<Direction> cache = new( grid.Width, grid.Height );
+		FlatArrayGrid<Direction> cache = new( grid.Width, grid.Height );
 		if( !( (IGrid<Direction>)_composite ).TryAttach( cache, column, row ) ) {
 			return false;
 		}
@@ -133,6 +136,9 @@ public sealed class ConnectivityGrid<TCell> : IConnectivityGrid<TCell>, IMutable
 				source.Row + source.Height
 			);
 		}
+		if( updated ) {
+			_connectivityVersion = unchecked(_connectivityVersion + 1);
+		}
 		return updated;
 	}
 
@@ -147,7 +153,88 @@ public sealed class ConnectivityGrid<TCell> : IConnectivityGrid<TCell>, IMutable
 		foreach( Source source in _sources ) {
 			updated |= UpdateConnectivity( source, connectivity, startColumn, startRow, endColumn, endRow );
 		}
+		if( updated ) {
+			_connectivityVersion = unchecked(_connectivityVersion + 1);
+		}
 		return updated;
+	}
+
+	GridTopology<TCell> IConnectivityGrid<TCell>.BuildTopology() {
+		TopologyLeaf<TCell>[] leaves = new TopologyLeaf<TCell>[_sources.Count];
+		int total = 0;
+		for( int i = 0; i < _sources.Count; i++ ) {
+			Source source = _sources[i];
+			leaves[i] = new TopologyLeaf<TCell>( source.DataGrid, source.Column, source.Row, source.Width, source.Height, total );
+			total += source.Width * source.Height;
+		}
+
+		Direction[] connectivity = new Direction[total];
+		List<SeamLink> seams = [];
+		for( int i = 0; i < _sources.Count; i++ ) {
+			Source source = _sources[i];
+			TopologyLeaf<TCell> leaf = leaves[i];
+			Span<Direction> cells = source.Cache.Cells;
+			int stride = source.Cache.Stride;
+			for( int row = 0; row < source.Height; row++ ) {
+				cells.Slice( row * stride, source.Width ).CopyTo( connectivity.AsSpan( leaf.Offset + ( row * source.Width ), source.Width ) );
+			}
+
+			for( int row = 0; row < source.Height; row++ ) {
+				for( int column = 0; column < source.Width; column++ ) {
+					int index = leaf.Offset + ( row * source.Width ) + column;
+					Direction direction = connectivity[index];
+					if( direction == Direction.None ) {
+						continue;
+					}
+					foreach( (int deltaColumn, int deltaRow, Direction flag) in _neighbours ) {
+						if( ( direction & flag ) == 0 ) {
+							continue;
+						}
+						int neighbourColumn = column + deltaColumn;
+						int neighbourRow = row + deltaRow;
+						if( neighbourColumn >= 0
+							&& neighbourColumn < source.Width
+							&& neighbourRow >= 0
+							&& neighbourRow < source.Height
+						) {
+							continue;
+						}
+						if( TryGetLeafIndex( leaves, source.Column + neighbourColumn, source.Row + neighbourRow, out int neighbourIndex ) ) {
+							seams.Add( new SeamLink( index, neighbourIndex, flag ) );
+						}
+					}
+				}
+			}
+		}
+
+		return new GridTopology<TCell>(
+			leaves,
+			connectivity,
+			[.. seams],
+			( (IGrid<Direction>)this ).Version
+		);
+	}
+
+	private static bool TryGetLeafIndex(
+		TopologyLeaf<TCell>[] leaves,
+		int column,
+		int row,
+		out int index
+	) {
+		foreach( TopologyLeaf<TCell> leaf in leaves ) {
+			int localColumn = column - leaf.Column;
+			int localRow = row - leaf.Row;
+			if( localColumn >= 0
+				&& localColumn < leaf.Width
+				&& localRow >= 0
+				&& localRow < leaf.Height
+			) {
+				index = leaf.Offset + ( localRow * leaf.Width ) + localColumn;
+				return true;
+			}
+		}
+		index = -1;
+		return false;
 	}
 
 	bool IConnectivityGrid<TCell>.IsConnectedTo<TConnectivityStrategy>(
@@ -322,7 +409,7 @@ public sealed class ConnectivityGrid<TCell> : IConnectivityGrid<TCell>, IMutable
 
 	private sealed record Source(
 		IGrid<TCell> DataGrid,
-		IMutableGrid<Direction> Cache,
+		IDenseGrid<Direction> Cache,
 		int Column,
 		int Row,
 		int Width,
