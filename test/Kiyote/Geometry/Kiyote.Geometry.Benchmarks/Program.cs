@@ -26,7 +26,8 @@ BenchmarkSwitcher
 		//typeof( RectangleBenchmarks ),
 		//typeof( SimpleQuadTreeNodeBenchmarks ),
 		//typeof( IntegerRasterizerBenchmarks ),
-		typeof( ConnectivityGridBenchmarks )
+		//typeof( ConnectivityGridBenchmarks ),
+		typeof( PointBenchmarks )
 	] )
 	.RunAll( config, args );
 

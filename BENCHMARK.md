@@ -98,7 +98,7 @@ LaunchCount=1  WarmupCount=10
 | HasIntersection_Polygon                           |  58.46 ns |  0.833 ns |  0.779 ns |         - |
 | HasIntersection_EdgeArray                         |  60.12 ns |  1.856 ns |  1.737 ns |         - |
 
-# Rectangle
+# Rect
 | Method                      | Mean      | Error     | StdDev    | Median    | Allocated |
 |---------------------------- |----------:|----------:|----------:|----------:|----------:|
 | Contains_Rect               | 0.0015 ns | 0.0061 ns | 0.0048 ns | 0.0000 ns |         - |
@@ -128,3 +128,35 @@ LaunchCount=1  WarmupCount=10
 | Method             | Mean     | Error    | StdDev   | Allocated |
 |------------------- |---------:|---------:|---------:|----------:|
 | UpdateConnectivity | 21.00 us | 0.196 us | 0.174 us |         - |
+
+# Point
+| Method                  | Mean       | Error     | StdDev    | Median     | Allocated |
+|------------------------ |-----------:|----------:|----------:|-----------:|----------:|
+| Deconstruct             |  0.1096 ns | 0.0869 ns | 0.0813 ns |  0.0978 ns |         - |
+| ToStringBenchmark       | 46.3868 ns | 2.2878 ns | 2.1401 ns | 46.9177 ns |      48 B |
+| IsAdjacentTo_Orthogonal |  0.5488 ns | 0.0903 ns | 0.0845 ns |  0.5524 ns |         - |
+| IsAdjacentTo_Diagonal   |  0.9635 ns | 0.0638 ns | 0.0566 ns |  0.9752 ns |         - |
+| Add_Point               |  1.4746 ns | 0.0504 ns | 0.0447 ns |  1.4534 ns |         - |
+| Add_IntInt              |  1.2883 ns | 0.0409 ns | 0.0383 ns |  1.2832 ns |         - |
+| Subtract_Point          |  1.3646 ns | 0.0307 ns | 0.0256 ns |  1.3612 ns |         - |
+| Subtract_IntInt         |  1.3573 ns | 0.0970 ns | 0.0908 ns |  1.3422 ns |         - |
+| Negate                  |  1.3236 ns | 0.0269 ns | 0.0238 ns |  1.3276 ns |         - |
+| Operator_Add            |  1.3531 ns | 0.1195 ns | 0.1118 ns |  1.3847 ns |         - |
+| Operator_Subtract       |  1.2617 ns | 0.0500 ns | 0.0418 ns |  1.2652 ns |         - |
+| Operator_Negate         |  1.2279 ns | 0.1194 ns | 0.1116 ns |  1.1988 ns |         - |
+| ShiftRight              |  1.3625 ns | 0.0401 ns | 0.0355 ns |  1.3483 ns |         - |
+| And                     |  1.3847 ns | 0.0422 ns | 0.0395 ns |  1.3813 ns |         - |
+| Ctor                    |  0.0006 ns | 0.0024 ns | 0.0023 ns |  0.0000 ns |         - |
+| ManhattanDistance       |  0.4899 ns | 0.0150 ns | 0.0133 ns |  0.4868 ns |         - |
+| ChebyshevDistance       |  0.4988 ns | 0.0258 ns | 0.0228 ns |  0.4976 ns |         - |
+| DistanceSquared         |  0.3741 ns | 0.2264 ns | 0.2007 ns |  0.2902 ns |         - |
+| Operator_Equals         |  0.0000 ns | 0.0000 ns | 0.0000 ns |  0.0000 ns |         - |
+| Operator_NotEquals      |  0.1936 ns | 0.0199 ns | 0.0177 ns |  0.1889 ns |         - |
+| Equals_Object           |  0.0000 ns | 0.0000 ns | 0.0000 ns |  0.0000 ns |         - |
+| Equals_IEquatable       |  0.0504 ns | 0.0256 ns | 0.0227 ns |  0.0437 ns |         - |
+| GetHashCode_Single      |  0.0134 ns | 0.0280 ns | 0.0248 ns |  0.0000 ns |         - |
+| HashSet_Contains        |  5.4885 ns | 0.3488 ns | 0.3263 ns |  5.3107 ns |         - |
+| Dictionary_TryGetValue  |  5.8597 ns | 0.1136 ns | 0.0949 ns |  5.8475 ns |         - |
+| HashSet_Build           |  7.7450 ns | 0.1338 ns | 0.1252 ns |  7.7221 ns |      26 B |
+| Min                     |  1.9207 ns | 0.0632 ns | 0.0591 ns |  1.9105 ns |         - |
+| Max                     |  1.5877 ns | 0.0475 ns | 0.0421 ns |  1.5728 ns |         - |

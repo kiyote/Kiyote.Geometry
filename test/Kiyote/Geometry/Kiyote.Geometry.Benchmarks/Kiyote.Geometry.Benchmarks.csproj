@@ -15,4 +15,8 @@
 		<ProjectReference Include="..\..\..\..\src\Kiyote\Geometry\Kiyote.Geometry\Kiyote.Geometry.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Topology\" />
+	</ItemGroup>
+
 </Project>

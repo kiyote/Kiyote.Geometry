@@ -1,4 +1,4 @@
-﻿namespace Kiyote.Geometry;
+namespace Kiyote.Geometry;
 
 public readonly struct Rect : IRect, ISize, IEquatable<Rect> {
 
@@ -155,6 +155,98 @@ public readonly struct Rect : IRect, ISize, IEquatable<Rect> {
 			 && X1 <= rect.X2
 			 && Y1 + Height >= rect.Y1
 			 && Y1 <= rect.Y2;
+	}
+
+	public bool Overlaps(
+		Rect rect
+	) {
+		return X1 <= rect.X2
+			&& rect.X1 <= X2
+			&& Y1 <= rect.Y2
+			&& rect.Y1 <= Y2;
+	}
+
+	public bool Overlaps(
+		IRect rect
+	) {
+		return X1 <= rect.X2
+			&& rect.X1 <= X2
+			&& Y1 <= rect.Y2
+			&& rect.Y1 <= Y2;
+	}
+
+	public bool Touches(
+		Rect rect
+	) {
+		return X1 <= rect.X2 + 1
+			&& rect.X1 <= X2 + 1
+			&& Y1 <= rect.Y2 + 1
+			&& rect.Y1 <= Y2 + 1;
+	}
+
+	public bool Touches(
+		IRect rect
+	) {
+		return X1 <= rect.X2 + 1
+			&& rect.X1 <= X2 + 1
+			&& Y1 <= rect.Y2 + 1
+			&& rect.Y1 <= Y2 + 1;
+	}
+
+	/// <summary>
+	/// Computes the cells shared by both rectangles.  Returns false when they
+	/// do not overlap, since an empty rectangle cannot be represented.
+	/// </summary>
+	public static bool TryIntersect(
+		Rect a,
+		Rect b,
+		out Rect intersection
+	) {
+		if( !a.Overlaps( b ) ) {
+			intersection = default;
+			return false;
+		}
+
+		intersection = new Rect(
+			new Point( Math.Max( a.X1, b.X1 ), Math.Max( a.Y1, b.Y1 ) ),
+			new Point( Math.Min( a.X2, b.X2 ), Math.Min( a.Y2, b.Y2 ) )
+		);
+		return true;
+	}
+
+	/// <summary>
+	/// Computes the cells shared by this rectangle and <paramref name="other"/>.
+	/// Returns false when they do not overlap, since an empty rectangle cannot
+	/// be represented.
+	/// </summary>
+	public bool TryIntersect(
+		Rect other,
+		out Rect intersection
+	) {
+		return TryIntersect( this, other, out intersection );
+	}
+
+	/// <summary>
+	/// Computes the smallest rectangle containing both rectangles.
+	/// </summary>
+	public static Rect Union(
+		Rect a,
+		Rect b
+	) {
+		return new Rect(
+			new Point( Math.Min( a.X1, b.X1 ), Math.Min( a.Y1, b.Y1 ) ),
+			new Point( Math.Max( a.X2, b.X2 ), Math.Max( a.Y2, b.Y2 ) )
+		);
+	}
+
+	/// <summary>
+	/// Computes the smallest rectangle containing this rectangle and
+	/// <paramref name="other"/>.
+	/// </summary>
+	public Rect Union(
+		Rect other
+	) {
+		return Union( this, other );
 	}
 
 	public override bool Equals(

@@ -1,4 +1,4 @@
-﻿namespace Kiyote.Geometry; 
+namespace Kiyote.Geometry; 
 
 public interface IRect {
 
@@ -23,6 +23,21 @@ public interface IRect {
 	);
 
 	bool HasOverlap(
+		IRect rect
+	);
+
+	/// <summary>
+	/// Returns true when the two rectangles share at least one cell.
+	/// </summary>
+	bool Overlaps(
+		IRect rect
+	);
+
+	/// <summary>
+	/// Returns true when the two rectangles share at least one cell or are
+	/// adjacent, including diagonally.
+	/// </summary>
+	bool Touches(
 		IRect rect
 	);
 

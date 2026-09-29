@@ -267,6 +267,113 @@ internal sealed class RectTests {
 		Assert.That( r1.HasOverlap( r2 ), Is.EqualTo( expected ) );
 	}
 
+	[TestCase( 10, 10, 50, 50, true )]
+	[TestCase( 59, 59, 5, 5, true )]
+	[TestCase( 60, 10, 5, 5, false )]
+	[TestCase( 60, 60, 5, 5, false )]
+	[TestCase( 100, 100, 10, 10, false )]
+	public void Overlaps_TestCases_ExpectedResult(
+		int x,
+		int y,
+		int w,
+		int h,
+		bool expected
+	) {
+		Rect r1 = CreateRect();
+		Rect r2 = new Rect( x, y, w, h );
+
+		Assert.That( r1.Overlaps( r2 ), Is.EqualTo( expected ) );
+		Assert.That( r2.Overlaps( r1 ), Is.EqualTo( expected ) );
+		Assert.That( r1.Overlaps( (IRect)r2 ), Is.EqualTo( expected ) );
+	}
+
+	[TestCase( 10, 10, 50, 50, true )]
+	[TestCase( 60, 10, 5, 5, true )]
+	[TestCase( 60, 60, 5, 5, true )]
+	[TestCase( 5, 5, 5, 5, true )]
+	[TestCase( 61, 10, 5, 5, false )]
+	[TestCase( 100, 100, 10, 10, false )]
+	public void Touches_TestCases_ExpectedResult(
+		int x,
+		int y,
+		int w,
+		int h,
+		bool expected
+	) {
+		Rect r1 = CreateRect();
+		Rect r2 = new Rect( x, y, w, h );
+
+		Assert.That( r1.Touches( r2 ), Is.EqualTo( expected ) );
+		Assert.That( r2.Touches( r1 ), Is.EqualTo( expected ) );
+		Assert.That( r1.Touches( (IRect)r2 ), Is.EqualTo( expected ) );
+	}
+
+	[Test]
+	public void TryIntersect_OverlappingRects_ReturnsSharedCells() {
+		Rect r1 = CreateRect();
+		Rect r2 = new Rect( 50, 40, 20, 30 );
+
+		bool result = Rect.TryIntersect( r1, r2, out Rect intersection );
+
+		Assert.That( result, Is.True );
+		Assert.That( intersection.IsEquivalentTo( 50, 40, 59, 59 ), Is.True );
+	}
+
+	[Test]
+	public void TryIntersect_Instance_OverlappingRects_ReturnsSharedCells() {
+		Rect r1 = CreateRect();
+		Rect r2 = new Rect( 50, 40, 20, 30 );
+
+		bool result = r1.TryIntersect( r2, out Rect intersection );
+
+		Assert.That( result, Is.True );
+		Assert.That( intersection.IsEquivalentTo( 50, 40, 59, 59 ), Is.True );
+	}
+
+	[Test]
+	public void TryIntersect_Instance_AdjacentRects_ReturnsFalse() {
+		Rect r1 = CreateRect();
+		Rect r2 = new Rect( 60, 10, 5, 5 );
+
+		bool result = r1.TryIntersect( r2, out _ );
+
+		Assert.That( result, Is.False );
+	}
+
+	[Test]
+	public void TryIntersect_AdjacentRects_ReturnsFalse() {
+		Rect r1 = CreateRect();
+		Rect r2 = new Rect( 60, 10, 5, 5 );
+
+		bool result = Rect.TryIntersect( r1, r2, out _ );
+
+		Assert.That( result, Is.False );
+	}
+
+	[Test]
+	public void Union_Instance_DisjointRects_ReturnsEnclosingRect() {
+		Rect r1 = CreateRect();
+		Rect r2 = new Rect( 100, 0, 10, 5 );
+
+		Rect union = r1.Union( r2 );
+
+		Assert.That( union.IsEquivalentTo( 10, 0, 109, 59 ), Is.True );
+		Assert.That( union.Width, Is.EqualTo( 100 ) );
+		Assert.That( union.Height, Is.EqualTo( 60 ) );
+	}
+
+	[Test]
+	public void Union_DisjointRects_ReturnsEnclosingRect() {
+		Rect r1 = CreateRect();
+		Rect r2 = new Rect( 100, 0, 10, 5 );
+
+		Rect union = Rect.Union( r1, r2 );
+
+		Assert.That( union.IsEquivalentTo( 10, 0, 109, 59 ), Is.True );
+		Assert.That( union.Width, Is.EqualTo( 100 ) );
+		Assert.That( union.Height, Is.EqualTo( 60 ) );
+	}
+
 	[Test]
 	public void Contains_RectStruct_ContainedRect_ReturnsTrue() {
 		Rect r1 = CreateRect();
