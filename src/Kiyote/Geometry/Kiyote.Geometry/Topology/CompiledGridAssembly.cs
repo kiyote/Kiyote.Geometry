@@ -85,6 +85,47 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 		return layer;
 	}
 
+	public IGridLayer<T> CreateLayer<T>(
+		int halo
+	) {
+		ObjectDisposedException.ThrowIf( _disposed, this );
+
+		GridLayer<T> layer = new GridLayer<T>( _space, halo );
+		AddLayer( layer );
+		return layer;
+	}
+
+	public bool RemoveLayer(
+		IGridLayer layer
+	) {
+		if( !_layers.Remove( layer ) ) {
+			return false;
+		}
+		_storage.Remove( (IGridLayerStorage)layer );
+		if( layer is IBoundGridLayer<TCell> bound ) {
+			_bound.Remove( bound );
+		}
+		return true;
+	}
+
+	public void Swap<T>(
+		IGridLayer<T> a,
+		IGridLayer<T> b
+	) {
+		ObjectDisposedException.ThrowIf( _disposed, this );
+
+		if( a is not GridLayer<T> left || !_layers.Contains( a ) ) {
+			throw new ArgumentException( "Layer does not belong to this assembly.", nameof( a ) );
+		}
+		if( b is not GridLayer<T> right || !_layers.Contains( b ) ) {
+			throw new ArgumentException( "Layer does not belong to this assembly.", nameof( b ) );
+		}
+		if( left.Halo != right.Halo ) {
+			throw new ArgumentException( "Layers must have the same halo.", nameof( b ) );
+		}
+		left.SwapStorage( right );
+	}
+
 	public void Commit() {
 		ObjectDisposedException.ThrowIf( _disposed, this );
 

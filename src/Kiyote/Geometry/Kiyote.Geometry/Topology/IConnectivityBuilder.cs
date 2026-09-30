@@ -13,7 +13,7 @@ public interface IConnectivityBuilder {
 	/// <param name="strategy">Decides whether each pair of adjacent cells is connected.</param>
 	/// <param name="halo">
 	/// The width of the border, in cells, stored around each chunk of the
-	/// result.  Must be 0 or 1.  The halo does not affect the directions
+	/// result, from 0 to the chunk size.  The halo does not affect the directions
 	/// calculated.  Use 1 when a later pass over chunk storage needs the
 	/// neighbouring cells' directions, such as a flow field or region
 	/// labelling that checks whether a neighbour links back.  Use 0 when the

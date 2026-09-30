@@ -16,7 +16,7 @@ internal class GridLayer<T> : IGridLayer<T>, IGridLayerStorage {
 		int halo
 	) {
 		ArgumentOutOfRangeException.ThrowIfLessThan( halo, 0 );
-		ArgumentOutOfRangeException.ThrowIfGreaterThan( halo, 1 );
+		ArgumentOutOfRangeException.ThrowIfGreaterThan( halo, space.ChunkSize );
 
 		_space = space;
 		Halo = halo;
@@ -36,7 +36,7 @@ internal class GridLayer<T> : IGridLayer<T>, IGridLayerStorage {
 		T[] cells
 	) {
 		ArgumentOutOfRangeException.ThrowIfLessThan( halo, 0 );
-		ArgumentOutOfRangeException.ThrowIfGreaterThan( halo, 1 );
+		ArgumentOutOfRangeException.ThrowIfGreaterThan( halo, space.ChunkSize );
 
 		_space = space;
 		Halo = halo;
@@ -119,14 +119,14 @@ internal class GridLayer<T> : IGridLayer<T>, IGridLayerStorage {
 		}
 	}
 
-	/// <summary>
-	/// Refreshes the halo of a single slot from the edge cells of its
-	/// neighbours.  No-op when <see cref="Halo"/> is 0.
-	/// </summary>
-	internal void ExchangeHalo(
+	public void ExchangeHalo(
 		int slot
 	) {
 		if( Halo == 0 ) {
+			return;
+		}
+		if( Halo > 1 ) {
+			ExchangeWideHalo( slot );
 			return;
 		}
 		const int north = 0;
@@ -153,6 +153,58 @@ internal class GridLayer<T> : IGridLayer<T>, IGridLayerStorage {
 		CopyCell( cells, neighbours[northEast], 0, last, top + size + 1 );
 		CopyCell( cells, neighbours[southWest], last, 0, bottom );
 		CopyCell( cells, neighbours[southEast], 0, 0, bottom + size + 1 );
+	}
+
+	private void ExchangeWideHalo(
+		int slot
+	) {
+		const int north = 0;
+		const int northEast = 1;
+		const int east = 2;
+		const int southEast = 3;
+		const int south = 4;
+		const int southWest = 5;
+		const int west = 6;
+		const int northWest = 7;
+
+		int h = Halo;
+		int size = _space.ChunkSize;
+		int far = size - h;
+		int top = slot * ChunkLength;
+		int middle = top + ( h * Stride );
+		int bottom = top + ( ( size + h ) * Stride );
+		ReadOnlySpan<int> neighbours = _space.GetNeighbours( slot );
+		Span<T> cells = _cells;
+
+		CopyBlock( cells, neighbours[north], far, 0, top + h, size, h );
+		CopyBlock( cells, neighbours[south], 0, 0, bottom + h, size, h );
+		CopyBlock( cells, neighbours[west], 0, far, middle, h, size );
+		CopyBlock( cells, neighbours[east], 0, 0, middle + h + size, h, size );
+		CopyBlock( cells, neighbours[northWest], far, far, top, h, h );
+		CopyBlock( cells, neighbours[northEast], far, 0, top + h + size, h, h );
+		CopyBlock( cells, neighbours[southWest], 0, far, bottom, h, h );
+		CopyBlock( cells, neighbours[southEast], 0, 0, bottom + h + size, h, h );
+	}
+
+	private void CopyBlock(
+		Span<T> cells,
+		int source,
+		int sourceRow,
+		int sourceColumn,
+		int target,
+		int width,
+		int height
+	) {
+		if( source < 0 ) {
+			for( int i = 0; i < height; i++ ) {
+				cells.Slice( target + ( i * Stride ), width ).Clear();
+			}
+			return;
+		}
+		int from = IndexOf( source, ( sourceRow << _space.ChunkShift ) + sourceColumn );
+		for( int i = 0; i < height; i++ ) {
+			cells.Slice( from + ( i * Stride ), width ).CopyTo( cells.Slice( target + ( i * Stride ), width ) );
+		}
 	}
 
 	private void CopyRow(
@@ -212,6 +264,25 @@ internal class GridLayer<T> : IGridLayer<T>, IGridLayerStorage {
 		int localRow = localIndex >> shift;
 		int localColumn = localIndex & ( _space.ChunkSize - 1 );
 		return ( slot * ChunkLength ) + ( ( localRow + Halo ) * Stride ) + localColumn + Halo;
+	}
+
+	public int IndexOf(
+		int slot,
+		int localColumn,
+		int localRow
+	) {
+		return ( slot * ChunkLength ) + ( ( localRow + Halo ) * Stride ) + localColumn + Halo;
+	}
+
+	/// <summary>
+	/// Exchanges cell storage and dirty flags with another layer over the
+	/// same space and halo.
+	/// </summary>
+	internal void SwapStorage(
+		GridLayer<T> other
+	) {
+		( _cells, other._cells ) = ( other._cells, _cells );
+		( _dirty, other._dirty ) = ( other._dirty, _dirty );
 	}
 
 	/// <summary>

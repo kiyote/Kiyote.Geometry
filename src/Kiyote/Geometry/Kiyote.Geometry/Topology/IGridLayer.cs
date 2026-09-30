@@ -8,12 +8,14 @@ public interface IGridLayer {
 	IGridChunkLayout Space { get; }
 
 	/// <summary>
-	/// The number of halo cells surrounding each chunk.  Either 0 or 1.  A
-	/// halo of 1 holds copies of the adjacent cells from neighbouring chunks,
-	/// so a pass over a chunk's storage can read each cell's 8 neighbours
-	/// without leaving the chunk.  It is useful for stencil-style work such as
-	/// diffusion, blurring or neighbour counts.  Halo cells are only current
-	/// after <see cref="IGridLayer{T}.ExchangeHalos"/>.
+	/// The number of halo cells surrounding each chunk, from 0 to
+	/// <see cref="IGridChunkLayout.ChunkSize"/>.  A halo of <c>h</c> holds
+	/// copies of the cells within <c>h</c> of the chunk edge from neighbouring
+	/// chunks, so a pass over a chunk's storage can read neighbours up to
+	/// <c>h</c> cells away without leaving the chunk.  It is useful for
+	/// stencil-style work such as diffusion, blurring, neighbour counts or
+	/// interpolated sampling.  Halo cells are only current after
+	/// <see cref="IGridLayer{T}.ExchangeHalos"/>.
 	/// </summary>
 	int Halo { get; }
 
@@ -22,6 +24,17 @@ public interface IGridLayer {
 	/// chunk, <c>ChunkSize + (2 * Halo)</c>.
 	/// </summary>
 	int Stride { get; }
+
+	/// <summary>
+	/// Returns the index into the layer's cells of a chunk-local position.
+	/// <paramref name="localColumn"/> and <paramref name="localRow"/> may lie
+	/// in the halo, from <c>-Halo</c> to <c>ChunkSize + Halo - 1</c>.
+	/// </summary>
+	int IndexOf(
+		int slot,
+		int localColumn,
+		int localRow
+	);
 
 	bool IsDirty(
 		int slot
@@ -72,4 +85,13 @@ public interface IGridLayer<T> : IGridLayer {
 	/// No-op when <see cref="IGridLayer.Halo"/> is 0.
 	/// </summary>
 	void ExchangeHalos();
+
+	/// <summary>
+	/// Refreshes the halo of a single slot from its neighbours.  Halo cells
+	/// with no neighbouring chunk are set to <see langword="default"/>.
+	/// No-op when <see cref="IGridLayer.Halo"/> is 0.
+	/// </summary>
+	void ExchangeHalo(
+		int slot
+	);
 }
