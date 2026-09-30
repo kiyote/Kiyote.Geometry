@@ -160,3 +160,96 @@ LaunchCount=1  WarmupCount=10
 | HashSet_Build           |  7.7450 ns | 0.1338 ns | 0.1252 ns |  7.7221 ns |      26 B |
 | Min                     |  1.9207 ns | 0.0632 ns | 0.0591 ns |  1.9105 ns |         - |
 | Max                     |  1.5877 ns | 0.0475 ns | 0.0421 ns |  1.5728 ns |         - |
+
+# DenseGridSource
+| Method                              | Size | Mean         | Error       | StdDev      | Allocated |
+|------------------------------------ |----- |-------------:|------------:|------------:|----------:|
+| GetOccupiedRuns_Cached              | 64   |     120.8 ns |     4.46 ns |     4.17 ns |         - |
+| TryClearCell_TrySetCell_RebuildRuns | 64   |     126.0 ns |     2.92 ns |     2.44 ns |         - |
+| IsOccupied_Scan                     | 64   |   6,502.5 ns |    89.21 ns |    79.08 ns |         - |
+| GetCell_Scan                        | 64   |   3,872.5 ns |   190.15 ns |   177.86 ns |         - |
+| TryGetRow_Scan                      | 64   |   3,640.5 ns |    71.95 ns |    67.30 ns |         - |
+| GetOccupiedRuns_Cached              | 256  |     467.9 ns |    17.60 ns |    15.60 ns |         - |
+| TryClearCell_TrySetCell_RebuildRuns | 256  |     389.5 ns |     6.04 ns |     5.65 ns |         - |
+| IsOccupied_Scan                     | 256  | 105,981.7 ns | 4,297.04 ns | 4,019.46 ns |       1 B |
+| GetCell_Scan                        | 256  |  61,541.0 ns |   728.09 ns |   681.06 ns |       1 B |
+| TryGetRow_Scan                      | 256  |  58,758.7 ns |   728.46 ns |   681.40 ns |         - |
+
+# GridAssembly
+| Method                            | Size | Mean            | Error           | StdDev          | Allocated |
+|---------------------------------- |----- |----------------:|----------------:|----------------:|----------:|
+| TryAttach_TryDetach               | 64   |    493,325.8 ns |    16,842.90 ns |    15,754.86 ns |   15118 B |
+| TryGetPlacementAt_Scan            | 64   |    286,933.9 ns |     8,417.28 ns |     7,873.53 ns |       3 B |
+| TryRemoveCell_TryAddCell_Interior | 64   |        511.7 ns |        16.44 ns |        15.38 ns |         - |
+| TryRemoveCell_TryAddCell_Seam     | 64   |        677.5 ns |        35.09 ns |        32.82 ns |         - |
+| TryAttach_TryDetach               | 256  | 10,748,415.3 ns | 1,393,834.83 ns | 1,163,915.21 ns |   57489 B |
+| TryGetPlacementAt_Scan            | 256  |  6,820,740.9 ns |   379,854.12 ns |   355,315.78 ns |      45 B |
+| TryRemoveCell_TryAddCell_Interior | 256  |      1,789.5 ns |        30.13 ns |        26.71 ns |         - |
+| TryRemoveCell_TryAddCell_Seam     | 256  |      2,254.5 ns |        51.34 ns |        48.03 ns |         - |
+
+# GridCompiler
+| Method  | Size | ChunkSize | Mean        | Error     | StdDev    | Allocated  |
+|-------- |----- |---------- |------------:|----------:|----------:|-----------:|
+| Compile | 64   | 16        |   108.22 us |  1.969 us |  1.842 us |  104.25 KB |
+| Compile | 64   | 32        |    93.16 us |  1.261 us |  0.984 us |    70.6 KB |
+| Compile | 256  | 16        | 1,573.94 us | 57.104 us | 50.621 us | 1184.33 KB |
+| Compile | 256  | 32        | 1,224.30 us | 35.122 us | 31.135 us |  630.99 KB |
+
+# CompiledGridAssembly
+| Method                              | Size | Mean       | Error     | StdDev    | Allocated |
+|------------------------------------ |----- |-----------:|----------:|----------:|----------:|
+| Commit_AllChunksDirty               | 64   |  11.438 us | 0.2558 us | 0.2393 us |         - |
+| Commit_OneChunkDirty                | 64   |   2.044 us | 0.0219 us | 0.0194 us |         - |
+| Commit_NothingDirty                 | 64   |   1.274 us | 0.0261 us | 0.0244 us |         - |
+| TryRemoveCell_TryAddCell_Propagated | 64   |   2.455 us | 0.0328 us | 0.0274 us |         - |
+| Commit_AllChunksDirty               | 256  | 211.052 us | 7.3620 us | 6.5262 us |       1 B |
+| Commit_OneChunkDirty                | 256  |  22.247 us | 0.6546 us | 0.6123 us |         - |
+| Commit_NothingDirty                 | 256  |  20.958 us | 0.7257 us | 0.6433 us |         - |
+| TryRemoveCell_TryAddCell_Propagated | 256  |  19.611 us | 0.3407 us | 0.3020 us |         - |
+
+# CompiledGridAssemblyMutation
+| Method                          | Size | Mean         | Error      | StdDev     | Allocated  |
+|-------------------------------- |----- |-------------:|-----------:|-----------:|-----------:|
+| Bind_Halo0                      | 64   |     21.11 us |   3.492 us |   2.916 us |   64.12 KB |
+| Bind_Halo1                      | 64   |     41.69 us |  17.059 us |  15.122 us |   74.95 KB |
+| ConnectivityBuilder_Build_Halo0 | 64   |  1,082.01 us | 139.286 us | 116.310 us |   22.74 KB |
+| ConnectivityBuilder_Build_Halo1 | 64   |  1,028.68 us |  72.546 us |  60.579 us |    24.8 KB |
+| Bind_Halo0                      | 256  |    249.79 us |  18.006 us |  14.058 us | 1030.87 KB |
+| Bind_Halo1                      | 256  |    287.21 us |  51.241 us |  42.788 us | 1162.87 KB |
+| ConnectivityBuilder_Build_Halo0 | 256  | 15,629.69 us | 391.381 us | 366.098 us |  262.98 KB |
+| ConnectivityBuilder_Build_Halo1 | 256  | 16,118.66 us | 502.918 us | 470.429 us |  295.98 KB |
+
+# GridLayer
+| Method        | Size | Mean         | Error      | StdDev     | Allocated |
+|-------------- |----- |-------------:|-----------:|-----------:|----------:|
+| Indexer_Scan  | 64   |   206.142 us |  9.6156 us |  8.9944 us |       2 B |
+| GetChunk_Scan | 64   |    16.866 us |  0.1723 us |  0.1527 us |         - |
+| Cells_Scan    | 64   |    16.813 us |  0.2308 us |  0.2046 us |         - |
+| ExchangeHalos | 64   |     1.344 us |  0.0379 us |  0.0336 us |         - |
+| Indexer_Scan  | 256  | 2,757.622 us | 33.8544 us | 30.0110 us |      27 B |
+| GetChunk_Scan | 256  |   273.523 us |  4.4533 us |  3.7187 us |       3 B |
+| Cells_Scan    | 256  |   271.641 us |  6.0574 us |  5.3697 us |       3 B |
+| ExchangeHalos | 256  |    29.592 us |  1.2964 us |  1.2127 us |         - |
+
+# ConnectivityBuilder
+| Method            | Size | Halo | Mean       | Error     | StdDev    | Allocated |
+|------------------ |----- |----- |-----------:|----------:|----------:|----------:|
+| Update_SingleCell | 64   | 0    |   1.087 us | 0.0201 us | 0.0167 us |         - |
+| Update_SeamCell   | 64   | 0    |   1.052 us | 0.0053 us | 0.0044 us |         - |
+| Update_32x32      | 64   | 0    | 114.270 us | 5.5412 us | 4.9121 us |       1 B |
+| Update_SingleCell | 64   | 1    |   2.073 us | 0.0452 us | 0.0377 us |         - |
+| Update_SeamCell   | 64   | 1    |   2.252 us | 0.0511 us | 0.0478 us |         - |
+| Update_32x32      | 64   | 1    | 121.821 us | 8.6449 us | 8.0864 us |       1 B |
+| Update_SingleCell | 256  | 0    |   1.080 us | 0.0105 us | 0.0093 us |         - |
+| Update_SeamCell   | 256  | 0    |   1.192 us | 0.0263 us | 0.0246 us |         - |
+| Update_32x32      | 256  | 0    | 123.757 us | 4.9149 us | 4.3569 us |       1 B |
+| Update_SingleCell | 256  | 1    |   2.927 us | 0.0578 us | 0.0541 us |         - |
+| Update_SeamCell   | 256  | 1    |   2.811 us | 0.0126 us | 0.0112 us |         - |
+| Update_32x32      | 256  | 1    | 127.272 us | 2.7574 us | 2.5793 us |       2 B |
+
+# DirectionExtensions
+| Method            | Mean     | Error     | StdDev    | Allocated |
+|------------------ |---------:|----------:|----------:|----------:|
+| ToOffset          | 2.661 ns | 0.0543 ns | 0.0453 ns |         - |
+| Opposite          | 2.514 ns | 0.1178 ns | 0.1044 ns |         - |
+| TryGetOrthogonals | 1.379 ns | 0.0140 ns | 0.0117 ns |         - |

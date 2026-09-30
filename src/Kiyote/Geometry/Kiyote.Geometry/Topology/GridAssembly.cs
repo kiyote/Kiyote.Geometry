@@ -26,6 +26,8 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 	private readonly Dictionary<Point, PlacementId> _occupancy;
 	private readonly Dictionary<(PlacementId A, PlacementId B), List<GridContact>> _seams;
 	private readonly List<IGridAssemblyObserver> _observers;
+	private readonly List<GridContact> _addedContacts;
+	private readonly List<(PlacementId A, PlacementId B)> _emptySeams;
 	private List<GridSeam>? _seamCache;
 	private int _lastId;
 
@@ -35,6 +37,8 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 		_occupancy = [];
 		_seams = [];
 		_observers = [];
+		_addedContacts = [];
+		_emptySeams = [];
 	}
 
 	public int Version { get; private set; }
@@ -208,7 +212,8 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 		}
 		_occupancy[location] = placement;
 
-		List<GridContact> contacts = [];
+		List<GridContact> contacts = _addedContacts;
+		contacts.Clear();
 		AddContacts( placement, location.X, location.Y, contacts );
 
 		foreach( IGridAssemblyObserver observer in _observers ) {
@@ -355,16 +360,31 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 		PlacementId placement,
 		Point location
 	) {
-		List<(PlacementId A, PlacementId B)> empty = [];
+		List<(PlacementId A, PlacementId B)> empty = _emptySeams;
+		empty.Clear();
 		foreach( KeyValuePair<(PlacementId A, PlacementId B), List<GridContact>> seam in _seams ) {
 			if( seam.Key.A != placement && seam.Key.B != placement ) {
 				continue;
 			}
-			seam.Value.RemoveAll( c =>
-				( c.Column == location.X && c.Row == location.Y )
-				|| ( c.NeighbourColumn == location.X && c.NeighbourRow == location.Y )
-			);
-			if( seam.Value.Count == 0 ) {
+			List<GridContact> contacts = seam.Value;
+			Span<GridContact> span = CollectionsMarshal.AsSpan( contacts );
+			int kept = 0;
+			for( int i = 0; i < span.Length; i++ ) {
+				ref GridContact c = ref span[i];
+				if( ( c.Column == location.X && c.Row == location.Y )
+					|| ( c.NeighbourColumn == location.X && c.NeighbourRow == location.Y )
+				) {
+					continue;
+				}
+				if( kept != i ) {
+					span[kept] = c;
+				}
+				kept++;
+			}
+			if( kept != span.Length ) {
+				contacts.RemoveRange( kept, span.Length - kept );
+			}
+			if( contacts.Count == 0 ) {
 				empty.Add( seam.Key );
 			}
 		}

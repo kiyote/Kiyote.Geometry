@@ -150,7 +150,7 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 			localIndex,
 			1
 		);
-		_runs.Add( run );
+		AddRun( run );
 
 		foreach( GridContact contact in contacts ) {
 			AddSeamLink( contact );
@@ -186,24 +186,102 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 
 			int before = localIndex - run.LocalIndex;
 			int after = run.Length - before - 1;
-			_runs.RemoveAt( i );
 			if( before > 0 ) {
-				_runs.Add( run with { Length = before } );
-			}
-			if( after > 0 ) {
-				_runs.Add( run with {
-					SourceColumn = run.SourceColumn + before + 1,
+				_runs[i] = run with { Length = before };
+				if( after > 0 ) {
+					_runs.Add( run with {
+						SourceColumn = run.SourceColumn + before + 1,
+						LocalIndex = localIndex + 1,
+						Length = after
+					} );
+				}
+			} else if( after > 0 ) {
+				_runs[i] = run with {
+					SourceColumn = run.SourceColumn + 1,
 					LocalIndex = localIndex + 1,
 					Length = after
-				} );
+				};
+			} else {
+				RemoveRunAt( i );
 			}
 			break;
 		}
 
-		_seamLinks.RemoveAll( link =>
-			( link.Slot == slot && link.LocalIndex == localIndex )
-			|| ( link.NeighbourSlot == slot && link.NeighbourLocalIndex == localIndex )
-		);
+		Span<ChunkSeamLink> links = System.Runtime.InteropServices.CollectionsMarshal.AsSpan( _seamLinks );
+		int kept = 0;
+		for( int i = 0; i < links.Length; i++ ) {
+			ref ChunkSeamLink link = ref links[i];
+			if( ( link.Slot == slot && link.LocalIndex == localIndex )
+				|| ( link.NeighbourSlot == slot && link.NeighbourLocalIndex == localIndex )
+			) {
+				continue;
+			}
+			if( kept != i ) {
+				links[kept] = link;
+			}
+			kept++;
+		}
+		if( kept != links.Length ) {
+			_seamLinks.RemoveRange( kept, links.Length - kept );
+		}
+	}
+
+	/// <summary>
+	/// Adds a run, merging it with any run it directly continues or precedes
+	/// so that repeated removal and re-adding of cells does not fragment
+	/// <see cref="SourceRuns"/>.
+	/// </summary>
+	private void AddRun(
+		SourceRun run
+	) {
+		int shift = _space.ChunkShift;
+		int localRow = run.LocalIndex >> shift;
+		int previous = -1;
+		int next = -1;
+		for( int i = 0; i < _runs.Count; i++ ) {
+			SourceRun other = _runs[i];
+			if( other.Slot != run.Slot
+				|| other.Placement != run.Placement
+				|| other.SourceRow != run.SourceRow
+				|| ( other.LocalIndex >> shift ) != localRow
+			) {
+				continue;
+			}
+			if( other.LocalIndex + other.Length == run.LocalIndex
+				&& other.SourceColumn + other.Length == run.SourceColumn
+			) {
+				previous = i;
+			} else if( run.LocalIndex + run.Length == other.LocalIndex
+				&& run.SourceColumn + run.Length == other.SourceColumn
+			) {
+				next = i;
+			}
+			if( previous >= 0 && next >= 0 ) {
+				break;
+			}
+		}
+
+		if( previous >= 0 && next >= 0 ) {
+			SourceRun first = _runs[previous];
+			_runs[previous] = first with { Length = first.Length + run.Length + _runs[next].Length };
+			RemoveRunAt( next );
+		} else if( previous >= 0 ) {
+			SourceRun first = _runs[previous];
+			_runs[previous] = first with { Length = first.Length + run.Length };
+		} else if( next >= 0 ) {
+			SourceRun last = _runs[next];
+			_runs[next] = run with { Length = run.Length + last.Length };
+		} else {
+			_runs.Add( run );
+		}
+	}
+
+	private void RemoveRunAt(
+		int index
+	) {
+		int last = _runs.Count - 1;
+		_runs[index] = _runs[last];
+		_runs.RemoveAt( last );
 	}
 
 	/// <summary>

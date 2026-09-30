@@ -36,6 +36,23 @@ internal sealed class ConnectivityBuilderTests {
 		Assert.That( connectivity[49, 14], Is.EqualTo( Direction.South | Direction.SouthWest | Direction.West ) );
 	}
 
+	[TestCase( 0 )]
+	[TestCase( 1 )]
+	public void Update_CellClosedOnChunkBoundary_MatchesBuild(
+		int halo
+	) {
+		using ICompiledGridAssembly<TestCell> compiledAssembly = CreateAssembly();
+		WalkabilityStrategy walkabilityStrategy = new WalkabilityStrategy();
+		IGridLayer<Direction> connectivity = _builder.Build( compiledAssembly, walkabilityStrategy, halo );
+
+		Assert.That( compiledAssembly.Assembly.TryGetPlacement( new PlacementId( 1 ), out IGridPlacement<TestCell> placement ), Is.True );
+		placement.Source.GetCell( 31, 8 ).IsWalkable = false;
+		_builder.Update( compiledAssembly, connectivity, walkabilityStrategy, new Rect( 31, 8, 1, 1 ) );
+
+		IGridLayer<Direction> expected = _builder.Build( compiledAssembly, walkabilityStrategy, halo );
+		Assert.That( connectivity.Cells.ToArray(), Is.EqualTo( expected.Cells.ToArray() ) );
+	}
+
 	private struct WalkabilityStrategy : IConnectivityStrategy<TestCell> {
 		public readonly bool Evaluate(
 			in TopologyCell<TestCell> source,

@@ -8,6 +8,7 @@ public sealed class DenseGridSource<TCell> : IGridSource<TCell> {
 	private readonly TCell[] _cells;
 	private readonly ulong[] _occupied;
 	private readonly CellRun[][] _rowRuns;
+	private readonly int[] _rowRunCounts;
 	private readonly bool[] _rowDirty;
 
 	public DenseGridSource(
@@ -22,6 +23,7 @@ public sealed class DenseGridSource<TCell> : IGridSource<TCell> {
 		_cells = new TCell[width * height];
 		_occupied = new ulong[( ( width * height ) + 63 ) >> 6];
 		_rowRuns = new CellRun[height][];
+		_rowRunCounts = new int[height];
 		_rowDirty = new bool[height];
 		for( int i = 0; i < height; i++ ) {
 			_rowRuns[i] = [];
@@ -39,10 +41,10 @@ public sealed class DenseGridSource<TCell> : IGridSource<TCell> {
 			return [];
 		}
 		if( _rowDirty[row] ) {
-			_rowRuns[row] = BuildRuns( row );
+			BuildRuns( row );
 			_rowDirty[row] = false;
 		}
-		return _rowRuns[row];
+		return _rowRuns[row].AsSpan( 0, _rowRunCounts[row] );
 	}
 
 	public bool IsOccupied(
@@ -119,24 +121,44 @@ public sealed class DenseGridSource<TCell> : IGridSource<TCell> {
 		return ( row * Width ) + column;
 	}
 
-	private CellRun[] BuildRuns(
+	/// <summary>
+	/// Rebuilds the runs of a row in place.  The row's array only grows, so
+	/// steady-state edits do not allocate.
+	/// </summary>
+	private void BuildRuns(
 		int row
 	) {
-		List<CellRun> runs = [];
+		CellRun[] runs = _rowRuns[row];
+		int count = 0;
 		int start = -1;
-		for( int column = 0; column < Width; column++ ) {
-			if( IsOccupied( column, row ) ) {
+		int index = row * Width;
+		for( int column = 0; column < Width; column++, index++ ) {
+			if( ( _occupied[index >> 6] & ( 1UL << index ) ) != 0 ) {
 				if( start < 0 ) {
 					start = column;
 				}
 			} else if( start >= 0 ) {
-				runs.Add( new CellRun( start, row, column - start ) );
+				Append( ref runs, ref count, new CellRun( start, row, column - start ) );
 				start = -1;
 			}
 		}
 		if( start >= 0 ) {
-			runs.Add( new CellRun( start, row, Width - start ) );
+			Append( ref runs, ref count, new CellRun( start, row, Width - start ) );
 		}
-		return [.. runs];
+		_rowRuns[row] = runs;
+		_rowRunCounts[row] = count;
+	}
+
+	private void Append(
+		ref CellRun[] runs,
+		ref int count,
+		CellRun run
+	) {
+		if( count == runs.Length ) {
+			// A row holds at most ceil( Width / 2 ) runs.
+			int capacity = Math.Min( Math.Max( 4, runs.Length * 2 ), ( Width + 1 ) / 2 );
+			Array.Resize( ref runs, capacity );
+		}
+		runs[count++] = run;
 	}
 }

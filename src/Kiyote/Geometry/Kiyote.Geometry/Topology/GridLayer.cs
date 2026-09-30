@@ -26,6 +26,39 @@ internal class GridLayer<T> : IGridLayer<T>, IGridLayerStorage {
 		_dirty = new bool[space.SlotCount];
 	}
 
+	/// <summary>
+	/// Creates a layer over caller-supplied storage, such as a pooled array.
+	/// The first <c>SlotCount * ChunkLength</c> elements are cleared.
+	/// </summary>
+	internal GridLayer(
+		GridChunkLayout space,
+		int halo,
+		T[] cells
+	) {
+		ArgumentOutOfRangeException.ThrowIfLessThan( halo, 0 );
+		ArgumentOutOfRangeException.ThrowIfGreaterThan( halo, 1 );
+
+		_space = space;
+		Halo = halo;
+		Stride = space.ChunkSize + ( 2 * halo );
+		ChunkLength = Stride * Stride;
+		ArgumentOutOfRangeException.ThrowIfLessThan( cells.Length, space.SlotCount * ChunkLength );
+		Array.Clear( cells, 0, space.SlotCount * ChunkLength );
+		_cells = cells;
+		_dirty = [];
+	}
+
+	/// <summary>
+	/// The number of elements needed to back a layer with the given halo.
+	/// </summary>
+	internal static int GetLength(
+		GridChunkLayout space,
+		int halo
+	) {
+		int stride = space.ChunkSize + ( 2 * halo );
+		return space.SlotCount * stride * stride;
+	}
+
 	public IGridChunkLayout Space => _space;
 
 	public int Halo { get; }
@@ -81,26 +114,91 @@ internal class GridLayer<T> : IGridLayer<T>, IGridLayerStorage {
 		if( Halo == 0 ) {
 			return;
 		}
-		int size = _space.ChunkSize;
-		int mask = size - 1;
 		for( int slot = 0; slot < _space.SlotCount; slot++ ) {
-			int baseIndex = slot * ChunkLength;
-			for( int hy = -1; hy <= size; hy++ ) {
-				int dy = hy < 0 ? -1 : hy >= size ? 1 : 0;
-				for( int hx = -1; hx <= size; hx++ ) {
-					int dx = hx < 0 ? -1 : hx >= size ? 1 : 0;
-					if( dx == 0 && dy == 0 ) {
-						hx = size - 1;
-						continue;
-					}
-					int target = baseIndex + ( ( hy + 1 ) * Stride ) + hx + 1;
-					int neighbour = _space.GetNeighbour( slot, DirectionExtensions.FromOffset( new Point( dx, dy ) ) );
-					_cells[target] = neighbour < 0
-						? default!
-						: _cells[IndexOf( neighbour, ( ( hy & mask ) << _space.ChunkShift ) + ( hx & mask ) )];
-				}
-			}
+			ExchangeHalo( slot );
 		}
+	}
+
+	/// <summary>
+	/// Refreshes the halo of a single slot from the edge cells of its
+	/// neighbours.  No-op when <see cref="Halo"/> is 0.
+	/// </summary>
+	internal void ExchangeHalo(
+		int slot
+	) {
+		if( Halo == 0 ) {
+			return;
+		}
+		const int north = 0;
+		const int northEast = 1;
+		const int east = 2;
+		const int southEast = 3;
+		const int south = 4;
+		const int southWest = 5;
+		const int west = 6;
+		const int northWest = 7;
+
+		int size = _space.ChunkSize;
+		int last = size - 1;
+		int top = slot * ChunkLength;
+		int bottom = top + ( ( size + 1 ) * Stride );
+		ReadOnlySpan<int> neighbours = _space.GetNeighbours( slot );
+		Span<T> cells = _cells;
+
+		CopyRow( cells, neighbours[north], last, top + 1, size );
+		CopyRow( cells, neighbours[south], 0, bottom + 1, size );
+		CopyColumn( cells, neighbours[west], last, top + Stride, size );
+		CopyColumn( cells, neighbours[east], 0, top + Stride + size + 1, size );
+		CopyCell( cells, neighbours[northWest], last, last, top );
+		CopyCell( cells, neighbours[northEast], 0, last, top + size + 1 );
+		CopyCell( cells, neighbours[southWest], last, 0, bottom );
+		CopyCell( cells, neighbours[southEast], 0, 0, bottom + size + 1 );
+	}
+
+	private void CopyRow(
+		Span<T> cells,
+		int source,
+		int sourceRow,
+		int target,
+		int length
+	) {
+		Span<T> destination = cells.Slice( target, length );
+		if( source < 0 ) {
+			destination.Clear();
+			return;
+		}
+		cells.Slice( IndexOf( source, sourceRow << _space.ChunkShift ), length ).CopyTo( destination );
+	}
+
+	private void CopyColumn(
+		Span<T> cells,
+		int source,
+		int sourceColumn,
+		int target,
+		int length
+	) {
+		if( source < 0 ) {
+			for( int i = 0; i < length; i++ ) {
+				cells[target + ( i * Stride )] = default!;
+			}
+			return;
+		}
+		int from = IndexOf( source, sourceColumn );
+		for( int i = 0; i < length; i++ ) {
+			cells[target + ( i * Stride )] = cells[from + ( i * Stride )];
+		}
+	}
+
+	private void CopyCell(
+		Span<T> cells,
+		int source,
+		int sourceColumn,
+		int sourceRow,
+		int target
+	) {
+		cells[target] = source < 0
+			? default!
+			: cells[IndexOf( source, ( sourceRow << _space.ChunkShift ) + sourceColumn )];
 	}
 
 	/// <summary>

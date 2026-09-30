@@ -93,6 +93,17 @@ internal sealed class GridChunkLayout : IGridChunkLayout {
 		return index < 0 ? -1 : _neighbours[slot][index];
 	}
 
+	/// <summary>
+	/// Returns the slots of the 8 neighbouring chunks, or -1 where a chunk is
+	/// not allocated, in the order North, NorthEast, East, SouthEast, South,
+	/// SouthWest, West, NorthWest.
+	/// </summary>
+	internal ReadOnlySpan<int> GetNeighbours(
+		int slot
+	) {
+		return _neighbours[slot];
+	}
+
 	public bool TryGetSlot(
 		int chunkColumn,
 		int chunkRow,
