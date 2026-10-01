@@ -126,6 +126,61 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 		left.SwapStorage( right );
 	}
 
+	public IGridLayer<Direction> CreateVacuumLayer(
+		int halo
+	) {
+		ObjectDisposedException.ThrowIf( _disposed, this );
+
+		GridLayer<Direction> result = new GridLayer<Direction>( _space, halo );
+		int length = GridLayer<byte>.GetLength( _space, 1 );
+		byte[] buffer = System.Buffers.ArrayPool<byte>.Shared.Rent( length );
+		try {
+			GridLayer<byte> occupied = new GridLayer<byte>( _space, 1, buffer );
+			int size = _space.ChunkSize;
+			int shift = _space.ChunkShift;
+			int cellCount = size * size;
+			for( int slot = 0; slot < _space.SlotCount; slot++ ) {
+				ReadOnlySpan<ulong> mask = _space.GetValidityMask( slot );
+				for( int localIndex = 0; localIndex < cellCount; localIndex++ ) {
+					if( ( mask[localIndex >> 6] & ( 1UL << localIndex ) ) != 0 ) {
+						buffer[occupied.IndexOf( slot, localIndex )] = 1;
+					}
+				}
+			}
+			occupied.ExchangeHalos();
+
+			int stride = occupied.Stride;
+			Span<Direction> cells = result.Cells;
+			for( int slot = 0; slot < _space.SlotCount; slot++ ) {
+				for( int row = 0; row < size; row++ ) {
+					int centre = occupied.IndexOf( slot, row << shift );
+					int target = result.IndexOf( slot, row << shift );
+					for( int column = 0; column < size; column++ ) {
+						int i = centre + column;
+						if( buffer[i] == 0 ) {
+							continue;
+						}
+						int vacuum = buffer[i - stride] ^ 1;
+						vacuum |= ( buffer[i - stride + 1] ^ 1 ) << 1;
+						vacuum |= ( buffer[i + 1] ^ 1 ) << 2;
+						vacuum |= ( buffer[i + stride + 1] ^ 1 ) << 3;
+						vacuum |= ( buffer[i + stride] ^ 1 ) << 4;
+						vacuum |= ( buffer[i + stride - 1] ^ 1 ) << 5;
+						vacuum |= ( buffer[i - 1] ^ 1 ) << 6;
+						vacuum |= ( buffer[i - stride - 1] ^ 1 ) << 7;
+						cells[target + column] = (Direction)vacuum;
+					}
+				}
+			}
+		} finally {
+			System.Buffers.ArrayPool<byte>.Shared.Return( buffer );
+		}
+		result.ExchangeHalos();
+
+		AddLayer( result );
+		return result;
+	}
+
 	public void Commit() {
 		ObjectDisposedException.ThrowIf( _disposed, this );
 

@@ -202,6 +202,72 @@ internal sealed class CompiledGridAssemblyTests {
 		Assert.That( reloaded[5, 0], Is.True );
 	}
 
+	[Test]
+	public void GetChunkReference_LayoutFormula_MatchesIndexer() {
+		GridAssembly<TestCell> assembly = CreateFilledAssembly( 64, 64, out _ );
+		using ICompiledGridAssembly<TestCell> compiledAssembly = _compiler.Compile( assembly, GridCompiler.DefaultChunkSize );
+		IGridLayer<int> layer = compiledAssembly.CreateLayer<int>( 2 );
+		Assert.That( compiledAssembly.ChunkLayout.TryGetCell( 40, 37, out int slot, out _ ), Is.True );
+		Point origin = compiledAssembly.ChunkLayout.GetOrigin( slot );
+		int column = 40 - origin.X;
+		int row = 37 - origin.Y;
+
+		layer[40, 37] = 42;
+
+		int offset = ( ( row + layer.Halo ) * layer.Stride ) + column + layer.Halo;
+		Assert.That( layer.ChunkLength, Is.EqualTo( layer.Stride * layer.Stride ) );
+		Assert.That( System.Runtime.CompilerServices.Unsafe.Add( ref layer.GetChunkReference( slot ), offset ), Is.EqualTo( 42 ) );
+		Assert.That( layer.Cells[( slot * layer.ChunkLength ) + offset], Is.EqualTo( 42 ) );
+		Assert.That( layer.IndexOf( slot, column, row ), Is.EqualTo( ( slot * layer.ChunkLength ) + offset ) );
+	}
+
+	[TestCase( 0 )]
+	[TestCase( 1 )]
+	public void CreateVacuumLayer_IrregularShape_MatchesOccupancy(
+		int halo
+	) {
+		GridAssembly<TestCell> assembly = CreateFilledAssembly( 96, 70, out PlacementId placement );
+		Point[] holes = [new Point( 10, 10 ), new Point( 31, 31 ), new Point( 32, 31 ), new Point( 63, 32 ), new Point( 50, 64 )];
+		foreach( Point hole in holes ) {
+			Assert.That( assembly.TryRemoveCell( placement, hole.X, hole.Y ), Is.True );
+		}
+		using ICompiledGridAssembly<TestCell> compiledAssembly = _compiler.Compile( assembly, GridCompiler.DefaultChunkSize );
+		IGridChunkLayout space = compiledAssembly.ChunkLayout;
+
+		IGridLayer<Direction> vacuum = compiledAssembly.CreateVacuumLayer( halo );
+
+		Assert.That( compiledAssembly.Layers, Does.Contain( vacuum ) );
+		Direction[] directions = [Direction.North, Direction.NorthEast, Direction.East, Direction.SouthEast, Direction.South, Direction.SouthWest, Direction.West, Direction.NorthWest];
+		for( int row = 0; row < 70; row++ ) {
+			for( int column = 0; column < 96; column++ ) {
+				if( !space.TryGetCell( column, row, out _, out _ ) ) {
+					continue;
+				}
+				Direction expected = Direction.None;
+				foreach( Direction direction in directions ) {
+					Point offset = direction.ToOffset();
+					if( !space.TryGetCell( column + offset.X, row + offset.Y, out _, out _ ) ) {
+						expected |= direction;
+					}
+				}
+				Assert.That( vacuum[column, row], Is.EqualTo( expected ), $"( {column}, {row} )" );
+			}
+		}
+	}
+
+	[Test]
+	public void CreateVacuumLayer_UnoccupiedCell_None() {
+		GridAssembly<TestCell> assembly = CreateFilledAssembly( out PlacementId placement );
+		Assert.That( assembly.TryRemoveCell( placement, 10, 0 ), Is.True );
+		using ICompiledGridAssembly<TestCell> compiledAssembly = _compiler.Compile( assembly, GridCompiler.DefaultChunkSize );
+
+		IGridLayer<Direction> vacuum = compiledAssembly.CreateVacuumLayer( 1 );
+
+		Assert.That( compiledAssembly.ChunkLayout.TryGetSlot( 0, 0, out int slot ), Is.True );
+		Assert.That( vacuum.Cells[vacuum.IndexOf( slot, 10, 0 )], Is.EqualTo( Direction.None ) );
+		Assert.That( vacuum[9, 0], Is.EqualTo( Direction.North | Direction.NorthEast | Direction.East | Direction.SouthEast | Direction.South | Direction.SouthWest | Direction.NorthWest ) );
+	}
+
 	private static int Encode(
 		int column,
 		int row

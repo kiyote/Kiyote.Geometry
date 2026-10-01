@@ -26,6 +26,17 @@ public interface IGridLayer {
 	int Stride { get; }
 
 	/// <summary>
+	/// The number of elements occupied by each slot, including halo cells,
+	/// <c>Stride * Stride</c>.  The layout is guaranteed: the cell at
+	/// chunk-local <c>( column, row )</c> of a slot is at index
+	/// <c>slot * ChunkLength + ( row + Halo ) * Stride + ( column + Halo )</c>,
+	/// with <c>column</c> and <c>row</c> ranging from <c>-Halo</c> to
+	/// <c>ChunkSize + Halo - 1</c>.  Layers created with the same halo from
+	/// the same compiled assembly share the same layout.
+	/// </summary>
+	int ChunkLength { get; }
+
+	/// <summary>
 	/// Returns the index into the layer's cells of a chunk-local position.
 	/// <paramref name="localColumn"/> and <paramref name="localRow"/> may lie
 	/// in the halo, from <c>-Halo</c> to <c>ChunkSize + Halo - 1</c>.
@@ -50,6 +61,15 @@ public interface IGridLayer {
 /// <summary>
 /// Typed, chunked cell data laid out over an <see cref="IGridChunkLayout"/>.
 /// </summary>
+/// <remarks>
+/// The library never makes an unoccupied cell, or a halo cell facing a
+/// missing chunk, hold anything other than <see langword="default"/>: new
+/// layers start zeroed, unoccupied cells are never loaded, removed cells are
+/// reset and halo exchange clears regions with no neighbour.  Values written
+/// directly into such cells through <see cref="Cells"/>,
+/// <see cref="GetChunk"/>, <see cref="GetRow"/> or
+/// <see cref="GetChunkReference"/> are the caller's responsibility.
+/// </remarks>
 public interface IGridLayer<T> : IGridLayer {
 
 	/// <summary>
@@ -63,6 +83,16 @@ public interface IGridLayer<T> : IGridLayer {
 	/// order with <see cref="IGridLayer.Stride"/>.
 	/// </summary>
 	Span<T> GetChunk(
+		int slot
+	);
+
+	/// <summary>
+	/// Returns a reference to the first element, including halo cells, of a
+	/// single chunk's storage.  The reference is invalidated by
+	/// <see cref="ICompiledGridAssembly{TCell}.Swap"/> and by cell edits that
+	/// allocate chunks, so fetch it again after either.
+	/// </summary>
+	ref T GetChunkReference(
 		int slot
 	);
 

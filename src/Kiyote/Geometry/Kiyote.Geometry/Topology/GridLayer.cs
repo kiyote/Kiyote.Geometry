@@ -65,9 +65,6 @@ internal class GridLayer<T> : IGridLayer<T>, IGridLayerStorage {
 
 	public int Stride { get; }
 
-	/// <summary>
-	/// The number of elements occupied by each slot, including halo cells.
-	/// </summary>
 	public int ChunkLength { get; }
 
 	public Span<T> Cells => _cells;
@@ -92,6 +89,12 @@ internal class GridLayer<T> : IGridLayer<T>, IGridLayerStorage {
 		int slot
 	) {
 		return _cells.AsSpan( slot * ChunkLength, ChunkLength );
+	}
+
+	public ref T GetChunkReference(
+		int slot
+	) {
+		return ref _cells[slot * ChunkLength];
 	}
 
 	public Span<T> GetRow(

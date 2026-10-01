@@ -133,6 +133,30 @@ public interface ICompiledGridAssembly<TCell> : IDisposable {
 	);
 
 	/// <summary>
+	/// Creates a layer holding, for each occupied cell, the directions in
+	/// which the neighbouring cell is unoccupied: off-grid, a hole, a gap
+	/// between placements or a missing chunk.  A diagonal is flagged whenever
+	/// the diagonal cell itself is unoccupied, regardless of the two cells
+	/// beside it.  Unoccupied cells hold <see cref="Direction.None"/>.  The
+	/// result depends only on occupancy, not on any connectivity strategy.
+	/// </summary>
+	/// <remarks>
+	/// The layer is a snapshot.  Like any other layer it is resized by cell
+	/// edits and removed cells are reset, but the directions of the remaining
+	/// cells are not recalculated.  After changing the topology, remove the
+	/// layer with <see cref="RemoveLayer"/> and create it again.
+	/// </remarks>
+	/// <exception cref="ArgumentOutOfRangeException">
+	/// <paramref name="halo"/> is negative or greater than the chunk size.
+	/// </exception>
+	/// <exception cref="ObjectDisposedException">
+	/// This compiled assembly has been disposed.
+	/// </exception>
+	IGridLayer<Direction> CreateVacuumLayer(
+		int halo
+	);
+
+	/// <summary>
 	/// Writes the dirty chunks of every bound layer back to the
 	/// sources, then clears their dirty flags.
 	/// </summary>
