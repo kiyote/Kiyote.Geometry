@@ -1,4 +1,4 @@
-﻿using Kiyote.Geometry.Trees;
+using Kiyote.Geometry.Trees;
 
 namespace Kiyote.Geometry.DelaunayVoronoi;
 
@@ -33,7 +33,7 @@ internal sealed class QuadTreeSearchableVoronoi : ISearchableVoronoi {
 		Rect area
 	) {
 		IReadOnlyList<Rect> result = _quadTree.Query( area );
-		if( result.Any() ) {
+		if( result.Count != 0 ) {
 			return result.Select( r => _bounds[r] ).ToList();
 		}
 
