@@ -27,7 +27,7 @@ public class CompiledGridAssemblyMutationBenchmarks {
 	[IterationSetup]
 	public void IterationSetup() {
 		_compiled = new GridCompiler().Compile( _assembly, GridCompiler.DefaultChunkSize );
-		_ = _compiled.Bind<float, PressureBinding>( default, 1 );
+		_ = _compiled.Bind<float, PressureBinding>( default );
 	}
 
 	[IterationCleanup]
@@ -36,22 +36,17 @@ public class CompiledGridAssemblyMutationBenchmarks {
 	}
 
 	[Benchmark]
-	public IGridLayer<float> Bind_Halo0() {
-		return _compiled.Bind<float, PressureBinding>( default, 0 );
+	public IGridLayer<float> Bind() {
+		return _compiled.Bind<float, PressureBinding>( default );
 	}
 
 	[Benchmark]
-	public IGridLayer<float> Bind_Halo1() {
-		return _compiled.Bind<float, PressureBinding>( default, 1 );
+	public IGridLayer<Direction> ConnectivityBuilder_Build() {
+		return _builder.Build( _compiled, new WalkableStrategy() );
 	}
 
 	[Benchmark]
-	public IGridLayer<Direction> ConnectivityBuilder_Build_Halo0() {
-		return _builder.Build( _compiled, new WalkableStrategy(), 0 );
+	public IGridLayer<Direction> CreateVacuumLayer() {
+		return _compiled.CreateVacuumLayer();
 	}
-
-	[Benchmark]
-	public IGridLayer<Direction> ConnectivityBuilder_Build_Halo1() {
-		return _builder.Build( _compiled, new WalkableStrategy(), 1 );
-	}
-	}
+}

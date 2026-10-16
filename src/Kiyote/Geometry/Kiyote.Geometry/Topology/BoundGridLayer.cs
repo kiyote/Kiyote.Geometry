@@ -1,3 +1,5 @@
+using Kiyote.Buffers.ChunkedGrids;
+
 namespace Kiyote.Geometry.Topology;
 
 /// <summary>
@@ -5,15 +7,15 @@ namespace Kiyote.Geometry.Topology;
 /// through a struct binding.
 /// </summary>
 internal sealed class BoundGridLayer<TCell, T, TBinding> : GridLayer<T>, IBoundGridLayer<TCell>
+	where T : unmanaged
 	where TBinding : struct, IGridLayerBinding<TCell, T> {
 
 	private readonly TBinding _binding;
 
 	public BoundGridLayer(
-		GridChunkLayout space,
-		TBinding binding,
-		int halo
-	) : base( space, halo ) {
+		ChunkedGridLayout layout,
+		TBinding binding
+	) : base( layout ) {
 		_binding = binding;
 	}
 
@@ -21,7 +23,7 @@ internal sealed class BoundGridLayer<TCell, T, TBinding> : GridLayer<T>, IBoundG
 		IGridSource<TCell> source,
 		SourceRun run
 	) {
-		Span<T> target = Cells.Slice( IndexOf( run.Slot, run.LocalIndex ), run.Length );
+		Span<T> target = Values.GetValues( run.ChunkIndex ).Slice( run.LocalIndex, run.Length );
 		if( source.TryGetRow( run.SourceRow, out Span<TCell> row ) ) {
 			ReadOnlySpan<TCell> cells = row.Slice( run.SourceColumn, run.Length );
 			for( int i = 0; i < cells.Length; i++ ) {
@@ -38,7 +40,7 @@ internal sealed class BoundGridLayer<TCell, T, TBinding> : GridLayer<T>, IBoundG
 		IGridSource<TCell> source,
 		SourceRun run
 	) {
-		ReadOnlySpan<T> values = Cells.Slice( IndexOf( run.Slot, run.LocalIndex ), run.Length );
+		ReadOnlySpan<T> values = Values.GetValues( run.ChunkIndex ).Slice( run.LocalIndex, run.Length );
 		if( source.TryGetRow( run.SourceRow, out Span<TCell> row ) ) {
 			Span<TCell> cells = row.Slice( run.SourceColumn, run.Length );
 			for( int i = 0; i < cells.Length; i++ ) {

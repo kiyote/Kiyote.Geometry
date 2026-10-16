@@ -15,7 +15,7 @@ internal sealed class ConnectivityBuilderTests {
 		using ICompiledGridAssembly<TestCell> compiledAssembly = CreateAssembly();
 		WalkabilityStrategy walkabilityStrategy = new WalkabilityStrategy();
 
-		IGridLayer<Direction> connectivity = _builder.Build( compiledAssembly, walkabilityStrategy, 0 );
+		IGridLayer<Direction> connectivity = _builder.Build( compiledAssembly, walkabilityStrategy );
 
 		Assert.That( connectivity[49, 14], Is.EqualTo( Direction.East | Direction.SouthEast | Direction.South | Direction.SouthWest | Direction.West ) );
 	}
@@ -25,7 +25,7 @@ internal sealed class ConnectivityBuilderTests {
 		using ICompiledGridAssembly<TestCell> compiledAssembly = CreateAssembly();
 		WalkabilityStrategy walkabilityStrategy = new WalkabilityStrategy();
 
-		IGridLayer<Direction> connectivity = _builder.Build( compiledAssembly, walkabilityStrategy, 0 );
+		IGridLayer<Direction> connectivity = _builder.Build( compiledAssembly, walkabilityStrategy );
 		Assert.That( connectivity[49, 14], Is.EqualTo( Direction.East | Direction.SouthEast | Direction.South | Direction.SouthWest | Direction.West ) );
 
 		PlacementId source2 = new PlacementId( 2 );
@@ -36,21 +36,48 @@ internal sealed class ConnectivityBuilderTests {
 		Assert.That( connectivity[49, 14], Is.EqualTo( Direction.South | Direction.SouthWest | Direction.West ) );
 	}
 
-	[TestCase( 0 )]
-	[TestCase( 1 )]
-	public void Update_CellClosedOnChunkBoundary_MatchesBuild(
-		int halo
+	[TestCase( 31, 8, TestName = "Update_CellClosedOnChunkBoundary_MatchesBuild" )]
+	[TestCase( 63, 14, TestName = "Update_CellClosedOnChunkBoundaryInSecondPlacement_MatchesBuild" )]
+	[TestCase( 49, 14, TestName = "Update_CellClosedOnSeam_MatchesBuild" )]
+	public void Update_CellClosed_MatchesBuild(
+		int column,
+		int row
 	) {
 		using ICompiledGridAssembly<TestCell> compiledAssembly = CreateAssembly();
 		WalkabilityStrategy walkabilityStrategy = new WalkabilityStrategy();
-		IGridLayer<Direction> connectivity = _builder.Build( compiledAssembly, walkabilityStrategy, halo );
+		IGridLayer<Direction> connectivity = _builder.Build( compiledAssembly, walkabilityStrategy );
 
-		Assert.That( compiledAssembly.Assembly.TryGetPlacement( new PlacementId( 1 ), out IGridPlacement<TestCell> placement ), Is.True );
-		placement.Source.GetCell( 31, 8 ).IsWalkable = false;
-		_builder.Update( compiledAssembly, connectivity, walkabilityStrategy, new Rect( 31, 8, 1, 1 ) );
+		Assert.That( compiledAssembly.Assembly.TryGetPlacementAt( column, row, out IGridPlacement<TestCell> placement ), Is.True );
+		placement.Source.GetCell( column - placement.Column, row - placement.Row ).IsWalkable = false;
+		_builder.Update( compiledAssembly, connectivity, walkabilityStrategy, new Rect( column, row, 1, 1 ) );
 
-		IGridLayer<Direction> expected = _builder.Build( compiledAssembly, walkabilityStrategy, halo );
-		Assert.That( connectivity.Cells.ToArray(), Is.EqualTo( expected.Cells.ToArray() ) );
+		IGridLayer<Direction> expected = _builder.Build( compiledAssembly, walkabilityStrategy );
+		Assert.That( GetAllValues( connectivity ), Is.EqualTo( GetAllValues( expected ) ) );
+	}
+
+	[Test]
+	public void Build_TwoPlacements_MatchesPerCellEvaluation() {
+		using ICompiledGridAssembly<TestCell> compiledAssembly = CreateAssembly();
+		WalkabilityStrategy walkabilityStrategy = new WalkabilityStrategy();
+		IGridLayer<Direction> connectivity = _builder.Build( compiledAssembly, walkabilityStrategy );
+		IGridLayer<Direction> updated = _builder.Build( compiledAssembly, walkabilityStrategy );
+
+		// Update evaluates each cell from the assembly directly rather than from
+		// gathered chunk blocks, so recalculating everything must change nothing.
+		Rect bounds = compiledAssembly.Assembly.Bounds.Value;
+		_builder.Update( compiledAssembly, updated, walkabilityStrategy, bounds );
+
+		Assert.That( GetAllValues( updated ), Is.EqualTo( GetAllValues( connectivity ) ) );
+	}
+
+	private static List<Direction> GetAllValues(
+		IGridLayer<Direction> layer
+	) {
+		List<Direction> values = [];
+		foreach( int chunkIndex in layer.Layout.EnumerateChunks() ) {
+			values.AddRange( layer.Values.GetValues( chunkIndex ).ToArray() );
+		}
+		return values;
 	}
 
 	private struct WalkabilityStrategy : IConnectivityStrategy<TestCell> {

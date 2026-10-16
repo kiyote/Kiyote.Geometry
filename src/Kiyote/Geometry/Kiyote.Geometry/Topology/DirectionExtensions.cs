@@ -45,6 +45,20 @@ public static class DirectionExtensions {
 	}
 
 	/// <summary>
+	/// Returns the position of the neighbouring chunk in
+	/// <paramref name="direction"/> within the span returned by
+	/// <see cref="Kiyote.Buffers.ChunkedGrids.ChunkedGridLayout.GetNeighbours"/>:
+	/// <c>( dy + 1 ) * 3 + ( dx + 1 )</c>.  Returns 4, the chunk itself, for
+	/// anything other than a single direction.
+	/// </summary>
+	public static int ToNeighbourIndex(
+		this Direction direction
+	) {
+		Point offset = direction.ToOffset();
+		return ( ( offset.Y + 1 ) * 3 ) + offset.X + 1;
+	}
+
+	/// <summary>
 	/// Returns the direction pointing the opposite way.
 	/// </summary>
 	public static Direction Opposite(

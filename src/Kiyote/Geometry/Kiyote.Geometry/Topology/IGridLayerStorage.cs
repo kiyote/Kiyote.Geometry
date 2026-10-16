@@ -6,15 +6,10 @@ namespace Kiyote.Geometry.Topology;
 internal interface IGridLayerStorage : IGridLayer {
 
 	/// <summary>
-	/// Grows storage to match the current slot count of the space.
-	/// </summary>
-	void EnsureSlots();
-
-	/// <summary>
-	/// Resets the value of an interior cell to <see langword="default"/>.
+	/// Resets the value of a cell to <see langword="default"/>.
 	/// </summary>
 	void Reset(
-		int slot,
+		int chunkIndex,
 		int localIndex
 	);
 }

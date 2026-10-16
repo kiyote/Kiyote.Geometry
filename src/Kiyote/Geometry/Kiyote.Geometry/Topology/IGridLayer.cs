@@ -1,3 +1,5 @@
+using Kiyote.Buffers.ChunkedGrids;
+
 namespace Kiyote.Geometry.Topology;
 
 /// <summary>
@@ -5,123 +7,58 @@ namespace Kiyote.Geometry.Topology;
 /// </summary>
 public interface IGridLayer {
 
-	IGridChunkLayout Space { get; }
+	/// <summary>
+	/// The chunk layout the layer's values follow; the same instance as
+	/// <see cref="ICompiledGridAssembly{TCell}.ChunkLayout"/>.
+	/// </summary>
+	ChunkedGridLayout Layout { get; }
 
 	/// <summary>
-	/// The number of halo cells surrounding each chunk, from 0 to
-	/// <see cref="IGridChunkLayout.ChunkSize"/>.  A halo of <c>h</c> holds
-	/// copies of the cells within <c>h</c> of the chunk edge from neighbouring
-	/// chunks, so a pass over a chunk's storage can read neighbours up to
-	/// <c>h</c> cells away without leaving the chunk.  It is useful for
-	/// stencil-style work such as diffusion, blurring, neighbour counts or
-	/// interpolated sampling.  Halo cells are only current after
-	/// <see cref="IGridLayer{T}.ExchangeHalos"/>.
+	/// True when the chunk has been marked dirty since the last
+	/// <see cref="ClearDirty"/>.  False for chunk indices that are not allocated.
 	/// </summary>
-	int Halo { get; }
-
-	/// <summary>
-	/// The number of elements between the starts of consecutive rows of a
-	/// chunk, <c>ChunkSize + (2 * Halo)</c>.
-	/// </summary>
-	int Stride { get; }
-
-	/// <summary>
-	/// The number of elements occupied by each slot, including halo cells,
-	/// <c>Stride * Stride</c>.  The layout is guaranteed: the cell at
-	/// chunk-local <c>( column, row )</c> of a slot is at index
-	/// <c>slot * ChunkLength + ( row + Halo ) * Stride + ( column + Halo )</c>,
-	/// with <c>column</c> and <c>row</c> ranging from <c>-Halo</c> to
-	/// <c>ChunkSize + Halo - 1</c>.  Layers created with the same halo from
-	/// the same compiled assembly share the same layout.
-	/// </summary>
-	int ChunkLength { get; }
-
-	/// <summary>
-	/// Returns the index into the layer's cells of a chunk-local position.
-	/// <paramref name="localColumn"/> and <paramref name="localRow"/> may lie
-	/// in the halo, from <c>-Halo</c> to <c>ChunkSize + Halo - 1</c>.
-	/// </summary>
-	int IndexOf(
-		int slot,
-		int localColumn,
-		int localRow
-	);
-
 	bool IsDirty(
-		int slot
+		int chunkIndex
 	);
 
+	/// <summary>
+	/// Marks a chunk as changed so that <see cref="ICompiledGridAssembly{TCell}.Commit"/>
+	/// writes it back to the sources.
+	/// </summary>
+	/// <exception cref="ArgumentOutOfRangeException">
+	/// <paramref name="chunkIndex"/> is not allocated in <see cref="Layout"/>.
+	/// </exception>
 	void MarkDirty(
-		int slot
+		int chunkIndex
 	);
 
 	void ClearDirty();
 }
 
 /// <summary>
-/// Typed, chunked cell data laid out over an <see cref="IGridChunkLayout"/>.
+/// Typed cell data laid out over the chunks of a compiled assembly.
 /// </summary>
 /// <remarks>
-/// The library never makes an unoccupied cell, or a halo cell facing a
-/// missing chunk, hold anything other than <see langword="default"/>: new
-/// layers start zeroed, unoccupied cells are never loaded, removed cells are
-/// reset and halo exchange clears regions with no neighbour.  Values written
-/// directly into such cells through <see cref="Cells"/>,
-/// <see cref="GetChunk"/>, <see cref="GetRow"/> or
-/// <see cref="GetChunkReference"/> are the caller's responsibility.
+/// The library never makes an unoccupied cell hold anything other than
+/// <see langword="default"/>: new layers start zeroed, unoccupied cells are
+/// never loaded and removed cells are reset.  Values written directly into
+/// unoccupied cells through <see cref="Values"/> are the caller's
+/// responsibility.
 /// </remarks>
-public interface IGridLayer<T> : IGridLayer {
+public interface IGridLayer<T> : IGridLayer where T : unmanaged {
 
 	/// <summary>
-	/// The entire backing store.  Suitable for element-wise operations that
-	/// ignore neighbours.
+	/// The layer's values.  A chunk index and local index from
+	/// <see cref="Layout"/> identify the same cell in every layer of the
+	/// compiled assembly.  Do not change the layout's topology through it;
+	/// cell edits are made through the assembly.
 	/// </summary>
-	Span<T> Cells { get; }
-
-	/// <summary>
-	/// The storage for a single chunk, including halo cells, in row-major
-	/// order with <see cref="IGridLayer.Stride"/>.
-	/// </summary>
-	Span<T> GetChunk(
-		int slot
-	);
-
-	/// <summary>
-	/// Returns a reference to the first element, including halo cells, of a
-	/// single chunk's storage.  The reference is invalidated by
-	/// <see cref="ICompiledGridAssembly{TCell}.Swap"/> and by cell edits that
-	/// allocate chunks, so fetch it again after either.
-	/// </summary>
-	ref T GetChunkReference(
-		int slot
-	);
-
-	/// <summary>
-	/// The interior cells of a single chunk row, excluding halo cells.
-	/// </summary>
-	Span<T> GetRow(
-		int slot,
-		int row
-	);
+	ChunkedGridLayer<T> Values { get; }
 
 	/// <summary>
 	/// Returns a reference to the value at the supplied assembly-space cell.
 	/// Intended for convenience rather than hot loops.
 	/// </summary>
+	/// <exception cref="ArgumentOutOfRangeException">The cell is not occupied.</exception>
 	ref T this[int column, int row] { get; }
-
-	/// <summary>
-	/// Copies the edge cells of each chunk into the halos of its neighbours.
-	/// No-op when <see cref="IGridLayer.Halo"/> is 0.
-	/// </summary>
-	void ExchangeHalos();
-
-	/// <summary>
-	/// Refreshes the halo of a single slot from its neighbours.  Halo cells
-	/// with no neighbouring chunk are set to <see langword="default"/>.
-	/// No-op when <see cref="IGridLayer.Halo"/> is 0.
-	/// </summary>
-	void ExchangeHalo(
-		int slot
-	);
 }

@@ -11,7 +11,7 @@ public class GridCompilerBenchmarks {
 	[Params( 64, 256 )]
 	public int Size { get; set; }
 
-	[Params( 16, 32 )]
+	[Params( 32, 64 )]
 	public int ChunkSize { get; set; }
 
 	[GlobalSetup]
@@ -23,6 +23,6 @@ public class GridCompilerBenchmarks {
 	[Benchmark]
 	public int Compile() {
 		using ICompiledGridAssembly<BenchCell> compiled = _compiler.Compile( _assembly, ChunkSize );
-		return compiled.ChunkLayout.SlotCount;
+		return compiled.ChunkLayout.ChunkCount;
 	}
 }

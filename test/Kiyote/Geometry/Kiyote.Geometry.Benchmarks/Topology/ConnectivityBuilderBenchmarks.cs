@@ -17,15 +17,12 @@ public class ConnectivityBuilderBenchmarks {
 	[Params( 64, 256 )]
 	public int Size { get; set; }
 
-	[Params( 0, 1 )]
-	public int Halo { get; set; }
-
 	[GlobalSetup]
 	public void GlobalSetup() {
 		GridAssembly<BenchCell> assembly = TopologyBenchmarkData.CreateAssembly( Size );
 		_compiled = new GridCompiler().Compile( assembly, GridCompiler.DefaultChunkSize );
 		_builder = new ConnectivityBuilder();
-		_connectivity = _builder.Build( _compiled, new WalkableStrategy(), Halo );
+		_connectivity = _builder.Build( _compiled, new WalkableStrategy() );
 	}
 
 	[GlobalCleanup]

@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Kiyote.Buffers.ChunkedGrids;
 using Kiyote.Geometry.Topology;
 
 namespace Kiyote.Geometry.UnitTests.Topology;
@@ -40,6 +41,23 @@ public sealed class DirectionExtensionsTests {
 		Direction direction
 	) {
 		Assert.That( direction.Opposite().ToOffset(), Is.EqualTo( -direction.ToOffset() ) );
+	}
+
+	[TestCaseSource( nameof( AllDirections ) )]
+	public void ToNeighbourIndex_AnyDirection_SelectsLayoutNeighbour(
+		Direction direction
+	) {
+		ChunkedGridLayout layout = new ChunkedGridLayout( 32 );
+		int centre = layout.GetOrCreateChunk( 0, 0 );
+		Point offset = direction.ToOffset();
+		int neighbour = layout.GetOrCreateChunk( offset.X, offset.Y );
+
+		Assert.That( layout.GetNeighbours( centre )[direction.ToNeighbourIndex()], Is.EqualTo( neighbour ) );
+	}
+
+	[Test]
+	public void ToNeighbourIndex_None_IsCentre() {
+		Assert.That( Direction.None.ToNeighbourIndex(), Is.EqualTo( 4 ) );
 	}
 
 	[Test]

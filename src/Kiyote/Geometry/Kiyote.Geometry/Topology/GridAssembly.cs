@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using Kiyote.Buffers.ChunkedGrids;
 
 namespace Kiyote.Geometry.Topology;
 
@@ -23,7 +24,7 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 
 	private readonly Dictionary<PlacementId, GridPlacement<TCell>> _placements;
 	private readonly List<IGridPlacement<TCell>> _placementList;
-	private readonly Dictionary<Point, PlacementId> _occupancy;
+	private readonly ChunkedGrid<PlacementId> _occupancy;
 	private readonly Dictionary<(PlacementId A, PlacementId B), List<GridContact>> _seams;
 	private readonly List<IGridAssemblyObserver> _observers;
 	private readonly List<GridContact> _addedContacts;
@@ -34,7 +35,7 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 	public GridAssembly() {
 		_placements = [];
 		_placementList = [];
-		_occupancy = [];
+		_occupancy = new ChunkedGrid<PlacementId>();
 		_seams = [];
 		_observers = [];
 		_addedContacts = [];
@@ -101,7 +102,7 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 		for( int sourceRow = 0; sourceRow < source.Height; sourceRow++ ) {
 			foreach( CellRun run in source.GetOccupiedRuns( sourceRow ) ) {
 				for( int c = run.Column; c <= run.LastColumn; c++ ) {
-					_occupancy[new Point( c + column, sourceRow + row )] = id;
+					_occupancy[c + column, sourceRow + row] = id;
 				}
 			}
 		}
@@ -114,8 +115,8 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 					contacts.Clear();
 					AddContacts( id, c + column, sourceRow + row, contacts );
 					foreach( GridContact contact in contacts ) {
-						PlacementId first = _occupancy[new Point( contact.Column, contact.Row )];
-						PlacementId second = _occupancy[new Point( contact.NeighbourColumn, contact.NeighbourRow )];
+						PlacementId first = _occupancy[contact.Column, contact.Row];
+						PlacementId second = _occupancy[contact.NeighbourColumn, contact.NeighbourRow];
 						touched.Add( first == id ? second : first );
 					}
 				}
@@ -144,10 +145,12 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 		for( int sourceRow = 0; sourceRow < source.Height; sourceRow++ ) {
 			foreach( CellRun run in source.GetOccupiedRuns( sourceRow ) ) {
 				for( int c = run.Column; c <= run.LastColumn; c++ ) {
-					_occupancy.Remove( new Point( c + existing.Column, sourceRow + existing.Row ) );
+					_occupancy.Clear( c + existing.Column, sourceRow + existing.Row );
 				}
 			}
 		}
+		// Release chunks the detached placement leaves empty.
+		_ = _occupancy.Compact();
 
 		List<(PlacementId A, PlacementId B)> remove = [];
 		foreach( (PlacementId A, PlacementId B) key in _seams.Keys ) {
@@ -181,7 +184,7 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 		int row,
 		[MaybeNullWhen( false )] out IGridPlacement<TCell> result
 	) {
-		if( _occupancy.TryGetValue( new Point( column, row ), out PlacementId id ) ) {
+		if( _occupancy.TryGet( column, row, out PlacementId id ) ) {
 			result = _placements[id];
 			return true;
 		}
@@ -205,12 +208,12 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 		IGridSource<TCell> source = existing.Source;
 
 		Point location = new Point( column + existing.Column, row + existing.Row );
-		if( _occupancy.ContainsKey( location )
+		if( _occupancy.IsPopulated( location.X, location.Y )
 			|| !source.TrySetCell( column, row, in cell )
 		) {
 			return false;
 		}
-		_occupancy[location] = placement;
+		_occupancy[location.X, location.Y] = placement;
 
 		List<GridContact> contacts = _addedContacts;
 		contacts.Clear();
@@ -238,7 +241,7 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 		if( !source.TryClearCell( column, row ) ) {
 			return false;
 		}
-		_occupancy.Remove( location );
+		_occupancy.Clear( location.X, location.Y );
 		RemoveContacts( placement, location );
 
 		foreach( IGridAssemblyObserver observer in _observers ) {
@@ -282,7 +285,7 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 				for( int c = run.Column; c <= run.LastColumn; c++ ) {
 					int x = c + column;
 					int y = sourceRow + row;
-					if( !_occupancy.TryGetValue( new Point( x, y ), out PlacementId other ) ) {
+					if( !_occupancy.TryGet( x, y, out PlacementId other ) ) {
 						continue;
 					}
 					if( !cells.TryGetValue( other, out List<CellRun>? runs ) ) {
@@ -335,7 +338,7 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 			Point offset = direction.ToOffset();
 			int nx = column + offset.X;
 			int ny = row + offset.Y;
-			if( !_occupancy.TryGetValue( new Point( nx, ny ), out PlacementId other )
+			if( !_occupancy.TryGet( nx, ny, out PlacementId other )
 				|| other == placement
 			) {
 				continue;

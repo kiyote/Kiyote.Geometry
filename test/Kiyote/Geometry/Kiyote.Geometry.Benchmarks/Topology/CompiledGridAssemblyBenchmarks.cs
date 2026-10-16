@@ -22,7 +22,7 @@ public class CompiledGridAssemblyBenchmarks {
 	public void GlobalSetup() {
 		_assembly = TopologyBenchmarkData.CreateAssembly( Size );
 		_compiled = new GridCompiler().Compile( _assembly, GridCompiler.DefaultChunkSize );
-		_pressure = _compiled.Bind<float, PressureBinding>( default, 0 );
+		_pressure = _compiled.Bind<float, PressureBinding>( default );
 		_placement = _assembly.Placements[0].Id;
 		_cell = new BenchCell {
 			IsWalkable = true,
@@ -37,9 +37,8 @@ public class CompiledGridAssemblyBenchmarks {
 
 	[Benchmark]
 	public void Commit_AllChunksDirty() {
-		int slots = _compiled.ChunkLayout.SlotCount;
-		for( int slot = 0; slot < slots; slot++ ) {
-			_pressure.MarkDirty( slot );
+		foreach( int chunkIndex in _compiled.ChunkLayout.EnumerateChunks() ) {
+			_pressure.MarkDirty( chunkIndex );
 		}
 		_compiled.Commit();
 	}

@@ -1,3 +1,7 @@
+using System.Numerics;
+using System.Runtime.InteropServices;
+using Kiyote.Buffers.ChunkedGrids;
+
 namespace Kiyote.Geometry.Topology;
 
 /// <summary>
@@ -7,7 +11,7 @@ namespace Kiyote.Geometry.Topology;
 /// </summary>
 internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>, IGridAssemblyObserver {
 
-	private readonly GridChunkLayout _space;
+	private readonly ChunkedGridLayout _layout;
 	private readonly GridAssembly<TCell>? _observed;
 	private readonly List<SourceRun> _runs;
 	private readonly List<ChunkSeamLink> _seamLinks;
@@ -21,9 +25,20 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 		IGridAssembly<TCell> assembly,
 		int chunkSize
 	) {
+		if( chunkSize < GridCompiler.MinimumChunkSize
+			|| chunkSize > ChunkedGridLayout.MaximumChunkSize
+			|| !BitOperations.IsPow2( chunkSize )
+		) {
+			throw new ArgumentOutOfRangeException(
+				nameof( chunkSize ),
+				chunkSize,
+				$"Chunk size must be a power of two between {GridCompiler.MinimumChunkSize} and {ChunkedGridLayout.MaximumChunkSize}."
+			);
+		}
+
 		Assembly = assembly;
 		Version = assembly.Version;
-		_space = new GridChunkLayout( chunkSize );
+		_layout = new ChunkedGridLayout( chunkSize );
 		_runs = [];
 		_seamLinks = [];
 		_layers = [];
@@ -57,27 +72,24 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 
 	public bool IsStale => Assembly.Version != Version;
 
-	public IGridChunkLayout ChunkLayout => _space;
+	public ChunkedGridLayout ChunkLayout => _layout;
 
-	public ReadOnlySpan<SourceRun> SourceRuns => System.Runtime.InteropServices.CollectionsMarshal.AsSpan( _runs );
+	public ReadOnlySpan<SourceRun> SourceRuns => CollectionsMarshal.AsSpan( _runs );
 
-	public ReadOnlySpan<ChunkSeamLink> SeamLinks => System.Runtime.InteropServices.CollectionsMarshal.AsSpan( _seamLinks );
+	public ReadOnlySpan<ChunkSeamLink> SeamLinks => CollectionsMarshal.AsSpan( _seamLinks );
 
 	public IReadOnlyList<IGridLayer> Layers => _layers;
 
-	internal GridChunkLayout GridChunkLayout => _space;
-
 	public IGridLayer<T> Bind<T, TBinding>(
-		TBinding binding,
-		int halo
-	) where TBinding : struct, IGridLayerBinding<TCell, T> {
+		TBinding binding
+	) where T : unmanaged
+		where TBinding : struct, IGridLayerBinding<TCell, T> {
 		ObjectDisposedException.ThrowIf( _disposed, this );
 
-		BoundGridLayer<TCell, T, TBinding> layer = new BoundGridLayer<TCell, T, TBinding>( _space, binding, halo );
+		BoundGridLayer<TCell, T, TBinding> layer = new BoundGridLayer<TCell, T, TBinding>( _layout, binding );
 		foreach( SourceRun run in _runs ) {
 			layer.Load( _sources[run.Placement], run );
 		}
-		layer.ExchangeHalos();
 
 		_layers.Add( layer );
 		_storage.Add( layer );
@@ -85,12 +97,10 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 		return layer;
 	}
 
-	public IGridLayer<T> CreateLayer<T>(
-		int halo
-	) {
+	public IGridLayer<T> CreateLayer<T>() where T : unmanaged {
 		ObjectDisposedException.ThrowIf( _disposed, this );
 
-		GridLayer<T> layer = new GridLayer<T>( _space, halo );
+		GridLayer<T> layer = new GridLayer<T>( _layout );
 		AddLayer( layer );
 		return layer;
 	}
@@ -111,7 +121,7 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 	public void Swap<T>(
 		IGridLayer<T> a,
 		IGridLayer<T> b
-	) {
+	) where T : unmanaged {
 		ObjectDisposedException.ThrowIf( _disposed, this );
 
 		if( a is not GridLayer<T> left || !_layers.Contains( a ) ) {
@@ -120,62 +130,54 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 		if( b is not GridLayer<T> right || !_layers.Contains( b ) ) {
 			throw new ArgumentException( "Layer does not belong to this assembly.", nameof( b ) );
 		}
-		if( left.Halo != right.Halo ) {
-			throw new ArgumentException( "Layers must have the same halo.", nameof( b ) );
+		if( ReferenceEquals( left, right ) ) {
+			throw new ArgumentException( "A layer cannot be swapped with itself.", nameof( b ) );
 		}
 		left.SwapStorage( right );
 	}
 
-	public IGridLayer<Direction> CreateVacuumLayer(
-		int halo
-	) {
+	public IGridLayer<Direction> CreateVacuumLayer() {
 		ObjectDisposedException.ThrowIf( _disposed, this );
 
-		GridLayer<Direction> result = new GridLayer<Direction>( _space, halo );
-		int length = GridLayer<byte>.GetLength( _space, 1 );
-		byte[] buffer = System.Buffers.ArrayPool<byte>.Shared.Rent( length );
-		try {
-			GridLayer<byte> occupied = new GridLayer<byte>( _space, 1, buffer );
-			int size = _space.ChunkSize;
-			int shift = _space.ChunkShift;
-			int cellCount = size * size;
-			for( int slot = 0; slot < _space.SlotCount; slot++ ) {
-				ReadOnlySpan<ulong> mask = _space.GetValidityMask( slot );
-				for( int localIndex = 0; localIndex < cellCount; localIndex++ ) {
-					if( ( mask[localIndex >> 6] & ( 1UL << localIndex ) ) != 0 ) {
-						buffer[occupied.IndexOf( slot, localIndex )] = 1;
+		GridLayer<Direction> result = new GridLayer<Direction>( _layout );
+		ChunkedGridLayer<Direction> values = result.Values;
+		int size = _layout.ChunkSize;
+		int shift = _layout.ChunkShift;
+		foreach( int chunkIndex in _layout.EnumerateChunks() ) {
+			Span<Direction> cells = values.GetValues( chunkIndex );
+			for( int row = 0; row < size; row++ ) {
+				for( int column = 0; column < size; column += 64 ) {
+					int count = Math.Min( 64, size - column );
+					ulong occupied = _layout.ReadPresenceBits( chunkIndex, column, row, count );
+					if( occupied == 0 ) {
+						continue;
+					}
+					// Each mask has bit i set when the neighbour of cell column + i is unoccupied.
+					ulong north = ~_layout.ReadPresenceBits( chunkIndex, column, row - 1, count );
+					ulong northEast = ~_layout.ReadPresenceBits( chunkIndex, column + 1, row - 1, count );
+					ulong east = ~_layout.ReadPresenceBits( chunkIndex, column + 1, row, count );
+					ulong southEast = ~_layout.ReadPresenceBits( chunkIndex, column + 1, row + 1, count );
+					ulong south = ~_layout.ReadPresenceBits( chunkIndex, column, row + 1, count );
+					ulong southWest = ~_layout.ReadPresenceBits( chunkIndex, column - 1, row + 1, count );
+					ulong west = ~_layout.ReadPresenceBits( chunkIndex, column - 1, row, count );
+					ulong northWest = ~_layout.ReadPresenceBits( chunkIndex, column - 1, row - 1, count );
+					int start = ( row << shift ) + column;
+					while( occupied != 0 ) {
+						int i = BitOperations.TrailingZeroCount( occupied );
+						occupied &= occupied - 1;
+						ulong vacuum = ( ( north >> i ) & 1UL )
+							| ( ( ( northEast >> i ) & 1UL ) << 1 )
+							| ( ( ( east >> i ) & 1UL ) << 2 )
+							| ( ( ( southEast >> i ) & 1UL ) << 3 )
+							| ( ( ( south >> i ) & 1UL ) << 4 )
+							| ( ( ( southWest >> i ) & 1UL ) << 5 )
+							| ( ( ( west >> i ) & 1UL ) << 6 )
+							| ( ( ( northWest >> i ) & 1UL ) << 7 );
+						cells[start + i] = (Direction)vacuum;
 					}
 				}
 			}
-			occupied.ExchangeHalos();
-
-			int stride = occupied.Stride;
-			Span<Direction> cells = result.Cells;
-			for( int slot = 0; slot < _space.SlotCount; slot++ ) {
-				for( int row = 0; row < size; row++ ) {
-					int centre = occupied.IndexOf( slot, row << shift );
-					int target = result.IndexOf( slot, row << shift );
-					for( int column = 0; column < size; column++ ) {
-						int i = centre + column;
-						if( buffer[i] == 0 ) {
-							continue;
-						}
-						int vacuum = buffer[i - stride] ^ 1;
-						vacuum |= ( buffer[i - stride + 1] ^ 1 ) << 1;
-						vacuum |= ( buffer[i + 1] ^ 1 ) << 2;
-						vacuum |= ( buffer[i + stride + 1] ^ 1 ) << 3;
-						vacuum |= ( buffer[i + stride] ^ 1 ) << 4;
-						vacuum |= ( buffer[i + stride - 1] ^ 1 ) << 5;
-						vacuum |= ( buffer[i - 1] ^ 1 ) << 6;
-						vacuum |= ( buffer[i - stride - 1] ^ 1 ) << 7;
-						cells[target + column] = (Direction)vacuum;
-					}
-				}
-			}
-		} finally {
-			System.Buffers.ArrayPool<byte>.Shared.Return( buffer );
 		}
-		result.ExchangeHalos();
 
 		AddLayer( result );
 		return result;
@@ -186,7 +188,7 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 
 		foreach( IBoundGridLayer<TCell> layer in _bound ) {
 			foreach( SourceRun run in _runs ) {
-				if( layer.IsDirty( run.Slot ) ) {
+				if( layer.IsDirty( run.ChunkIndex ) ) {
 					layer.Store( _sources[run.Placement], run );
 				}
 			}
@@ -204,11 +206,11 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 
 	/// <summary>
 	/// Registers a layer that is not bound to the sources, such as a derived
-	/// connectivity layer, so that it is resized by cell edits.
+	/// connectivity layer, so that removed cells are reset in it.
 	/// </summary>
 	internal void AddLayer<T>(
 		GridLayer<T> layer
-	) {
+	) where T : unmanaged {
 		_layers.Add( layer );
 		_storage.Add( layer );
 	}
@@ -228,21 +230,15 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 		}
 		Assembly.TryGetPlacement( placement, out IGridPlacement<TCell>? owner );
 
-		int slotCount = _space.SlotCount;
-		int slot = _space.GetOrAllocateSlot( column, row );
-		int localIndex = _space.GetLocalIndex( column, row );
-		_space.SetOccupied( slot, localIndex, true );
-		if( _space.SlotCount != slotCount ) {
-			foreach( IGridLayerStorage layer in _storage ) {
-				layer.EnsureSlots();
-			}
-		}
+		// Layers allocate storage for new chunks themselves, zeroed, when next used.
+		_ = _layout.SetPopulated( column, row );
+		_ = _layout.TryLocate( column, row, out int chunkIndex, out int localIndex );
 
 		SourceRun run = new SourceRun(
 			placement,
 			column - owner!.Column,
 			row - owner.Row,
-			slot,
+			chunkIndex,
 			localIndex,
 			1
 		);
@@ -262,18 +258,18 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 		int column,
 		int row
 	) {
-		if( !_space.TryGetCell( column, row, out int slot, out int localIndex ) ) {
+		if( !_layout.TryLocate( column, row, out int chunkIndex, out int localIndex ) ) {
 			return;
 		}
 
 		foreach( IGridLayerStorage layer in _storage ) {
-			layer.Reset( slot, localIndex );
+			layer.Reset( chunkIndex, localIndex );
 		}
-		_space.SetOccupied( slot, localIndex, false );
+		_ = _layout.ClearPopulated( column, row );
 
 		for( int i = 0; i < _runs.Count; i++ ) {
 			SourceRun run = _runs[i];
-			if( run.Slot != slot
+			if( run.ChunkIndex != chunkIndex
 				|| localIndex < run.LocalIndex
 				|| localIndex >= run.LocalIndex + run.Length
 			) {
@@ -303,12 +299,12 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 			break;
 		}
 
-		Span<ChunkSeamLink> links = System.Runtime.InteropServices.CollectionsMarshal.AsSpan( _seamLinks );
+		Span<ChunkSeamLink> links = CollectionsMarshal.AsSpan( _seamLinks );
 		int kept = 0;
 		for( int i = 0; i < links.Length; i++ ) {
 			ref ChunkSeamLink link = ref links[i];
-			if( ( link.Slot == slot && link.LocalIndex == localIndex )
-				|| ( link.NeighbourSlot == slot && link.NeighbourLocalIndex == localIndex )
+			if( ( link.ChunkIndex == chunkIndex && link.LocalIndex == localIndex )
+				|| ( link.NeighbourChunkIndex == chunkIndex && link.NeighbourLocalIndex == localIndex )
 			) {
 				continue;
 			}
@@ -330,13 +326,13 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 	private void AddRun(
 		SourceRun run
 	) {
-		int shift = _space.ChunkShift;
+		int shift = _layout.ChunkShift;
 		int localRow = run.LocalIndex >> shift;
 		int previous = -1;
 		int next = -1;
 		for( int i = 0; i < _runs.Count; i++ ) {
 			SourceRun other = _runs[i];
-			if( other.Slot != run.Slot
+			if( other.ChunkIndex != run.ChunkIndex
 				|| other.Placement != run.Placement
 				|| other.SourceRow != run.SourceRow
 				|| ( other.LocalIndex >> shift ) != localRow
@@ -381,8 +377,8 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 	}
 
 	/// <summary>
-	/// Adds the source runs
-	/// chunk boundaries.
+	/// Marks a source run occupied in the layout and records it as one
+	/// <see cref="SourceRun"/> per chunk it crosses.
 	/// </summary>
 	private void AddRuns(
 		IGridPlacement<TCell> placement,
@@ -392,17 +388,17 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 		int column = sourceRun.Column + placement.Column;
 		int remaining = sourceRun.Length;
 		int sourceColumn = sourceRun.Column;
-		int size = _space.ChunkSize;
+		int size = _layout.ChunkSize;
+		int shift = _layout.ChunkShift;
+		int mask = _layout.ChunkMask;
+		int localRowStart = ( row & mask ) << shift;
 
 		while( remaining > 0 ) {
-			int inChunk = size - ( column & ( size - 1 ) );
-			int length = Math.Min( inChunk, remaining );
-			int slot = _space.GetOrAllocateSlot( column, row );
-			int localIndex = _space.GetLocalIndex( column, row );
-			for( int i = 0; i < length; i++ ) {
-				_space.SetOccupied( slot, localIndex + i, true );
-			}
-			_runs.Add( new SourceRun( placement.Id, sourceColumn, sourceRun.Row, slot, localIndex, length ) );
+			int localColumn = column & mask;
+			int length = Math.Min( size - localColumn, remaining );
+			int chunkIndex = _layout.GetOrCreateChunk( column >> shift, row >> shift );
+			_ = _layout.SetPopulatedRun( column, row, length );
+			_runs.Add( new SourceRun( placement.Id, sourceColumn, sourceRun.Row, chunkIndex, localRowStart + localColumn, length ) );
 
 			column += length;
 			sourceColumn += length;
@@ -413,10 +409,10 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 	private void AddSeamLink(
 		GridContact contact
 	) {
-		if( _space.TryGetCell( contact.Column, contact.Row, out int slot, out int localIndex )
-			&& _space.TryGetCell( contact.NeighbourColumn, contact.NeighbourRow, out int neighbourSlot, out int neighbourLocalIndex )
+		if( _layout.TryLocate( contact.Column, contact.Row, out int chunkIndex, out int localIndex )
+			&& _layout.TryLocate( contact.NeighbourColumn, contact.NeighbourRow, out int neighbourChunkIndex, out int neighbourLocalIndex )
 		) {
-			_seamLinks.Add( new ChunkSeamLink( slot, localIndex, neighbourSlot, neighbourLocalIndex, contact.Direction ) );
+			_seamLinks.Add( new ChunkSeamLink( chunkIndex, localIndex, neighbourChunkIndex, neighbourLocalIndex, contact.Direction ) );
 		}
 	}
 }

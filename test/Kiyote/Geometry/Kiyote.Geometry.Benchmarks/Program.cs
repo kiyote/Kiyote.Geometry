@@ -34,7 +34,6 @@ BenchmarkSwitcher
 		typeof( GridCompilerBenchmarks ),
 		typeof( CompiledGridAssemblyBenchmarks ),
 		typeof( CompiledGridAssemblyMutationBenchmarks ),
-		typeof( GridLayerBenchmarks ),
 		typeof( ConnectivityBuilderBenchmarks ),
 		typeof( DirectionExtensionsBenchmarks )
 	] )

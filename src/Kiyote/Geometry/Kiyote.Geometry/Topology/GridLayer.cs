@@ -1,309 +1,64 @@
+using Kiyote.Buffers.ChunkedGrids;
+
 namespace Kiyote.Geometry.Topology;
 
 /// <summary>
-/// Chunked storage laid out over a <see cref="GridChunkLayout"/>.  Each slot holds
-/// <c>Stride * Stride</c> elements in row-major order, with interior cells
-/// offset by <see cref="Halo"/>.
+/// A <see cref="ChunkedGridLayer{T}"/> over a compiled assembly's layout,
+/// together with the per-chunk dirty flags used by commit.
 /// </summary>
-internal class GridLayer<T> : IGridLayer<T>, IGridLayerStorage {
+internal class GridLayer<T> : IGridLayer<T>, IGridLayerStorage where T : unmanaged {
 
-	private readonly GridChunkLayout _space;
-	private T[] _cells;
 	private bool[] _dirty;
 
 	public GridLayer(
-		GridChunkLayout space,
-		int halo
+		ChunkedGridLayout layout
 	) {
-		ArgumentOutOfRangeException.ThrowIfLessThan( halo, 0 );
-		ArgumentOutOfRangeException.ThrowIfGreaterThan( halo, space.ChunkSize );
-
-		_space = space;
-		Halo = halo;
-		Stride = space.ChunkSize + ( 2 * halo );
-		ChunkLength = Stride * Stride;
-		_cells = new T[space.SlotCount * ChunkLength];
-		_dirty = new bool[space.SlotCount];
-	}
-
-	/// <summary>
-	/// Creates a layer over caller-supplied storage, such as a pooled array.
-	/// The first <c>SlotCount * ChunkLength</c> elements are cleared.
-	/// </summary>
-	internal GridLayer(
-		GridChunkLayout space,
-		int halo,
-		T[] cells
-	) {
-		ArgumentOutOfRangeException.ThrowIfLessThan( halo, 0 );
-		ArgumentOutOfRangeException.ThrowIfGreaterThan( halo, space.ChunkSize );
-
-		_space = space;
-		Halo = halo;
-		Stride = space.ChunkSize + ( 2 * halo );
-		ChunkLength = Stride * Stride;
-		ArgumentOutOfRangeException.ThrowIfLessThan( cells.Length, space.SlotCount * ChunkLength );
-		Array.Clear( cells, 0, space.SlotCount * ChunkLength );
-		_cells = cells;
+		Values = new ChunkedGridLayer<T>( layout );
 		_dirty = [];
 	}
 
-	/// <summary>
-	/// The number of elements needed to back a layer with the given halo.
-	/// </summary>
-	internal static int GetLength(
-		GridChunkLayout space,
-		int halo
-	) {
-		int stride = space.ChunkSize + ( 2 * halo );
-		return space.SlotCount * stride * stride;
-	}
+	public ChunkedGridLayout Layout => Values.Layout;
 
-	public IGridChunkLayout Space => _space;
+	public ChunkedGridLayer<T> Values { get; }
 
-	public int Halo { get; }
-
-	public int Stride { get; }
-
-	public int ChunkLength { get; }
-
-	public Span<T> Cells => _cells;
+	public ref T this[int column, int row] => ref Values.GetReference( column, row );
 
 	public bool IsDirty(
-		int slot
+		int chunkIndex
 	) {
-		return _dirty[slot];
+		return (uint)chunkIndex < (uint)_dirty.Length && _dirty[chunkIndex];
 	}
 
 	public void MarkDirty(
-		int slot
+		int chunkIndex
 	) {
-		_dirty[slot] = true;
+		if( !Layout.IsAllocated( chunkIndex ) ) {
+			throw new ArgumentOutOfRangeException( nameof( chunkIndex ), chunkIndex, "The chunk is not allocated." );
+		}
+		if( chunkIndex >= _dirty.Length ) {
+			Array.Resize( ref _dirty, Layout.ChunkCapacity );
+		}
+		_dirty[chunkIndex] = true;
 	}
 
 	public void ClearDirty() {
 		Array.Clear( _dirty );
 	}
 
-	public Span<T> GetChunk(
-		int slot
-	) {
-		return _cells.AsSpan( slot * ChunkLength, ChunkLength );
-	}
-
-	public ref T GetChunkReference(
-		int slot
-	) {
-		return ref _cells[slot * ChunkLength];
-	}
-
-	public Span<T> GetRow(
-		int slot,
-		int row
-	) {
-		return _cells.AsSpan( IndexOf( slot, row << _space.ChunkShift ), _space.ChunkSize );
-	}
-
-	public ref T this[int column, int row] {
-		get {
-			if( !_space.TryGetCell( column, row, out int slot, out int localIndex ) ) {
-				throw new ArgumentOutOfRangeException( nameof( column ), $"Cell ( {column}, {row} ) is not occupied." );
-			}
-			return ref _cells[IndexOf( slot, localIndex )];
-		}
-	}
-
-	public void ExchangeHalos() {
-		if( Halo == 0 ) {
-			return;
-		}
-		for( int slot = 0; slot < _space.SlotCount; slot++ ) {
-			ExchangeHalo( slot );
-		}
-	}
-
-	public void ExchangeHalo(
-		int slot
-	) {
-		if( Halo == 0 ) {
-			return;
-		}
-		if( Halo > 1 ) {
-			ExchangeWideHalo( slot );
-			return;
-		}
-		const int north = 0;
-		const int northEast = 1;
-		const int east = 2;
-		const int southEast = 3;
-		const int south = 4;
-		const int southWest = 5;
-		const int west = 6;
-		const int northWest = 7;
-
-		int size = _space.ChunkSize;
-		int last = size - 1;
-		int top = slot * ChunkLength;
-		int bottom = top + ( ( size + 1 ) * Stride );
-		ReadOnlySpan<int> neighbours = _space.GetNeighbours( slot );
-		Span<T> cells = _cells;
-
-		CopyRow( cells, neighbours[north], last, top + 1, size );
-		CopyRow( cells, neighbours[south], 0, bottom + 1, size );
-		CopyColumn( cells, neighbours[west], last, top + Stride, size );
-		CopyColumn( cells, neighbours[east], 0, top + Stride + size + 1, size );
-		CopyCell( cells, neighbours[northWest], last, last, top );
-		CopyCell( cells, neighbours[northEast], 0, last, top + size + 1 );
-		CopyCell( cells, neighbours[southWest], last, 0, bottom );
-		CopyCell( cells, neighbours[southEast], 0, 0, bottom + size + 1 );
-	}
-
-	private void ExchangeWideHalo(
-		int slot
-	) {
-		const int north = 0;
-		const int northEast = 1;
-		const int east = 2;
-		const int southEast = 3;
-		const int south = 4;
-		const int southWest = 5;
-		const int west = 6;
-		const int northWest = 7;
-
-		int h = Halo;
-		int size = _space.ChunkSize;
-		int far = size - h;
-		int top = slot * ChunkLength;
-		int middle = top + ( h * Stride );
-		int bottom = top + ( ( size + h ) * Stride );
-		ReadOnlySpan<int> neighbours = _space.GetNeighbours( slot );
-		Span<T> cells = _cells;
-
-		CopyBlock( cells, neighbours[north], far, 0, top + h, size, h );
-		CopyBlock( cells, neighbours[south], 0, 0, bottom + h, size, h );
-		CopyBlock( cells, neighbours[west], 0, far, middle, h, size );
-		CopyBlock( cells, neighbours[east], 0, 0, middle + h + size, h, size );
-		CopyBlock( cells, neighbours[northWest], far, far, top, h, h );
-		CopyBlock( cells, neighbours[northEast], far, 0, top + h + size, h, h );
-		CopyBlock( cells, neighbours[southWest], 0, far, bottom, h, h );
-		CopyBlock( cells, neighbours[southEast], 0, 0, bottom + h + size, h, h );
-	}
-
-	private void CopyBlock(
-		Span<T> cells,
-		int source,
-		int sourceRow,
-		int sourceColumn,
-		int target,
-		int width,
-		int height
-	) {
-		if( source < 0 ) {
-			for( int i = 0; i < height; i++ ) {
-				cells.Slice( target + ( i * Stride ), width ).Clear();
-			}
-			return;
-		}
-		int from = IndexOf( source, ( sourceRow << _space.ChunkShift ) + sourceColumn );
-		for( int i = 0; i < height; i++ ) {
-			cells.Slice( from + ( i * Stride ), width ).CopyTo( cells.Slice( target + ( i * Stride ), width ) );
-		}
-	}
-
-	private void CopyRow(
-		Span<T> cells,
-		int source,
-		int sourceRow,
-		int target,
-		int length
-	) {
-		Span<T> destination = cells.Slice( target, length );
-		if( source < 0 ) {
-			destination.Clear();
-			return;
-		}
-		cells.Slice( IndexOf( source, sourceRow << _space.ChunkShift ), length ).CopyTo( destination );
-	}
-
-	private void CopyColumn(
-		Span<T> cells,
-		int source,
-		int sourceColumn,
-		int target,
-		int length
-	) {
-		if( source < 0 ) {
-			for( int i = 0; i < length; i++ ) {
-				cells[target + ( i * Stride )] = default!;
-			}
-			return;
-		}
-		int from = IndexOf( source, sourceColumn );
-		for( int i = 0; i < length; i++ ) {
-			cells[target + ( i * Stride )] = cells[from + ( i * Stride )];
-		}
-	}
-
-	private void CopyCell(
-		Span<T> cells,
-		int source,
-		int sourceColumn,
-		int sourceRow,
-		int target
-	) {
-		cells[target] = source < 0
-			? default!
-			: cells[IndexOf( source, ( sourceRow << _space.ChunkShift ) + sourceColumn )];
-	}
-
-	/// <summary>
-	/// Returns the index into <see cref="Cells"/> of an interior cell.
-	/// </summary>
-	internal int IndexOf(
-		int slot,
+	public void Reset(
+		int chunkIndex,
 		int localIndex
 	) {
-		int shift = _space.ChunkShift;
-		int localRow = localIndex >> shift;
-		int localColumn = localIndex & ( _space.ChunkSize - 1 );
-		return ( slot * ChunkLength ) + ( ( localRow + Halo ) * Stride ) + localColumn + Halo;
-	}
-
-	public int IndexOf(
-		int slot,
-		int localColumn,
-		int localRow
-	) {
-		return ( slot * ChunkLength ) + ( ( localRow + Halo ) * Stride ) + localColumn + Halo;
+		Values.GetValues( chunkIndex )[localIndex] = default;
 	}
 
 	/// <summary>
-	/// Exchanges cell storage and dirty flags with another layer over the
-	/// same space and halo.
+	/// Exchanges values and dirty flags with another layer over the same layout.
 	/// </summary>
 	internal void SwapStorage(
 		GridLayer<T> other
 	) {
-		( _cells, other._cells ) = ( other._cells, _cells );
+		Values.SwapStorage( other.Values );
 		( _dirty, other._dirty ) = ( other._dirty, _dirty );
-	}
-
-	/// <summary>
-	/// Grows storage to match the current slot count of the space.
-	/// </summary>
-	public void EnsureSlots() {
-		int slots = _space.SlotCount;
-		if( _dirty.Length >= slots ) {
-			return;
-		}
-		Array.Resize( ref _cells, slots * ChunkLength );
-		Array.Resize( ref _dirty, slots );
-	}
-
-	public void Reset(
-		int slot,
-		int localIndex
-	) {
-		_cells[IndexOf( slot, localIndex )] = default!;
 	}
 }

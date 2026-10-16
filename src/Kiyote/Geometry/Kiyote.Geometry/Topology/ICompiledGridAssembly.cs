@@ -1,3 +1,5 @@
+using Kiyote.Buffers.ChunkedGrids;
+
 namespace Kiyote.Geometry.Topology;
 
 /// <summary>
@@ -24,12 +26,16 @@ public interface ICompiledGridAssembly<TCell> : IDisposable {
 	bool IsStale { get; }
 
 	/// <summary>
-	/// The chunk layout of the whole compiled assembly: every allocated chunk
-	/// slot, its origin, neighbours and cell occupancy.  Holds no cell data.
-	/// Every layer in <see cref="Layers"/> stores its values according to this
-	/// layout, so a slot and local index identify the same cell in all layers.
+	/// The chunk layout of the whole compiled assembly: every allocated chunk,
+	/// its index, neighbours and cell occupancy.  Holds no cell data.  Every
+	/// layer in <see cref="Layers"/> stores its values over this layout, so a
+	/// chunk index and local index identify the same cell in all layers.
+	/// Treat it as read-only: occupancy is changed through
+	/// <see cref="IGridAssembly{TCell}.TryAddCell"/> and
+	/// <see cref="IGridAssembly{TCell}.TryRemoveCell"/>.  Chunks are never
+	/// removed while the compiled assembly is live, so chunk indices are stable.
 	/// </summary>
-	IGridChunkLayout ChunkLayout { get; }
+	ChunkedGridLayout ChunkLayout { get; }
 
 	/// <summary>
 	/// Every source-to-chunk mapping.
@@ -60,47 +66,30 @@ public interface ICompiledGridAssembly<TCell> : IDisposable {
 	/// <see cref="IGridLayerBinding{TCell, T}.Commit"/> is called for cells in
 	/// dirty chunks when <see cref="Commit"/> runs.
 	/// </param>
-	/// <param name="halo">
-	/// The width of the border, in cells, stored around each chunk, from 0 to
-	/// <see cref="IGridChunkLayout.ChunkSize"/>.  With a halo of <c>h</c>, each
-	/// chunk also holds a copy of the cells within <c>h</c> of its edge from
-	/// its neighbouring chunks.  Code that reads a cell's neighbours
-	/// can then stay within a single chunk's storage, even at chunk edges.
-	/// Halo cells with no neighbouring chunk hold <see langword="default"/>.
-	/// The halo is filled when the layer is bound.  After writing values, call
-	/// <see cref="IGridLayer{T}.ExchangeHalos"/> to refresh it.  Use 1 for
-	/// stencil-style passes over <see cref="IGridLayer{T}.GetChunk"/> spans,
-	/// such as diffusion, blurring, edge detection or neighbour counts, where
-	/// each cell reads its 8 neighbours.  Use 0 when cells are processed
-	/// without looking at their neighbours, or when neighbours are only read
-	/// through the layer's indexer; this saves memory and exchange time.
-	/// </param>
-	/// <exception cref="ArgumentOutOfRangeException">
-	/// <paramref name="halo"/> is negative or greater than the chunk size.
-	/// </exception>
+	/// <remarks>
+	/// For stencil-style passes that read neighbouring cells across chunk
+	/// borders, use <see cref="ChunkedGridLayer{T}.GetNeighbourhood"/> on
+	/// <see cref="IGridLayer{T}.Values"/> and copy each chunk with a border
+	/// into scratch with <see cref="GridChunkNeighbourhood{T}.CopyPadded"/>.
+	/// </remarks>
 	/// <exception cref="ObjectDisposedException">
 	/// This compiled assembly has been disposed.
 	/// </exception>
 	IGridLayer<T> Bind<T, TBinding>(
-		TBinding binding,
-		int halo
-	) where TBinding : struct, IGridLayerBinding<TCell, T>;
+		TBinding binding
+	) where T : unmanaged
+		where TBinding : struct, IGridLayerBinding<TCell, T>;
 
 	/// <summary>
 	/// Creates a scratch layer over the same chunk layout that is not bound to
-	/// the sources.  It starts zeroed, is resized by cell edits and has removed
+	/// the sources.  It starts zeroed, grows with cell edits and has removed
 	/// cells reset to <see langword="default"/>, like bound layers, but is never
 	/// written by <see cref="Commit"/>.
 	/// </summary>
-	/// <exception cref="ArgumentOutOfRangeException">
-	/// <paramref name="halo"/> is negative or greater than the chunk size.
-	/// </exception>
 	/// <exception cref="ObjectDisposedException">
 	/// This compiled assembly has been disposed.
 	/// </exception>
-	IGridLayer<T> CreateLayer<T>(
-		int halo
-	);
+	IGridLayer<T> CreateLayer<T>() where T : unmanaged;
 
 	/// <summary>
 	/// Stops maintaining a layer owned by this assembly and removes it from
@@ -114,15 +103,15 @@ public interface ICompiledGridAssembly<TCell> : IDisposable {
 	);
 
 	/// <summary>
-	/// Exchanges the cell storage and dirty flags of two layers owned by this
+	/// Exchanges the values and dirty flags of two layers owned by this
 	/// assembly in O(1).  Bindings stay with their layer objects, so after a
-	/// swap <see cref="Commit"/> stores whatever storage the bound layer now
-	/// holds, for the slots marked dirty in the flags it now holds.  Spans
+	/// swap <see cref="Commit"/> stores whatever values the bound layer now
+	/// holds, for the chunks marked dirty in the flags it now holds.  Spans
 	/// obtained from either layer before the swap refer to the other layer
 	/// afterwards.
 	/// </summary>
 	/// <exception cref="ArgumentException">
-	/// Either layer does not belong to this assembly, or their halos differ.
+	/// Either layer does not belong to this assembly, or they are the same layer.
 	/// </exception>
 	/// <exception cref="ObjectDisposedException">
 	/// This compiled assembly has been disposed.
@@ -130,7 +119,7 @@ public interface ICompiledGridAssembly<TCell> : IDisposable {
 	void Swap<T>(
 		IGridLayer<T> a,
 		IGridLayer<T> b
-	);
+	) where T : unmanaged;
 
 	/// <summary>
 	/// Creates a layer holding, for each occupied cell, the directions in
@@ -141,20 +130,15 @@ public interface ICompiledGridAssembly<TCell> : IDisposable {
 	/// result depends only on occupancy, not on any connectivity strategy.
 	/// </summary>
 	/// <remarks>
-	/// The layer is a snapshot.  Like any other layer it is resized by cell
+	/// The layer is a snapshot.  Like any other layer it grows with cell
 	/// edits and removed cells are reset, but the directions of the remaining
 	/// cells are not recalculated.  After changing the topology, remove the
 	/// layer with <see cref="RemoveLayer"/> and create it again.
 	/// </remarks>
-	/// <exception cref="ArgumentOutOfRangeException">
-	/// <paramref name="halo"/> is negative or greater than the chunk size.
-	/// </exception>
 	/// <exception cref="ObjectDisposedException">
 	/// This compiled assembly has been disposed.
 	/// </exception>
-	IGridLayer<Direction> CreateVacuumLayer(
-		int halo
-	);
+	IGridLayer<Direction> CreateVacuumLayer();
 
 	/// <summary>
 	/// Writes the dirty chunks of every bound layer back to the

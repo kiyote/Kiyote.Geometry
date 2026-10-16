@@ -18,8 +18,19 @@ internal sealed class GridCompilerTests {
 
 		using( Assert.EnterMultipleScope() ) {
 			Assert.That( compiledAssembly.Assembly, Is.SameAs( assembly ) );
-			Assert.That( compiledAssembly.ChunkLayout.SlotCount, Is.EqualTo( 4 ) );
+			Assert.That( compiledAssembly.ChunkLayout.ChunkCount, Is.EqualTo( 4 ) );
 		}
+	}
+
+	[TestCase( 16 )]
+	[TestCase( 48 )]
+	[TestCase( 0 )]
+	public void Compile_InvalidChunkSize_Throws(
+		int chunkSize
+	) {
+		IGridAssembly<TestCell> assembly = CreateAssembly();
+
+		Assert.That( () => _compiler.Compile( assembly, chunkSize ), Throws.TypeOf<ArgumentOutOfRangeException>() );
 	}
 
 	[Test]
@@ -28,7 +39,7 @@ internal sealed class GridCompilerTests {
 		ICompiledGridAssembly<TestCell> compiledAssembly = _compiler.Compile( assembly, GridCompiler.DefaultChunkSize );
 		WalkabilityBinding walkabilityBinding = new WalkabilityBinding();
 
-		IGridLayer<bool> walkability = compiledAssembly.Bind<bool, WalkabilityBinding>( walkabilityBinding, 0 );
+		IGridLayer<bool> walkability = compiledAssembly.Bind<bool, WalkabilityBinding>( walkabilityBinding );
 
 		using( Assert.EnterMultipleScope() ) {
 			Assert.That( walkability[1, 1], Is.True );
