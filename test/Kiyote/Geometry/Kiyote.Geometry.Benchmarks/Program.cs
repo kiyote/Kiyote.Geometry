@@ -3,7 +3,6 @@ using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Toolchains.InProcess.NoEmit;
 using Kiyote.Geometry.Benchmarks;
-using Kiyote.Geometry.Benchmarks.Grids.Connectivity;
 using Kiyote.Geometry.Benchmarks.Rasterizers;
 using Kiyote.Geometry.Benchmarks.Topology;
 using Kiyote.Geometry.DelaunayVoronoi.Benchmarks;
@@ -27,7 +26,6 @@ BenchmarkSwitcher
 		typeof( RectangleBenchmarks ),
 		typeof( SimpleQuadTreeNodeBenchmarks ),
 		typeof( IntegerRasterizerBenchmarks ),
-		typeof( ConnectivityGridBenchmarks ),
 		typeof( PointBenchmarks ),
 		typeof( DenseGridSourceBenchmarks ),
 		typeof( GridAssemblyBenchmarks ),
@@ -38,5 +36,4 @@ BenchmarkSwitcher
 		typeof( DirectionExtensionsBenchmarks )
 	] )
 	.Run( args, config );
-
 
