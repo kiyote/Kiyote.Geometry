@@ -11,7 +11,6 @@ public class EdgeBenchmarks {
 	private readonly Point _p2;
 	private readonly Edge _edge;
 	private readonly Edge _other;
-	private Point _i;
 
 	public EdgeBenchmarks() {
 		_p1X = 200;
@@ -32,32 +31,46 @@ public class EdgeBenchmarks {
 	}
 
 	[Benchmark, BenchmarkCategory("Edge_Ctor")]
-	public void Ctor_PointPoint() {
-		_ = new Edge( _p1, _p2 );
+	public Edge Ctor_PointPoint() {
+		return new Edge( _p1, _p2 );
 	}
 
 	[Benchmark, BenchmarkCategory( "Edge_Ctor" )]
-	public void Ctor_IntIntIntInt() {
-		_ = new Edge( _p1X, _p1Y, _p2X, _p2Y );
+	public Edge Ctor_IntIntIntInt() {
+		return new Edge( _p1X, _p1Y, _p2X, _p2Y );
 	}
 
 	[Benchmark]
-	public void HasIntersection() {
-		_ = _edge.HasIntersection( _other );
+	public bool HasIntersection() {
+		return _edge.HasIntersection( _other );
 	}
 
 	[Benchmark]
-	public void TryFindIntersection() {
-		_ = _edge.TryFindIntersection( _other, out _i );
+	public (bool Found, Point Intersection) TryFindIntersection() {
+		bool found = _edge.TryFindIntersection( _other, out Point intersection );
+		return (found, intersection);
 	}
 
 	[Benchmark]
-	public void GetBoundingBox() {
-		_ = _edge.GetBoundingBox();
+	public Rect GetBoundingBox() {
+		return _edge.GetBoundingBox();
 	}
 
 	[Benchmark]
-	public void GetMidpoint() {
-		_ = _edge.GetMidpoint( 0.5f );
+	public Point GetMidpoint() {
+		return _edge.GetMidpoint( 0.5f );
+	}
+
+	[GlobalSetup]
+	public void Validate() {
+		if( !HasIntersection()
+			|| TryFindIntersection() != (true, new Point( 300, 300 ))
+			|| GetMidpoint() != new Point( 300, 300 )
+			|| GetBoundingBox() != new Rect( 200, 200, 201, 201 )
+			|| Ctor_PointPoint() != _edge
+			|| Ctor_IntIntIntInt() != _edge
+		) {
+			throw new InvalidOperationException( "Edge benchmark fixture produced an unexpected result." );
+		}
 	}
 }

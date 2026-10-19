@@ -48,11 +48,15 @@ internal static class TopologyBenchmarkData {
 	/// on every eighth row, broken by a door.
 	/// </summary>
 	public static DenseGridSource<BenchCell> CreateSource(
-		int size
+		int size,
+		bool fragmented = false
 	) {
 		DenseGridSource<BenchCell> source = new DenseGridSource<BenchCell>( size, size );
 		for( int row = 0; row < size; row++ ) {
 			for( int column = 0; column < size; column++ ) {
+				if( fragmented && ( ( row + column ) & 1 ) != 0 ) {
+					continue;
+				}
 				bool wall = row == 0
 					|| column == 0
 					|| row == size - 1
@@ -73,13 +77,14 @@ internal static class TopologyBenchmarkData {
 	/// (0, 0) to (2 * size - 1, 2 * size - 1).
 	/// </summary>
 	public static GridAssembly<BenchCell> CreateAssembly(
-		int size
+		int size,
+		bool fragmented = false
 	) {
 		GridAssembly<BenchCell> assembly = new GridAssembly<BenchCell>();
-		_ = assembly.TryAttach( CreateSource( size ), 0, 0 );
-		_ = assembly.TryAttach( CreateSource( size ), size, 0 );
-		_ = assembly.TryAttach( CreateSource( size ), 0, size );
-		_ = assembly.TryAttach( CreateSource( size ), size, size );
+		_ = assembly.TryAttach( CreateSource( size, fragmented ), 0, 0 );
+		_ = assembly.TryAttach( CreateSource( size, fragmented ), size, 0 );
+		_ = assembly.TryAttach( CreateSource( size, fragmented ), 0, size );
+		_ = assembly.TryAttach( CreateSource( size, fragmented ), size, size );
 		return assembly;
 	}
 }

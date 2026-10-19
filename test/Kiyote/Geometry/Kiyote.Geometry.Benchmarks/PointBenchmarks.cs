@@ -30,7 +30,7 @@ public class PointBenchmarks {
 
 	[Benchmark, BenchmarkCategory( "Point_Ctor" )]
 	public Point Ctor() {
-		return new Point( 200, 300 );
+		return new Point( _p1.X, _p1.Y );
 	}
 
 	[Benchmark, BenchmarkCategory( "Point_Arithmetic" )]

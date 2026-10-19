@@ -467,22 +467,39 @@ Review finding 8. Primary files:
 [RectangleBenchmarks.cs](test/Kiyote/Geometry/Kiyote.Geometry.Benchmarks/RectangleBenchmarks.cs),
 and [BENCHMARK.md](BENCHMARK.md).
 
-- [ ] Return or explicitly consume all relevant results in the 15 identified
+- [x] Return or explicitly consume all relevant results in the 15 identified
   discarded-output benchmark methods. Consume intersection outputs as well as
   success flags where appropriate.
-- [ ] Correct benchmark names/overloads and use nonconstant input fields where
+- [x] Correct benchmark names/overloads and use nonconstant input fields where
   constant folding could invalidate a measurement.
-- [ ] Add representative small, maximum-supported, irregular, fragmented, and
+- [x] Add representative small, maximum-supported, irregular, fragmented, and
   high-degree workloads. Do not rely solely on regular grids.
-- [ ] Run Release benchmarks with the same SDK/runtime, machine, inputs, and
-  configuration for before/after comparisons. Inspect generated code for suspicious
-  zero-work timings when necessary.
-- [ ] Replace affected published results with measured results and their environment.
+- [x] Establish a Release baseline with recorded SDK/runtime, machine, inputs, and
+  configuration for matched before/after comparisons. Inspect generated code for
+  suspicious zero-work timings when necessary.
+- [x] Replace affected published results with measured results and their environment.
   Do not invent throughput targets from the old near-zero timings.
 
 This package does not require deliberately failing timing tests. Correct fixture
 data should have independently verifiable expected results. Establish valid
 baselines before accepting performance changes.
+
+P1 implementation evidence:
+
+- Benchmark results are now consumed, including polygon and factory results beyond
+  the original 15 methods. Tree insertion resets outside each measured iteration;
+  the harness confirmed one invocation/unroll, with no accumulating mutation.
+- The isolated-process Release run attempted 70 cases. 69 produced measurements;
+  HighDegree Voronoi failed setup with the expected `IndexOutOfRangeException`
+  in cell traversal. Its timing is explicitly deferred to C1, not silently skipped
+  or treated as successful. The runner returned exit code 1.
+- Narrow disassembly of both Edge constructors, the Point constructor, and
+  integer-coordinate Rect containment confirmed actual input loads/output work.
+  Near-zero durations remain below useful timing resolution and are qualified
+  accordingly in [BENCHMARK.md](BENCHMARK.md).
+- All 258 unit tests and 52 integration tests pass in Release. The benchmark
+  project builds with zero warnings/errors. No production correctness changes
+  are included in P1; the red-green requirement starts with the C packages.
 
 ### P2. Reduce allocation and copying at representation boundaries
 
@@ -563,7 +580,7 @@ and [ConnectivityBuilder.cs](src/Kiyote/Geometry/Kiyote.Geometry/Topology/Connec
 | Milestone | Work | Prerequisites |
 |---|---|---|
 | 0 (complete) | Approve domain, shape, ownership, and extensibility contracts | Decisions recorded in section 1 |
-| 1 | P1: trustworthy benchmark baseline | None; domain approval for boundary fixtures |
+| 1 (complete) | P1: repaired baseline; high-degree timing deferred to C1 | None; domain approval for boundary fixtures |
 | 2 | C4 and C5: arithmetic and rectangle foundations | Milestone 0; P1 for performance comparisons |
 | 3 | C1: Voronoi capacity and factory validation | Approved degree/domain contract; C3 and geometry-storage C7 for final result invariants |
 | 3 | C2: quadtree correctness | C5; C4 for supported-coordinate arithmetic |

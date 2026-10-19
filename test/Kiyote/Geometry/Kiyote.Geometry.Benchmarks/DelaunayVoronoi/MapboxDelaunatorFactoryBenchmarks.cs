@@ -34,17 +34,17 @@ public class MapboxDelaunatorFactoryBenchmarks {
 	}
 
 	[BenchmarkCategory( "Create" ), Benchmark]
-	public void Create_100x100() {
-		MapboxDelaunatorFactory.Create( _100points );
+	public object Create_100x100() {
+		return MapboxDelaunatorFactory.Create( _100points );
 	}
 
 	[BenchmarkCategory( "Create" ), Benchmark]
-	public void Create_500x500() {
-		MapboxDelaunatorFactory.Create( _500points );
+	public object Create_500x500() {
+		return MapboxDelaunatorFactory.Create( _500points );
 	}
 
 	[BenchmarkCategory( "Create" ), Benchmark]
-	public void Create_1000x1000() {
-		MapboxDelaunatorFactory.Create( _1000points );
+	public object Create_1000x1000() {
+		return MapboxDelaunatorFactory.Create( _1000points );
 	}
 }

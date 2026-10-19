@@ -8,6 +8,7 @@ public class SimpleQuadTreeNodeBenchmarks {
 	private readonly IRect _query;
 	private readonly SimpleQuadTreeNode<Rect> _node;
 	private readonly Rect _insert;
+	private SimpleQuadTreeNode<Rect> _insertionNode = null!;
 
 	public SimpleQuadTreeNodeBenchmarks() {
 		_bounds = new Rect( 0, 0, 1920, 1080 );
@@ -27,22 +28,30 @@ public class SimpleQuadTreeNodeBenchmarks {
 	}
 
 	[Benchmark]
-	public void Count() {
-		_ = _node.Count;
+	public int Count() {
+		return _node.Count;
 	}
 
 	[Benchmark]
-	public void GetSubTreeContents() {
-		_ = _node.GetSubTreeContents();
+	public IReadOnlyList<Rect> GetSubTreeContents() {
+		return _node.GetSubTreeContents();
+	}
+
+	[IterationSetup( Target = nameof( Insert ) )]
+	public void ResetInsertionTree() {
+		_insertionNode = new SimpleQuadTreeNode<Rect>( _bounds );
+		foreach( Rect item in _node.GetSubTreeContents() ) {
+			_insertionNode.Insert( item );
+		}
 	}
 
 	[Benchmark]
 	public void Insert() {
-		_node.Insert( _insert );
+		_insertionNode.Insert( _insert );
 	}
 
 	[Benchmark]
-	public void Query() {
-		_ = _node.Query( _query );
+	public IReadOnlyList<Rect> Query() {
+		return _node.Query( _query );
 	}
 }

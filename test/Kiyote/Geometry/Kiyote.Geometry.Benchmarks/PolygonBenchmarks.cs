@@ -79,67 +79,73 @@ public class PolygonBenchmarks {
 	}
 
 	[Benchmark]
-	public void Ctor() {
-		_ = new Polygon( _polyPoints );
+	public Polygon Ctor() {
+		return new Polygon( _polyPoints );
 	}
 
 	[Benchmark]
-	public void Contains_Polygon() {
-		_polygon.Contains( _other );
+	public bool Contains_Polygon() {
+		return _polygon.Contains( _other );
 	}
 
 	[Benchmark, BenchmarkCategory( "HasIntersection" )]
-	public void HasIntersection_Edge() {
-		_ = _polygon.HasIntersection( _edge );
+	public bool HasIntersection_Edge() {
+		return _polygon.HasIntersection( _edge );
 	}
 
 	[Benchmark, BenchmarkCategory( "HasIntersection" )]
-	public void HasIntersection_Polygon() {
-		_ = _polygon.HasIntersection( _other );
+	public bool HasIntersection_Polygon() {
+		return _polygon.HasIntersection( _other );
 	}
 
 	[Benchmark, BenchmarkCategory( "HasIntersection" )]
-	public void HasIntersection_EdgeArray() {
-		_ = _polygon.HasIntersection( _other.Edges );
+	public bool HasIntersection_EdgeArray() {
+		return _polygon.HasIntersection( _other.Edges );
 	}
 
 	[Benchmark]
-	public void HasOverlap() {
-		_ = _polygon.HasOverlap( _other );
+	public bool HasOverlap() {
+		return _polygon.HasOverlap( _other );
 	}
 
 	[Benchmark]
-	public void IsEquivalentTo() {
-		_polygon.IsEquivalentTo( _poly2 );
+	public bool IsEquivalentTo() {
+		return _polygon.IsEquivalentTo( _poly2 );
 	}
 
 	[Benchmark]
-	public void TryIntersect_WithIntersection() {
-		_ = _i1.TryIntersect( _i2, out Polygon _ );
+	public (bool Found, Polygon Intersection) TryIntersect_WithIntersection() {
+		bool found = _i1.TryIntersect( _i2, out Polygon intersection );
+		return (found, intersection);
 	}
 
 	[Benchmark]
-	public void TryIntersect_WithoutIntersection() {
-		_ = _i1.TryIntersect( _farOther, out Polygon _ );
+	public (bool Found, Polygon Intersection) TryIntersect_WithoutIntersection() {
+		bool found = _i1.TryIntersect( _farOther, out Polygon intersection );
+		return (found, intersection);
 	}
 
 	[Benchmark]
-	public void TryFindIntersections_Edge_WithIntersections() {
-		_polygon.TryFindIntersections( _edge, out _ );
+	public (bool Found, IReadOnlyList<Point> Intersections) TryFindIntersections_Edge_WithIntersections() {
+		bool found = _polygon.TryFindIntersections( _edge, out IReadOnlyList<Point> intersections );
+		return (found, intersections);
 	}
 
 	[Benchmark]
-	public void TryFindIntersections_Edge_WithoutIntersections() {
-		_polygon.TryFindIntersections( _farEdge, out _ );
+	public (bool Found, IReadOnlyList<Point> Intersections) TryFindIntersections_Edge_WithoutIntersections() {
+		bool found = _polygon.TryFindIntersections( _farEdge, out IReadOnlyList<Point> intersections );
+		return (found, intersections);
 	}
 
 	[Benchmark]
-	public void TryFindIntersections_Polygon_WithIntersections() {
-		_polygon.TryFindIntersections( _other, out _ );
+	public (bool Found, IReadOnlyList<Point> Intersections) TryFindIntersections_Polygon_WithIntersections() {
+		bool found = _polygon.TryFindIntersections( _other, out IReadOnlyList<Point> intersections );
+		return (found, intersections);
 	}
 
 	[Benchmark]
-	public void TryFindIntersections_Polygon_WithoutIntersections() {
-		_polygon.TryFindIntersections( _farOther, out _ );
+	public (bool Found, IReadOnlyList<Point> Intersections) TryFindIntersections_Polygon_WithoutIntersections() {
+		bool found = _polygon.TryFindIntersections( _farOther, out IReadOnlyList<Point> intersections );
+		return (found, intersections);
 	}
 }

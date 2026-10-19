@@ -49,17 +49,17 @@ public class D3VoronoiFactoryBenchmarks {
 	}
 
 	[BenchmarkCategory( "Create" ), Benchmark]
-	public void Create_100x100() {
-		 _voronoiFactory.Create( _100bounds, _100points );
+	public IVoronoi Create_100x100() {
+		return _voronoiFactory.Create( _100bounds, _100points );
 	}
 
 	[BenchmarkCategory( "Create" ), Benchmark]
-	public void Create_500x500() {
-		 _voronoiFactory.Create( _500bounds, _500points );
+	public IVoronoi Create_500x500() {
+		return _voronoiFactory.Create( _500bounds, _500points );
 	}
 
 	[BenchmarkCategory( "Create" ), Benchmark]
-	public void Create_1000x1000() {
-		 _voronoiFactory.Create( _1000bounds, _1000points );
+	public IVoronoi Create_1000x1000() {
+		return _voronoiFactory.Create( _1000bounds, _1000points );
 	}
 }

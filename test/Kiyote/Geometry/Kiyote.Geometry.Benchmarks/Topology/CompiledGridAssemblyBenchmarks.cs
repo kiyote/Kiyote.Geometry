@@ -18,9 +18,12 @@ public class CompiledGridAssemblyBenchmarks {
 	[Params( 64, 256 )]
 	public int Size { get; set; }
 
+	[Params( false, true )]
+	public bool Fragmented { get; set; }
+
 	[GlobalSetup]
 	public void GlobalSetup() {
-		_assembly = TopologyBenchmarkData.CreateAssembly( Size );
+		_assembly = TopologyBenchmarkData.CreateAssembly( Size, Fragmented );
 		_compiled = new GridCompiler().Compile( _assembly, GridCompiler.DefaultChunkSize );
 		_pressure = _compiled.Bind<float, PressureBinding>( default );
 		_placement = _assembly.Placements[0].Id;
@@ -28,6 +31,12 @@ public class CompiledGridAssemblyBenchmarks {
 			IsWalkable = true,
 			Pressure = 1.0f
 		};
+		int expectedRuns = 4 * Size * ( Fragmented ? Size / 2 : Size / GridCompiler.DefaultChunkSize );
+		if( _compiled.SourceRuns.Length != expectedRuns || !TryRemoveCell_TryAddCell_Propagated()
+			|| _compiled.SourceRuns.Length != expectedRuns
+		) {
+			throw new InvalidOperationException( "Compiled assembly benchmark fixture has unexpected source runs." );
+		}
 	}
 
 	[GlobalCleanup]
