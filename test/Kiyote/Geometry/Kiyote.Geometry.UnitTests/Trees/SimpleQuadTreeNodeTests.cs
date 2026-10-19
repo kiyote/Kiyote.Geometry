@@ -64,7 +64,7 @@ internal sealed class SimpleQuadTreeNodeTests {
 	public void Insert_ItemLarger_ItemIsRejected() {
 		Rect item = LargerBy( _bounds, 10 );
 
-		_node.Insert( item );
+		Assert.That( () => _node.Insert( item ), Throws.ArgumentException );
 
 		Assert.That( _node.Count, Is.EqualTo( 0 ) );
 	}

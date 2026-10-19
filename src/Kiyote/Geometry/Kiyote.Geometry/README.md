@@ -97,6 +97,32 @@ collections; reusing or mutating an input array/list cannot change an existing
 diagram. Quantized Voronoi polygons approximate the continuous cells, not an
 exact partition of continuous space.
 
+## Quadtree contracts
+
+Quadtrees use inclusive occupied-cell bounds in signed 32-bit coordinate space,
+without the screen-space coordinate restriction. Construction snapshots the bounds;
+empty bounds are rejected, while `1 x 1` and one-cell-wide/high trees are valid.
+Children partition their parent without shared cells or gaps, including odd sizes.
+Regions with area at most ten cells, or an axis that cannot split, remain leaves.
+Thin terminal regions may therefore require a linear scan of their entries.
+
+Insertions must be nonempty and fully contained by the tree; invalid insertions
+throw `ArgumentException` without changing its entries or count. Each insertion
+counts separately, including repeated values. Indexed item bounds must remain
+unchanged; arbitrary mutable items are not cloned. Queries return entries sharing
+at least one occupied cell, and empty queries return no entries.
+
+`Count` and `IsEmpty` describe the entire subtree, not whether it has children,
+and are maintained in constant time. A populated leaf is not empty.
+`SimpleQuadTreeNode.Bounds` now exposes an immutable `Rect` snapshot; `Contents`
+is a read-only live view of direct entries. `GetSubTreeContents` returns an
+independent collection of all entries.
+
+Searchable Voronoi queries use cell bounding boxes, not exact polygon intersections.
+The searchable factory's size defines an origin-anchored index rectangle; it must
+contain every cell's bounding box. Undersized or incorrectly positioned indexes
+now throw rather than silently omitting cells.
+
 Implementation is staged: topology validation and rasterizer boundary
 checks have separate remaining
 milestones in the repository's correctness plan.

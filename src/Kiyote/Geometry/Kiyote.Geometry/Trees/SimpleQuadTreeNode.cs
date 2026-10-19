@@ -1,206 +1,138 @@
-﻿using System.Runtime.InteropServices.Marshalling;
-
 namespace Kiyote.Geometry.Trees;
 
+/// <summary>
+/// An inclusive-bounds quadtree. Item bounds must remain unchanged while indexed.
+/// Each insertion is a separate entry, including repeated values.
+/// </summary>
 public class SimpleQuadTreeNode<T> where T : IRect {
 
 	public const int SmallestAllowedArea = 10;
 
-	private readonly int _width;
-	private readonly int _height;
 	private readonly List<T> _contents;
 	private readonly List<SimpleQuadTreeNode<T>> _nodes;
+	private IReadOnlyList<T>? _readOnlyContents;
+	private int _count;
 
-	/// <summary>
-	/// Construct a quadtree node with the given bounds 
-	/// </summary>
-	/// <param name="area"></param>
+	/// <summary>Constructs a node with an owned snapshot of nonempty bounds.</summary>
+	/// <exception cref="InvalidOperationException">The bounds are empty.</exception>
 	public SimpleQuadTreeNode(
 		IRect bounds
 	) {
-		if (bounds.X2 - bounds.X1 == 0
-			|| bounds.Y2 - bounds.Y1 == 0
-		) {
-			throw new InvalidOperationException( "Cannot define quad tree with zero area." );
+		ArgumentNullException.ThrowIfNull( bounds );
+		Bounds = new Rect( bounds.X1, bounds.Y1, bounds.Width, bounds.Height );
+		if( Bounds.IsEmpty ) {
+			throw new InvalidOperationException( "Cannot define a quadtree with empty bounds." );
 		}
-		Bounds = bounds;
-		_width = bounds.X2 - bounds.X1;
-		_height = bounds.Y2 - bounds.Y1;
 		_contents = [];
 		_nodes = new List<SimpleQuadTreeNode<T>>( 4 );
 	}
 
-	/// <summary>
-	/// Is the node empty
-	/// </summary>
-	public bool IsEmpty => _nodes.Count == 0;
+	/// <summary>True when neither this node nor any descendant contains an entry.</summary>
+	public bool IsEmpty => _count == 0;
 
-	/// <summary>
-	/// Area of the quadtree node
-	/// </summary>
-	public IRect Bounds { get; }
+	public Rect Bounds { get; }
 
-	/// <summary>
-	/// Total number of nodes in the this node and all SubNodes
-	/// </summary>
-	public int Count {
-		get {
-			int count = 0;
+	/// <summary>Total inserted entries in this node and its descendants.</summary>
+	public int Count => _count;
 
-			for (int i = 0; i < _nodes.Count; i++) {
-				count += _nodes[i].Count;
-			}
-
-			count += this.Contents.Count;
-
-			return count;
-		}
-	}
-
-	/// <summary>
-	/// Return the contents of this node and all subnodes in the true below this one.
-	/// </summary>
+	/// <summary>Returns a snapshot of entries in this node and its descendants.</summary>
 	public IReadOnlyList<T> GetSubTreeContents() {
-		List<T> results = [];
-
+		if( IsEmpty ) {
+			return Array.Empty<T>();
+		}
+		List<T> results = new List<T>( _count );
 		FillContents( results );
-
 		return results;
 	}
 
-	public IReadOnlyList<T> Contents => _contents;
+	/// <summary>A read-only live view of entries stored directly in this node.</summary>
+	public IReadOnlyList<T> Contents => _readOnlyContents ??= _contents.AsReadOnly();
 
-	/// <summary>
-	/// Query the QuadTree for items that are in the given area
-	/// </summary>
-	/// <param name="queryArea"></pasram>
-	/// <returns></returns>
+	/// <summary>Returns each entry sharing an occupied cell with the query; empty queries return no entries.</summary>
 	public IReadOnlyList<T> Query( IRect queryArea ) {
-		// create a list of the items that are found
-		List<T> results = [];
+		ArgumentNullException.ThrowIfNull( queryArea );
+		if( IsEmpty || queryArea.IsEmpty ) {
+			return Array.Empty<T>();
+		}
+		Rect query = new Rect( queryArea.X1, queryArea.Y1, queryArea.Width, queryArea.Height );
+		return Bounds.Overlaps( query ) ? QueryCore( query ) : Array.Empty<T>();
+	}
 
-		// this quad contains items that are not entirely contained by
-		// its four sub-quads. Iterate through the items in this quad 
-		// to see if they intersect.
-		foreach( T item in Contents ) {
+	private IReadOnlyList<T> QueryCore( Rect queryArea ) {
+		List<T> results = [];
+		foreach( T item in _contents ) {
 			if( queryArea.Overlaps( item ) ) {
 				results.Add( item );
 			}
 		}
-
 		foreach( SimpleQuadTreeNode<T> node in _nodes ) {
 			if( node.IsEmpty ) {
 				continue;
 			}
-
-			// Case 1: search area completely contained by sub-quad
-			// if a node completely contains the query area, go down that branch
-			// and skip the remaining nodes (break this loop)
 			if( node.Bounds.Contains( queryArea ) ) {
-				results.AddRange( node.Query( queryArea ) );
+				results.AddRange( node.QueryCore( queryArea ) );
 				break;
 			}
-
-			// Case 2: Sub-quad completely contained by search area 
-			// if the query area completely contains a sub-quad,
-			// just add all the contents of that quad and it's children 
-			// to the result set. You need to continue the loop to test 
-			// the other quads
 			if( queryArea.Contains( node.Bounds ) ) {
 				node.FillContents( results );
 				continue;
 			}
-
-			// Case 3: search area intersects with sub-quad
-			// traverse into this quad, continue the loop to search other
-			// quads
 			if( node.Bounds.Overlaps( queryArea ) ) {
-				results.AddRange( node.Query( queryArea ) );
+				results.AddRange( node.QueryCore( queryArea ) );
 			}
 		}
-
 		return results;
 	}
 
 	private void FillContents(
 		List<T> contents
 	) {
-		for (int i = 0; i < _nodes.Count; i++) {
+		for( int i = 0; i < _nodes.Count; i++ ) {
 			_nodes[i].FillContents( contents );
 		}
-		contents.AddRange( this.Contents );
+		contents.AddRange( _contents );
 	}
 
-	/// <summary>
-	/// Insert an item to this node
-	/// </summary>
-	/// <param name="item"></param>
+	/// <summary>Inserts a nonempty item completely contained by this node's bounds.</summary>
+	/// <exception cref="ArgumentException">The item is empty or extends outside the node; the tree is unchanged.</exception>
+	/// <exception cref="OverflowException">The total entry count cannot fit a signed 32-bit integer.</exception>
 	public void Insert( T item ) {
-		// if the item is not contained in this quad, there's a problem
-		if( !Bounds.Contains( item ) ) {
-			//throw new InvalidOperationException( "feature is out of the bounds of this quadtree node" );
-			//Trace.TraceWarning( "feature is out of the bounds of this quadtree node" );
-			return;
+		if( item is null ) {
+			throw new ArgumentNullException( nameof( item ) );
 		}
+		if( !Bounds.Contains( item ) ) {
+			throw new ArgumentException( "Items must be nonempty and completely contained by the quadtree bounds.", nameof( item ) );
+		}
+		InsertContained( item );
+	}
 
-		// if the subnodes are null create them. may not be sucessful: see below
-		// we may be at the smallest allowed size in which case the subnodes will not be created
+	private void InsertContained( T item ) {
+		int count = checked( _count + 1 );
 		if( _nodes.Count == 0 ) {
 			CreateSubNodes();
 		}
-
-		// for each subnode:
-		// if the node contains the item, add the item to that node and return
-		// this recurses into the node that is just large enough to fit this item
 		foreach( SimpleQuadTreeNode<T> node in _nodes ) {
 			if( node.Bounds.Contains( item ) ) {
-				node.Insert( item );
+				node.InsertContained( item );
+				_count = count;
 				return;
 			}
 		}
-
-		// if we make it to here, either
-		// 1) none of the subnodes completely contained the item. or
-		// 2) we're at the smallest subnode size allowed 
-		// add the item to this node's contents.
 		_contents.Add( item );
+		_count = count;
 	}
 
-	/// <summary>
-	/// Internal method to create the subnodes (partitions space)
-	/// </summary>
 	private void CreateSubNodes() {
-		// the smallest subnode has an area
-		if( ( _height * _width ) <= SmallestAllowedArea ) {
+		int width = Bounds.Width, height = Bounds.Height;
+		if( width < 2 || height < 2 || (long)width * height <= SmallestAllowedArea ) {
 			return;
 		}
 
-		int halfWidth = ( _width / 2 );
-		int halfHeight = ( _height / 2 );
-
-		_nodes.Add( new SimpleQuadTreeNode<T>(
-			new Rect(
-				new Point( Bounds.X1, Bounds.Y1 ),
-				new Point( Bounds.X1 + halfWidth, Bounds.Y1 + halfHeight )
-			)
-		) );
-		_nodes.Add( new SimpleQuadTreeNode<T>(
-			new Rect(
-				new Point( Bounds.X1, Bounds.Y1 + halfHeight ),
-				new Point( Bounds.X1 + halfWidth, Bounds.Y1 + halfHeight + halfHeight )
-			)
-		) );
-		_nodes.Add( new SimpleQuadTreeNode<T>(
-			new Rect(
-				new Point( Bounds.X1 + halfWidth, Bounds.Y1 ),
-				new Point( Bounds.X1 + halfWidth + halfWidth, Bounds.Y1 + halfHeight )
-			)
-		) );
-		_nodes.Add( new SimpleQuadTreeNode<T>(
-			new Rect(
-				new Point( Bounds.X1 + halfWidth, Bounds.Y1 + halfHeight ),
-				new Point( Bounds.X1 + halfWidth + halfWidth, Bounds.Y1 + halfHeight + halfHeight )
-			)
-		) );
+		int leftWidth = width / 2, topHeight = height / 2;
+		int rightX = Bounds.X1 + leftWidth, bottomY = Bounds.Y1 + topHeight;
+		_nodes.Add( new SimpleQuadTreeNode<T>( new Rect( Bounds.X1, Bounds.Y1, leftWidth, topHeight ) ) );
+		_nodes.Add( new SimpleQuadTreeNode<T>( new Rect( Bounds.X1, bottomY, leftWidth, height - topHeight ) ) );
+		_nodes.Add( new SimpleQuadTreeNode<T>( new Rect( rightX, Bounds.Y1, width - leftWidth, topHeight ) ) );
+		_nodes.Add( new SimpleQuadTreeNode<T>( new Rect( rightX, bottomY, width - leftWidth, height - topHeight ) ) );
 	}
 }

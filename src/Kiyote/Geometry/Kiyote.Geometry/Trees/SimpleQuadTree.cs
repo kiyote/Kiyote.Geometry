@@ -7,17 +7,11 @@ internal sealed class SimpleQuadTree<T> : IQuadTree<T> where T : IRect {
 	private readonly SimpleQuadTreeNode<T> _root;
 
 	/// <summary>
-	/// The bounds of this QuadTree
-	/// </summary>
-	private readonly IRect _bounds;
-
-	/// <summary>
 	/// 
 	/// </summary>
 	/// <param name="bounds"></param>
 	public SimpleQuadTree( IRect bounds ) {
-		_bounds = bounds;
-		_root = new SimpleQuadTreeNode<T>( _bounds );
+		_root = new SimpleQuadTreeNode<T>( bounds );
 	}
 
 	/// <summary>

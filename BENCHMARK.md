@@ -1,5 +1,50 @@
 # Performance measurements
 
+## C2 quadtree follow-up
+
+Measured on 2026-10-19 against the pre-C2 production implementation at `e9cdf35`,
+with the same environment and short-run settings as P1 below. All four cases
+complete. The seeded 10,000-entry input and query are unchanged; new untimed setup
+checks entry multiplicity, total contents, and query results against an independent
+inclusive-bounds reference.
+
+```powershell
+dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*SimpleQuadTreeNodeBenchmarks*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\correctness-c2-final
+```
+
+Subtree occupancy is now cached rather than recursively counted. This both fixes
+the populated-leaf emptiness error and avoids adding recursive scans to queries.
+Knowing the complete count also permits one exact-sized result allocation for
+`GetSubTreeContents`, rather than repeatedly growing its list.
+
+| Method | Before mean (us) | C2 mean (us) | C2 error (us) | C2 StdDev (us) | Before allocation | C2 allocation |
+|---|---:|---:|---:|---:|---:|---:|
+| Insert | 5.620 | 8.6500 | 24.2102 | 3.7466 | 200 B | 200 B |
+| Count | 86.138 | below resolution | - | - | - | - |
+| GetSubTreeContents | 764.524 | 275.0210 | 40.7958 | 6.3132 | 786746 B | 240104 B |
+| Query | 4.986 | 4.3014 | 0.4222 | 0.0653 | 22808 B | 23904 B |
+
+Insertion still resets its seeded tree outside timing and runs one invocation per
+iteration. Its very short iteration and wide confidence interval cannot establish
+a small regression or improvement. Query now traverses corrected disjoint child
+bounds; the old query implementation was known to miss entries. Do not treat its
+timing/allocation as an equivalent correct-work baseline or preserve its incorrect
+pruning to save allocations. Recursive result lists and interface-based item
+access still warrant the separate P2 query-path work.
+
+The first C2 measurement exposed 40 B of extra insertion boxing from a generic
+null check, and additional query boxing of value-type node bounds. A non-boxing
+null test and a concrete internal query rectangle removed those introduced costs
+without changing the public generic query interface. The final numbers above
+retain the remaining costs rather than claiming allocation-free queries.
+
+Count was also measured with `--disasm` and filter
+`*SimpleQuadTreeNodeBenchmarks.Count`, under
+`BenchmarkDotNet.Artifacts\correctness-c2-count`. Its generated code is eight
+bytes: two field loads and a return. The benchmark reported `ZeroMeasurement`;
+this establishes retained work and constant-time access, not a literal zero-cost
+operation or a meaningful numeric speedup ratio.
+
 ## C1 diagram follow-up
 
 Measured on 2026-10-19 with the same environment and short-run job settings as

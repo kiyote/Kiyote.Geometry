@@ -365,6 +365,56 @@ Review finding 2. Primary implementation:
   data. Verify rejected insertion leaves the tree unchanged.
 - Include searchable-Voronoi integration coverage after the tree fixes.
 
+**C2 implementation evidence**
+
+- Pre-fix unit regressions: **24 failures / 1 pass**. Small inserted rectangles
+  disappeared from queries; populated terminal leaves reported empty; thin
+  subdivisions threw; overlapping child bounds caused incorrect branch pruning;
+  invalid insertions silently returned; and full-int area products wrapped.
+  Bounds aliasing and writable `Contents` also failed their ownership assertions.
+- Both searchable-diagram regressions failed before the fix. A dense 400-cell
+  diagram lost eight cells from a two-column bounding-box query; an undersized
+  index silently omitted cells instead of rejecting construction. A coarser grid
+  did not exercise populated terminal leaves, so the reproducer uses spacing two.
+- Nodes now own a concrete `Rect` bounds snapshot. Splitting uses inclusive
+  dimensions, puts the odd remainder in the right/bottom children, and starts
+  those children immediately after the left/top occupied bounds. Child rectangles
+  are disjoint and cover their parent. Both dimensions must be splittable;
+  one-cell-wide/high regions remain valid terminal leaves rather than introducing
+  a separate binary-tree subdivision path.
+- The area test promotes before multiplication: the maximum supported product is
+  `int.MaxValue * int.MaxValue < long.MaxValue`. Child origins remain within the
+  validated parent bounds. Tests exercise coordinates at both int extremes and
+  maximum representable dimensions, including assertions that large trees really
+  subdivide rather than merely avoiding arithmetic exceptions.
+- Subtree counts update only after successful insertion; `Count` and `IsEmpty`
+  are constant-time, so correct emptiness checks do not add recursive scans to
+  queries. Invalid/empty entries are rejected before mutation; checked count
+  arithmetic also precedes mutation. Direct contents are exposed through a lazy
+  read-only view to prevent bypassing count maintenance. Indexed item geometry
+  must remain stable; arbitrary generic items are not cloned.
+- The same regression expectations now pass. The old rejection test was updated
+  to expect the explicit argument exception, retaining its unchanged-count check.
+  Coverage includes every occupied cell in nine thin/odd/regular shapes, 600 seeded
+  entries against 1,000 independent inclusive-bounds queries, duplicate insertion
+  multiplicity, empty queries, and 654 dense-diagram queries through both public
+  search overloads.
+- Release solution build: zero warnings/errors. All **374 unit + 96 integration**
+  tests pass. The **58 unit + 2 integration** targeted tests also pass in Debug,
+  including interface-backed entries, custom query rectangles, and null rejection.
+  Recursive query result lists and searchable-result materialization remain P2
+  work; C2 does not introduce a new query/visitor API.
+- All four matched benchmark cases complete with independent untimed fixture
+  validation. Exact-sized full-subtree materialization reduces measured allocation
+  from 786,746 B to 240,104 B. Count changes from a recursive scan to a cached
+  field read; disassembly confirms two loads and a return, while its measured
+  duration is below useful resolution. Query allocation is 23,904 B versus
+  22,808 B before C2 and remains P2 work. An initial extra 40 B on insertion was
+  removed by a non-boxing generic null check; insertion is back to 200 B.
+  Internal queries use a concrete rectangle snapshot to avoid boxing child bounds
+  at each recursion level. Full results and limitations are in
+  [BENCHMARK.md](BENCHMARK.md).
+
 ### C3. Correct polygon containment, intersection, and equivalence
 
 Review finding 3. Primary implementation:
@@ -765,7 +815,7 @@ and [ConnectivityBuilder.cs](src/Kiyote/Geometry/Kiyote.Geometry/Topology/Connec
 | 1 (complete) | P1: repaired baseline; high-degree timing deferred to C1 | None; domain approval for boundary fixtures |
 | 2 (complete) | C4 arithmetic and C5 rectangle foundations | Milestone 0; P1 for performance comparisons |
 | 3 (C1 complete) | C1: Voronoi capacity and factory validation; diagram-storage portion of C7 | Approved degree/domain contract; C3 and geometry-storage C7 for final result invariants |
-| 3 | C2: quadtree correctness | C5; C4 for supported-coordinate arithmetic |
+| 3 (C2 complete) | C2: quadtree correctness | C5; C4 for supported-coordinate arithmetic |
 | 3 (C3 complete) | C3: polygon semantics; geometry-storage portion of C7 | Approved polygon contract; C4 |
 | 3 | C6: rasterizer contract | Approved shape contract; C4; C3 for validated polygon overloads |
 | 4 | Grid-source portion of C7 and A1 | Approved ownership/extensibility contracts; C5 |
