@@ -23,17 +23,26 @@ THIS SOFTWARE.
 
 internal sealed class MapboxDelaunatorFactory {
 
+	internal static int GetTriangleCapacity( int pointCount ) {
+		long capacity = Math.Max( 2L * pointCount - 5, 0 ) * 3;
+		if( pointCount < 0 || capacity > Array.MaxLength ) {
+			throw new ArgumentOutOfRangeException( nameof( pointCount ), "Site count exceeds representable triangulation array capacities." );
+		}
+		return (int)capacity;
+	}
+
 	public static MapboxDelaunator Create(
-		ReadOnlySpan<double> coords
+		ReadOnlySpan<double> coords,
+		bool rejectDuplicates = false
 	) {
 		int n = coords.Length / 2;
+		int triangleCapacity = GetTriangleCapacity( n );
 
 		int[] edgeStack = new int[512];
 
 		// arrays that will store the triangulation graph
-		int maxTriangles = Math.Max( ( 2 * n ) - 5, 0 );
-		int[] triangles = new int[maxTriangles * 3];
-		int[] halfEdges = new int[maxTriangles * 3];
+		int[] triangles = new int[triangleCapacity];
+		int[] halfEdges = new int[triangleCapacity];
 
 		// temporary arrays for tracking the edges of the advancing convex hull
 		int hashSize = (int)Math.Ceiling( Math.Sqrt( n ) );
@@ -45,6 +54,21 @@ internal sealed class MapboxDelaunatorFactory {
 		// temporary arrays for sorting points
 		int[] ids = new int[n];
 		double[] dists = new double[n];
+
+		if( rejectDuplicates ) {
+			// Public factories supply bounded integer sites. Their 32-bit keys fit exactly in double.
+			// Reuse distance scratch rather than allocating a default-path hash set.
+			for( int i = 0; i < n; i++ ) {
+				dists[i] = ( ( (long)coords[i * 2] - GeometryLimits.MinimumCoordinate ) << 16 )
+					+ ( (long)coords[i * 2 + 1] - GeometryLimits.MinimumCoordinate );
+			}
+			Array.Sort( dists );
+			for( int i = 1; i < n; i++ ) {
+				if( dists[i - 1] == dists[i] ) {
+					throw new ArgumentException( "Duplicate sites require explicit sanitization.", nameof( coords ) );
+				}
+			}
+		}
 
 		double minX = double.PositiveInfinity;
 		double minY = double.PositiveInfinity;
@@ -599,4 +623,3 @@ internal sealed class MapboxDelaunatorFactory {
 	}
 
 }
-

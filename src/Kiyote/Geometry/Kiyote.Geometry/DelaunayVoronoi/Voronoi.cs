@@ -2,6 +2,7 @@
 
 internal sealed class Voronoi : IVoronoi {
 
+	// Transfers factory-owned read-only storage; no mutable aliases may escape.
 	public Voronoi(
 		IReadOnlyList<Point> points,
 		IReadOnlyList<Cell> cells,

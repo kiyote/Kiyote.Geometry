@@ -30,11 +30,9 @@ internal sealed class D3DelaunayFactory : IDelaunayFactory {
 		IReadOnlyList<Point> points,
 		bool sanitizePoints
 	) {
-		if( sanitizePoints ) {
-			points = points.Distinct().ToList();
-		}
+		points = DiagramSites.Snapshot( points, sanitizePoints );
 		double[] coords = points.ToCoords();
-		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( coords );
+		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( coords, rejectDuplicates: !sanitizePoints );
 
 		List<Triangle> triangles = new List<Triangle>( delaunator.Triangles.Length / 3 );
 		for( int i = 0; i < delaunator.Triangles.Length; i += 3 ) {
@@ -47,7 +45,7 @@ internal sealed class D3DelaunayFactory : IDelaunayFactory {
 			);
 		}
 
-		List<Point> hull = [];
+		List<Point> hull = new List<Point>( delaunator.Hull.Length );
 		for( int i = 0; i < delaunator.Hull.Length; i++ ) {
 			int c = delaunator.Hull[i];
 			if( c >= 0 ) {
@@ -57,8 +55,8 @@ internal sealed class D3DelaunayFactory : IDelaunayFactory {
 
 		Delaunay result = new Delaunay(
 			points,
-			triangles,
-			hull
+			triangles.AsReadOnly(),
+			hull.AsReadOnly()
 		);
 
 		return result;

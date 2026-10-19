@@ -2,6 +2,7 @@
 
 internal sealed class Delaunay : IDelaunay {
 
+	// Transfers factory-owned read-only storage; no mutable aliases may escape.
 	public Delaunay(
 		IReadOnlyList<Point> points,
 		IReadOnlyList<Triangle> triangles,

@@ -1,7 +1,6 @@
 ﻿namespace Kiyote.Geometry.DelaunayVoronoi;
 
-using System.Linq;
-using System.Runtime.InteropServices;
+using System.Collections.ObjectModel;
 
 // Ported from: https://github.com/d3/d3-delaunay/blob/main/src/voronoi.js
 /*
@@ -23,8 +22,9 @@ THIS SOFTWARE.
 
 internal sealed class D3VoronoiFactory : IVoronoiFactory {
 
-	private const int MaximumExpectedPointsPerCell = 25;
-	private const int MaximumExpectedNeighbours = 10;
+	private const int MaximumProjectedVertices = IVoronoiFactory.MaximumCellVertices + 2;
+	// Each projected edge emits at most two clipped endpoints; each clipping pass adds at most four box corners.
+	private const int MaximumClippedVertices = 2 * MaximumProjectedVertices + 8;
 
 	IVoronoi IVoronoiFactory.Create(
 		Rect bounds,
@@ -38,29 +38,22 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		IReadOnlyList<Point> points,
 		bool sanitizePoints
 	) {
-		if( sanitizePoints ) {
-			points = [.. points
-				.Where( p =>
-					p.X >= bounds.X1
-					&& p.X <= bounds.X2
-					&& p.Y >= bounds.Y1
-					&& p.Y <= bounds.Y2
-				)
-				.Distinct()];
-		}
+		DiagramSites.ValidateBounds( bounds );
+		points = DiagramSites.Snapshot( points, sanitizePoints, bounds );
 		double[] coords = points.ToCoords();
 
-		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( coords );
+		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( coords, rejectDuplicates: !sanitizePoints );
 		D3Delaunay delaunay = D3DelaunayFactory.Create( coords, delaunator );
 
 		double[] circumcenters = CalculateCircumcenters( delaunator, coords );
 		double[] vectors = CalculateVectors( delaunator, coords );
 
-		double[] cellPointBuffer = new double[MaximumExpectedPointsPerCell * 2];
-		double[] projectedPointBuffer = new double[cellPointBuffer.Length + 4];
+		double[] cellPointBuffer = new double[IVoronoiFactory.MaximumCellVertices * 2];
+		double[] projectedPointBuffer = new double[MaximumProjectedVertices * 2];
+		Span<Point> quantizedPointBuffer = stackalloc Point[MaximumClippedVertices];
 
 		List<Cell> cells = new List<Cell>( points.Count );
-		List<double> cellCoords = new List<double>( MaximumExpectedPointsPerCell * 2 );
+		List<double> cellCoords = new List<double>( MaximumClippedVertices * 2 );
 		for( int i = 0; i < points.Count; i++ ) {
 			bool isOpen = false;
 			Clip(
@@ -85,7 +78,6 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			int minY = int.MaxValue;
 			int maxX = int.MinValue;
 			int maxY = int.MinValue;
-			List<Point> cellPoints = [];
 			for( int j = 0; j < cellCoords.Count / 2; j++ ) {
 				int x = (int)Math.Floor( cellCoords[( j * 2 ) + 0] );
 				int y = (int)Math.Floor( cellCoords[( j * 2 ) + 1] );
@@ -101,9 +93,9 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				if( y > maxY ) {
 					maxY = y;
 				}
-				cellPoints.Add( new Point( x, y ) );
+				quantizedPointBuffer[j] = new Point( x, y );
 			}
-			Polygon polygon = Polygon.FromRoundedConvexVertices( CollectionsMarshal.AsSpan( cellPoints ) );
+			Polygon polygon = Polygon.FromRoundedConvexVertices( quantizedPointBuffer[..( cellCoords.Count / 2 )] );
 			if( polygon.IsEmpty ) {
 				throw new InvalidOperationException( "Quantized Voronoi cell does not enclose positive area." );
 			}
@@ -119,7 +111,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		ReadOnlySpan<int> inedges = delaunay.Inedges;
 		ReadOnlySpan<int> hullIndex = delaunay.HullIndex;
 		Dictionary<Cell, IReadOnlyList<Cell>> cellNeighbours = new Dictionary<Cell, IReadOnlyList<Cell>>( points.Count );
-		List<Cell> neighbours = new List<Cell>( MaximumExpectedNeighbours );
+		List<Cell> neighbours = new List<Cell>( IVoronoiFactory.MaximumCellVertices + 1 );
 		for( int i = 0; i < points.Count; i++ ) {
 			int e0 = inedges[i];
 			if( e0 == -1 ) {
@@ -145,7 +137,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				}
 
 			} while( e != e0 );
-			cellNeighbours[cells[i]] = [.. neighbours]; // Make a copy
+			cellNeighbours[cells[i]] = Array.AsReadOnly( neighbours.ToArray() );
 			neighbours.Clear();
 		}
 
@@ -156,7 +148,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			}
 		}
 
-		return new Voronoi( points, cells, cellNeighbours, [.. edges] );
+		return new Voronoi( points, cells.AsReadOnly(),
+			new ReadOnlyDictionary<Cell, IReadOnlyList<Cell>>( cellNeighbours ), Array.AsReadOnly( edges.ToArray() ) );
 	}
 
 	private static void Clip(
@@ -318,18 +311,10 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				( bounds.Y1 + bounds.Y2 ) / 2
 		) ) {
 			cellCoords.Clear();
-			cellCoords.AddRange(
-				[
-					bounds.X1,
-					bounds.Y1,
-					bounds.X2,
-					bounds.Y1,
-					bounds.X2,
-					bounds.Y2,
-					bounds.X1,
-					bounds.Y2
-				]
-			);
+			InsertPoint( cellCoords, cellCoords.Count, bounds.X1, bounds.Y1 );
+			InsertPoint( cellCoords, cellCoords.Count, bounds.X2, bounds.Y1 );
+			InsertPoint( cellCoords, cellCoords.Count, bounds.X2, bounds.Y2 );
+			InsertPoint( cellCoords, cellCoords.Count, bounds.X1, bounds.Y2 );
 		}
 	}
 
@@ -364,8 +349,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			if( c0 == 0 && c1 == 0 ) {
 				//e0 = e1;
 				e1 = 0;
-				cellCoords.Add( x1 );
-				cellCoords.Add( y1 );
+				InsertPoint( cellCoords, cellCoords.Count, x1, y1 );
 			} else {
 				double sx0;
 				double sy0;
@@ -404,8 +388,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 						   cellCoords.Count
 					   );
 					}
-					cellCoords.Add( sx0 );
-					cellCoords.Add( sy0 );
+					InsertPoint( cellCoords, cellCoords.Count, sx0, sy0 );
 				}
 				e0 = e1;
 				e1 = EdgeCode( bounds, sx1, sy1 );
@@ -425,8 +408,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 					   cellCoords.Count
 				   );
 				}
-				cellCoords.Add( sx1 );
-				cellCoords.Add( sy1 );
+				InsertPoint( cellCoords, cellCoords.Count, sx1, sy1 );
 			}
 		}
 		if( cellCoords.Count != 0 ) {
@@ -458,19 +440,19 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				( bounds.Y1 + bounds.Y2 ) / 2
 		) ) {
 			cellCoords.Clear();
-			cellCoords.AddRange(
-				[
-					bounds.X2,
-					bounds.Y1,
-					bounds.X2,
-					bounds.Y2,
-					bounds.X1,
-					bounds.Y2,
-					bounds.X1,
-					bounds.Y1
-				]
-			);
+			InsertPoint( cellCoords, cellCoords.Count, bounds.X2, bounds.Y1 );
+			InsertPoint( cellCoords, cellCoords.Count, bounds.X2, bounds.Y2 );
+			InsertPoint( cellCoords, cellCoords.Count, bounds.X1, bounds.Y2 );
+			InsertPoint( cellCoords, cellCoords.Count, bounds.X1, bounds.Y1 );
 		}
+	}
+
+	private static void InsertPoint( List<double> points, int index, double x, double y ) {
+		if( points.Count >= 2 * MaximumClippedVertices ) {
+			throw new InvalidOperationException( $"Clipped Voronoi scratch exceeds {MaximumClippedVertices} vertices." );
+		}
+		points.Insert( index, x );
+		points.Insert( index + 1, y );
 	}
 
 	private static int Edge(
@@ -534,8 +516,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 					x,
 					y
 			) ) ) {
-				points.Insert( j, x );
-				points.Insert( j + 1, y );
+				InsertPoint( points, j, x, y );
 				j += 2;
 			}
 		}
@@ -806,6 +787,9 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		cellPointCount = 0;
 		do {
 			int t = e / 3;
+			if( cellPointCount == cellPointBuffer.Length ) {
+				throw new InvalidOperationException( $"Voronoi cell {i} exceeds {IVoronoiFactory.MaximumCellVertices} pre-clipping vertices." );
+			}
 			cellPointBuffer[cellPointCount + 0] = circumcenters[( t * 2 ) + 0];
 			cellPointBuffer[cellPointCount + 1] = circumcenters[( t * 2 ) + 1];
 			cellPointCount += 2;
@@ -882,8 +866,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			double c1 = ( ex * ex ) + ( ey * ey );
 			double x = x1 + ( ( ( ey * b1 ) - ( dy * c1 ) ) * d );
 			double y = y1 + ( ( ( dx * c1 ) - ( ex * b1 ) ) * d );
-			circumcenters[j + 0] = Math.Floor( x ); // Probably not correct or wise
-			circumcenters[j + 1] = Math.Floor( y ); // but close points suck
+			circumcenters[j + 0] = x;
+			circumcenters[j + 1] = y;
 			j += 2;
 		}
 		return circumcenters;

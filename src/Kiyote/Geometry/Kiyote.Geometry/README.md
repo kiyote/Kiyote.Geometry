@@ -61,12 +61,43 @@ boundary slightly. Contact or quantization collapse returns false and
 `Polygon.None`; a result exceeding 128 corners throws `InvalidOperationException`.
 Scratch storage is bounded, and contained immutable operands can be reused.
 
-Generated Voronoi cells retain their existing floor-to-integer quantization.
+Generated Voronoi cells retain floor-to-integer quantization of final vertices;
+circumcentres and clipping calculations are no longer rounded prematurely.
 Their convex hull removes quantization-induced concavity; a collapsed cell
 throws rather than publishing a degenerate polygon. This trusted producer path
 does not relax public polygon construction.
 
-Implementation is staged: topology validation and factory/rasterizer boundary
+## Diagram factory contracts
+
+Delaunay and Voronoi factories require at least three distinct, noncollinear
+sites within `GeometryLimits`. Duplicates are rejected by default. Explicit
+`sanitizePoints` deduplicates in first-occurrence order; for Voronoi it also
+discards sites outside the clipping rectangle. Remaining sites must still be
+nondegenerate. Out-of-domain coordinates are always invalid, even with
+sanitization enabled.
+
+Voronoi sites must lie inside the requested rectangle unless sanitization is
+enabled. Both rectangle endpoints must be within the geometry domain, and its
+inclusive width and height must each be at least two to enclose geometric area.
+Invalid site sets throw `ArgumentException`; invalid coordinates, bounds, and
+unrepresentable array capacities throw `ArgumentOutOfRangeException`.
+
+`IVoronoiFactory.MaximumCellVertices` is a compile-time limit of 64 vertices
+emitted by cell traversal, before projection, clipping, and simplification.
+Open cells have separately bounded projection/clipping scratch; their final
+polygons can have more than 64 corners, subject to the polygon limit of 128.
+Exceeding the traversal or polygon limit, or collapsing a cell after final
+quantization, throws `InvalidOperationException`. Increasing the constants
+requires rebuilding and revisiting their derived scratch bounds.
+
+There is no fixed total site-count cap. Required array lengths must be
+representable, and allocations remain subject to available memory. Results own
+stable site snapshots and read-only triangles, hulls, cells, edges, and neighbour
+collections; reusing or mutating an input array/list cannot change an existing
+diagram. Quantized Voronoi polygons approximate the continuous cells, not an
+exact partition of continuous space.
+
+Implementation is staged: topology validation and rasterizer boundary
 checks have separate remaining
 milestones in the repository's correctness plan.
 

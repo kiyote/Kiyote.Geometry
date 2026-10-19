@@ -1,5 +1,70 @@
 # Performance measurements
 
+## C1 diagram follow-up
+
+Measured on 2026-10-19 with the same environment and short-run job settings as
+P1 below. All 12 selected cases complete, including the previously failing
+HighDegree Voronoi workload. These measurements include validated sites,
+read-only result ownership, bounded cell scratch, and unrounded circumcentres.
+
+```powershell
+dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*VoronoiWorkloadBenchmarks*' '*D3DelaunayFactoryBenchmarks*' '*MapboxDelaunatorFactoryBenchmarks*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\correctness-c1
+```
+
+### Voronoi workloads
+
+The before column is the C3 run with identical sites and job settings. HighDegree
+has no valid pre-fix timing. New validation has a cost, and short-run intervals
+overlap; these results do not establish a precise throughput regression.
+Per-diagram bounded quantization scratch replaces per-cell temporary lists,
+reducing allocation even with the new owned site snapshot and read-only wrappers.
+Deferring intermediate rounding intentionally changes some output vertices, so
+these are correctness-cost comparisons, not interchangeable-algorithm speedups.
+
+| Workload | C3 mean (us) | C1 mean (us) | C1 error (us) | C1 StdDev (us) | C3 allocation | C1 allocation |
+|---|---:|---:|---:|---:|---:|---:|
+| Grid | 337.8 | 365.26 | 46.854 | 7.251 | 402.42 KB | 374.69 KB |
+| JitteredGrid | 587.4 | 646.12 | 138.313 | 35.919 | 575.05 KB | 515.68 KB |
+| HighDegree | failed | 33.81 | 4.452 | 0.689 | unavailable | 56.73 KB |
+
+### Isolated duplicate-validation cost
+
+The internal triangulation benchmark now runs with and without duplicate
+rejection on the same already-valid coordinates. Untimed setup verifies identical
+triangle, half-edge, and hull sequences. This isolates the duplicate check, not
+all public-boundary validation or snapshot costs. Its sorted exact coordinate
+keys reuse the existing distance array; no additional per-site buffer/hash set
+is introduced on the default factory path.
+
+Short-run means add about 5 us, 0.30 ms, and 1.62 ms at 400, 10,000, and 40,000
+sites respectively (roughly 9-11%); larger-case uncertainty is substantial.
+Managed allocation is similar, but an exact zero-delta claim is not supported.
+A trial whole-kernel thread-allocation assertion gave deltas of +6,080 and -2,080
+bytes at 40,000 sites in successive runs. No stable exact budget was established,
+so that assertion was not retained; the benchmark measurements below are used
+instead, as required by the plan.
+
+| Sites | Reject duplicates | Mean (us) | Error (us) | StdDev (us) | Allocated |
+|---|---|---:|---:|---:|---:|
+| 400 | false | 58.70 | 2.196 | 0.340 | 47.63 KB |
+| 400 | true | 63.82 | 3.388 | 0.880 | 47.63 KB |
+| 10000 | false | 3087.41 | 163.110 | 42.359 | 1167.95 KB |
+| 10000 | true | 3386.04 | 993.691 | 153.775 | 1168.43 KB |
+| 40000 | false | 14909.03 | 2611.298 | 404.101 | 4674.95 KB |
+| 40000 | true | 16528.53 | 1366.625 | 354.908 | 4674.97 KB |
+
+### Complete Delaunay factory
+
+Current validated/owned-result snapshots; no new matched pre-C1 factory run was
+made. Grid dimensions 100, 500, and 1000 correspond to the site counts below at
+spacing five.
+
+| Sites | Mean (us) | Error (us) | StdDev (us) | Allocated |
+|---|---:|---:|---:|---:|
+| 400 | 80.54 | 7.252 | 1.883 | 91.71 KB |
+| 10000 | 4128.98 | 1629.495 | 252.166 | 2324.63 KB |
+| 40000 | 20757.48 | 3157.062 | 488.559 | 9333.48 KB |
+
 ## C3 polygon follow-up
 
 Measured on 2026-10-19 with the same environment and job settings as P1 below.

@@ -283,6 +283,63 @@ Review finding 1. Primary implementation:
 - Validate cell, projected, and clipped buffer capacities and exception-path returns.
   Benchmark representative low-degree inputs and the supported high-degree case.
 
+**C1 implementation evidence**
+
+- Initial Release regressions: **34 failures / 2 passes**. The 26-, 40-, 63-,
+  and 64-vertex closed cells and the 64-vertex open cell failed with
+  `IndexOutOfRangeException`. Above-limit cells also failed with that accidental
+  exception instead of the agreed explicit rejection. Other failures covered
+  factory validation, caller-input aliasing, mutable result collections, and
+  overflowing coordinate-array capacity arithmetic.
+- `IVoronoiFactory.MaximumCellVertices` names the 64-vertex pre-clipping limit.
+  The traversal checks before writing the next coordinate pair. Tests derive
+  63/64/65 fixtures from the constant and independently count incident triangles
+  to establish their actual traversal degree. Open-cell coverage exercises 64
+  traversed vertices followed by more than 64 output vertices; rejected calls
+  do not affect subsequent valid calls on the same factory.
+- Projection needs at most two extra vertices: 66 vertices / 132 doubles.
+  Finite clipping emits at most two endpoints per projected edge and four box
+  corners; the open-cell boundary pass can insert four more corners. Conservative
+  clipping scratch is therefore `2 * 66 + 8 = 140` vertices / 280 doubles.
+  All clipping insertion sites check that bound before mutation. Quantization
+  reuses 140 stack points once per diagram, eliminating per-cell temporary lists.
+  Output polygons retain their independent 128-corner bound. Scratch is local
+  managed/stack storage; there are no rented buffers to leak on exception paths.
+- Shared site preparation validates the geometry domain, rectangle membership,
+  and nondegeneracy, and owns an ordered snapshot. Only explicit sanitization
+  deduplicates/filters, and it revalidates the remaining sites. All result
+  collections, including nested neighbour lists, are read-only views of storage
+  owned exclusively by the factory/result.
+- Default-path duplicate detection reuses the triangulation distance array:
+  each validated 16-bit coordinate pair forms an exact 32-bit key represented in
+  `double`; sort and compare adjacent keys before reusing the array for distances.
+  It does not allocate a hash set or change the triangulation's index ordering.
+  Opt-in sanitization uses a set to retain first-occurrence order.
+- Array capacity arithmetic uses `long` and rejects `6*n - 15 > Array.MaxLength`
+  before snapshot/coordinate allocation. For `n >= 8` this also bounds the `4*n`
+  vectors and `2*n` coordinates; smaller supported counts are trivially safe.
+  Tests cover an impossible list count without reading elements and the exact
+  representable triangle-array boundary without large allocations.
+- An additional regression exposed premature circumcentre flooring. For sites
+  `(0,0), (9,2), (2,9)`, the exact circumcentre is `(85/22,85/22)`; clipping
+  against `[-20,20]` must produce floored boundary vertices `(9,-20)` and
+  `(-20,9)`, not `(8,-20)` and `(-20,8)`. The test was observed failing, then
+  passed after deferring flooring until final output. Continuous convexity is
+  also necessary for the clipping-capacity derivation.
+- Permanent coverage checks full-domain sites, site containment, bounds, unique
+  reciprocal neighbours, and ten seeded irregular diagrams against independent
+  nearest-site half-planes with the exact floor-quantization error allowance.
+  Release solution build: zero warnings/errors. **347 unit + 94 integration**
+  tests pass; **11 unit + 60 integration** diagram tests also pass in Debug.
+- All 12 selected benchmark cases complete. The formerly failing 40-degree
+  workload now measures 33.81 us / 56.73 KB. Regular/jittered Voronoi allocation
+  falls from 402.42/575.05 KB to 374.69/515.68 KB. Duplicate checking adds roughly
+  9-11% to the isolated triangulation short-run means without another per-site
+  scratch buffer; uncertainty and small allocation variations are retained in
+  [BENCHMARK.md](BENCHMARK.md). An attempted exact allocation assertion was
+  unstable across repeated runs and was not retained; no correctness regression
+  expectations were weakened.
+
 ### C2. Repair quadtree storage and query invariants
 
 Review finding 2. Primary implementation:
@@ -707,7 +764,7 @@ and [ConnectivityBuilder.cs](src/Kiyote/Geometry/Kiyote.Geometry/Topology/Connec
 | 0 (complete) | Approve domain, shape, ownership, and extensibility contracts | Decisions recorded in section 1 |
 | 1 (complete) | P1: repaired baseline; high-degree timing deferred to C1 | None; domain approval for boundary fixtures |
 | 2 (complete) | C4 arithmetic and C5 rectangle foundations | Milestone 0; P1 for performance comparisons |
-| 3 | C1: Voronoi capacity and factory validation | Approved degree/domain contract; C3 and geometry-storage C7 for final result invariants |
+| 3 (C1 complete) | C1: Voronoi capacity and factory validation; diagram-storage portion of C7 | Approved degree/domain contract; C3 and geometry-storage C7 for final result invariants |
 | 3 | C2: quadtree correctness | C5; C4 for supported-coordinate arithmetic |
 | 3 (C3 complete) | C3: polygon semantics; geometry-storage portion of C7 | Approved polygon contract; C4 |
 | 3 | C6: rasterizer contract | Approved shape contract; C4; C3 for validated polygon overloads |
