@@ -4,20 +4,17 @@ namespace Kiyote.Geometry.DelaunayVoronoi;
 
 internal sealed class QuadTreeSearchableVoronoi : ISearchableVoronoi {
 
-	private readonly IQuadTree<Rect> _quadTree;
-	private readonly Dictionary<Rect, Cell> _bounds;
+	private readonly IQuadTree<IndexedCell> _quadTree;
 	private readonly IVoronoi _voronoi;
 
 	public QuadTreeSearchableVoronoi(
-		IQuadTree<Rect> quadTree,
+		IQuadTree<IndexedCell> quadTree,
 		IVoronoi voronoi
 	) {
 		_voronoi = voronoi;
 		_quadTree = quadTree;
-		_bounds = [];
 		foreach( Cell cell in voronoi.Cells ) {
-			_quadTree.Insert( cell.BoundingBox );
-			_bounds[cell.BoundingBox] = cell;
+			_quadTree.Insert( new IndexedCell( cell ) );
 		}
 	}
 
@@ -32,17 +29,33 @@ internal sealed class QuadTreeSearchableVoronoi : ISearchableVoronoi {
 	IReadOnlyList<Cell> ISearchableVoronoi.Search(
 		Rect area
 	) {
-		IReadOnlyList<Rect> result = _quadTree.Query( area );
-		if( result.Count != 0 ) {
-			return result.Select( r => _bounds[r] ).ToList();
-		}
+		ListQueryVisitor<Cell> visitor = default;
+		Search( area, ref visitor );
+		return visitor.Results;
+	}
 
-		return [];
+	public void Search<TVisitor>( Rect area, ref TVisitor visitor )
+		where TVisitor : struct, IQueryVisitor<Cell>, allows ref struct {
+		CellVisitor<TVisitor> adapter = new CellVisitor<TVisitor>( visitor );
+		try {
+			_quadTree.Query( area, ref adapter );
+		} finally {
+			visitor = adapter.Visitor;
+		}
 	}
 
 	IReadOnlyList<Cell> ISearchableVoronoi.Search( int x, int y, int w, int h ) {
 		Rect area = new Rect( x, y, w, h );
 		return ( this as ISearchableVoronoi ).Search( area );
 	}
-}
 
+	private ref struct CellVisitor<TVisitor>( TVisitor visitor ) : IQueryVisitor<IndexedCell>
+		where TVisitor : struct, IQueryVisitor<Cell>, allows ref struct {
+		internal TVisitor Visitor = visitor;
+
+		public void Visit( scoped in IndexedCell item ) {
+			Cell cell = item.Cell;
+			Visitor.Visit( in cell );
+		}
+	}
+}

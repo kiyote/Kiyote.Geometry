@@ -97,6 +97,18 @@ collections; reusing or mutating an input array/list cannot change an existing
 diagram. Quantized Voronoi polygons approximate the continuous cells, not an
 exact partition of continuous space.
 
+`Triangle` is an immutable value type with ordered structural equality, not a
+nullable reference object. Its default value is degenerate and is rejected by
+filled rasterization. Triangles are stored inline in collections; copying large
+collections copies all vertex data, not just references.
+
+Triangulation scratch is pooled separately from owned result storage and returned
+on success or failure. Results need no disposal and never alias returned scratch.
+Internal meshes expose only populated entries while retaining capacity arrays:
+this avoids trimming copies but can retain nearly twice the logical mesh storage
+for all-hull inputs. Pool caches also retain scratch; lower allocated bytes do
+not imply an equal reduction in process working set.
+
 ## Quadtree contracts
 
 Quadtrees use inclusive occupied-cell bounds in signed 32-bit coordinate space,
@@ -118,10 +130,19 @@ and are maintained in constant time. A populated leaf is not empty.
 is a read-only live view of direct entries. `GetSubTreeContents` returns an
 independent collection of all entries.
 
+`Query(Rect, ref visitor)` and searchable Voronoi's `Search(Rect, ref visitor)`
+accept struct or ref-struct implementations of `IQueryVisitor<T>`. Implement
+`Visit(scoped in T item)` to consume each match without intermediate collections.
+Traversal allocates nothing; caller-owned visitor state survives both success and
+callback exceptions. Do not mutate the index or indexed bounds during a visit.
+Existing collection-returning overloads remain, using a single result list.
+Use the concrete `Rect` query overload to avoid boxing the query rectangle.
+
 Searchable Voronoi queries use cell bounding boxes, not exact polygon intersections.
 The searchable factory's size defines an origin-anchored index rectangle; it must
 contain every cell's bounding box. Undersized or incorrectly positioned indexes
 now throw rather than silently omitting cells.
+Distinct cells with identical bounding boxes remain distinct search results.
 
 ### Rasterization
 
@@ -137,6 +158,14 @@ outlines may remain concave. Already constructed `Polygon` inputs reuse their
 validated immutable boundary without another convexity scan. Struct/ref-struct
 sinks, pooled scanline scratch, and inclusive whole-span emission are preserved.
 Sink exceptions propagate to the caller and pooled buffers are returned.
+
+`IPixelOperation.PixelSpan` is now required: inheriting its former default
+implementation boxed pixel-only struct sinks once per scanline. A scalar sink
+can implement it as `IPixelOperation.EmitSpan(this, xMin, xMax, y)`; whole-span
+sinks should retain their specialized implementation. The helper operates on a
+value copy, so observable state should be referenced/span-backed; write the loop
+directly if mutable value state must persist inside the sink. Rasterizer APIs
+continue to receive sinks by value. Delegate adapters also use the unboxed helper.
 
 ### Topology ownership and lifetime
 

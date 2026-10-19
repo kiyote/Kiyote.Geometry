@@ -786,17 +786,17 @@ Review finding 9. Primary areas:
 [MapboxDelaunatorFactory.cs](src/Kiyote/Geometry/Kiyote.Geometry/DelaunayVoronoi/MapboxDelaunatorFactory.cs),
 and [Trees](src/Kiyote/Geometry/Kiyote.Geometry/Trees).
 
-- [ ] Benchmark a readonly value-type triangle against the current per-triangle
+- [x] Benchmark a readonly value-type triangle against the current per-triangle
   object representation, including construction, traversal, and copying costs.
 - [x] Build owned polygon edge storage once, without an intermediate full copy
   (completed with C3).
-- [ ] Evaluate reuse/pooling of the seven triangulation work arrays and avoidance
+- [x] Evaluate reuse/pooling of the seven triangulation work arrays and avoidance
   of both output-trimming copies. Keep scratch ownership separate from result ownership.
-- [ ] Add caller-owned destination or struct-visitor query paths so recursive tree
+- [x] Add caller-owned destination or struct-visitor query paths so recursive tree
   traversal does not construct intermediate lists. Retain convenience wrappers.
-- [ ] Avoid a second result materialization in searchable-Voronoi queries when the
+- [x] Avoid a second result materialization in searchable-Voronoi queries when the
   chosen query API can emit the required cells directly.
-- [ ] Investigate default-interface per-pixel sink allocation measured by C6
+- [x] Investigate default-interface per-pixel sink allocation measured by C6
   (29,792/30,752 B per polygon/triangle fill). Preserve ref-struct and whole-span
   paths; do not assume that a struct sink alone eliminates interface boxing.
 
@@ -806,6 +806,60 @@ storage and escaped results never alias returned scratch. Where stable allocatio
 budgets are justified, demonstrate that the old implementation exceeds the budget
 and the new implementation passes. Otherwise use BenchmarkDotNet allocation data.
 Accept only measured benefits that justify complexity; pooling is not an end in itself.
+
+**Implementation and evidence**
+
+- Before production changes, all **five** new cases compiled and failed for the
+  intended reasons: 1,000 triangle constructions allocated 48,024 B against a
+  33,024 B ceiling; 100 tree queries allocated 2,390,400 B against a 409,600 B
+  ceiling; both scalar-struct and delegate rasterization allocated 50,400 B
+  against zero; equal-bounds Voronoi cells lost one identity and duplicated
+  another. The original budgets were retained.
+- `Triangle` is now a readonly record struct, retaining ordered equality and
+  hashing. The rasterizer's obsolete null guard is removed, avoiding boxing.
+  Default triangles remain degenerate and filled rasterization rejects them
+  before callbacks. Construction, traversal, and shallow-reference versus
+  inline-value copying are measured at 16, 2,048, 4,096, and 16,384 elements.
+- Queries share one generic visitor traversal. Materializing overloads use one
+  lazy result list, not lists at every node; generic rectangle comparisons avoid
+  per-entry boxing. Concrete-rectangle overloads avoid query boxing.
+  Struct/ref-struct visitors preserve order, multiplicity, caller-owned state,
+  and exceptions. Stack-backed destinations are covered.
+- Searchable Voronoi indexes lightweight cell references directly, rather than
+  using bounds as dictionary identities. Equal-bounds cells remain distinct,
+  and search has a zero-allocation visitor path plus its convenience wrapper.
+  The adapter copies visitor state back in `finally`, including partial state
+  when a ref-struct visitor throws.
+- The 512-entry edge stack is stack-allocated. Five integer work regions share
+  one pool rental; distance scratch uses another. Slices use logical lengths,
+  not pool capacity. Both rentals are protected by `finally`, including failure
+  of the second rental. Output arrays are never rented or returned; logical
+  spans avoid two trimming copies.
+- Dirty-pool tests cover sizes 3, 17, 400, and 4,096 with oversized rentals,
+  deterministic results, output-only allocation budgets, parallel/repeated
+  creation, and retained-result isolation. All-hull tests verify logical lengths
+  and reciprocal half-edges. Repeated duplicate failures stay below 4 KB/call;
+  losing either rental would exceed 8 KB/call before exception allocations.
+- `IPixelOperation.PixelSpan` is required rather than a boxing default method.
+  Pixel-only sinks and the delegate adapter use the shared generic scalar
+  emitter; ref-struct and optimized whole-span sinks remain supported. The
+  helper's value-copy state semantics and migration are documented.
+- Acceptance includes measured costs: value arrays copy more data and can
+  cross the large-object-heap threshold earlier; small mesh creation measured
+  slightly slower. Internal mesh capacity can approach twice its logical
+  payload for all-hull inputs, and pool caches retain scratch. Public diagrams
+  do not retain those temporary internal mesh objects. No claim of universal
+  throughput or working-set reduction is made.
+- **35 matched benchmark cases** completed, plus **three visitor cases** and a
+  **24-case triangle size sweep**. Tree convenience-query allocation fell from
+  23.34 KB to 776 B; visitors and per-pixel rasterization allocate zero after
+  warmup. Delaunay creation allocation approximately halved. Detailed results,
+  uncertainty, and representation tradeoffs are in [BENCHMARK.md](BENCHMARK.md).
+- Final validation: **429 unit + 138 integration tests pass in Release**, and
+  **145 targeted unit tests pass in Debug**. The full Release solution builds
+  with zero warnings/errors, including the visualizer, profiler, and benchmarks.
+  The package adds 22 permanent cases, including the five observed red-to-green
+  regressions; earlier correctness suites remain green.
 
 ### P3. Make topology mutation and commit scale with affected data
 
@@ -941,7 +995,7 @@ and [ConnectivityBuilder.cs](src/Kiyote/Geometry/Kiyote.Geometry/Topology/Connec
 | 3 (C3 complete) | C3: polygon semantics; geometry-storage portion of C7 | Approved polygon contract; C4 |
 | 3 (C6 complete) | C6: rasterizer contract | Approved shape contract; C4; C3 for validated polygon overloads |
 | 4 (complete) | Grid-source portion of C7 and A1 | Approved ownership/extensibility contracts; C5 |
-| 5 | P2: allocation/layout improvements | P1 and correctness fixes for each affected component |
+| 5 (P2 complete) | P2: allocation/layout improvements | P1 and correctness fixes for each affected component |
 | 5 | P3: topology locality | P1, grid-source C7, and A1 |
 | 6 | Documentation, full validation, updated measurements | All accepted packages |
 

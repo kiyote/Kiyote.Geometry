@@ -1,5 +1,133 @@
 # Performance measurements
 
+## P2 allocation and representation boundaries
+
+Measured against pre-P2 production at `61fcfe5`, in the same .NET 10.0.13,
+SDK 11 preview, BenchmarkDotNet 0.15.8, i7-9700K environment as the preceding
+measurements. The before run completed 35 cases; the after run completed those
+35 plus three visitor cases. Setup checks and seeded fixtures remain enabled.
+Times are short-run measurements, not guaranteed speedups.
+
+```powershell
+dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*TriangleRepresentationBenchmarks*' '*SearchableVoronoiBenchmarks*' '*MapboxDelaunatorFactoryBenchmarks*' '*D3DelaunayFactoryBenchmarks*' '*VoronoiWorkloadBenchmarks*' '*SimpleQuadTreeNodeBenchmarks.Query*' '*IntegerRasterizerBenchmarks*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\performance-p2-after
+```
+
+The matched run used triangle counts 16 and 4,096. The committed fixture also
+includes 2,048 and 16,384, added for the subsequent size sweep; running the full
+command now includes those extra 12 cases.
+
+### Queries
+
+Times are nanoseconds; allocation is per operation after warmup. Error is half
+the 99.9% confidence interval. Visitor cases are new APIs, not before/after
+comparisons with equivalent materialization.
+
+| Operation | Before mean | After mean | After error | After StdDev | Before allocation | After allocation |
+|---|---:|---:|---:|---:|---:|---:|
+| Seeded 10,000-item tree query | 4869 | 1582 | 134.4 | 34.9 | 23.34 KB | 776 B |
+| Tree counting visitor | - | 1406 | 342.0 | 88.8 | - | 0 B |
+| Voronoi search, 20x20 | 777.1 | 273.0 | 65.76 | 17.08 | 3.45 KB | 88 B |
+| Voronoi counting visitor, 20x20 | - | 215.6 | 21.84 | 5.67 | - | 0 B |
+| Voronoi search, 200x200 | 11090.8 | 7719.9 | 628.31 | 163.17 | 29.02 KB | 8384 B |
+| Voronoi counting visitor, 200x200 | - | 2731.1 | 138.59 | 35.99 | - | 0 B |
+
+There is one growing result list per materialized query, with no recursive
+lists or per-candidate boxing. Search directly projects indexed cell references;
+it no longer materializes rectangles or uses a bounds-to-cell dictionary.
+This also fixes distinct cells with equal bounds being returned as duplicates
+of the last cell. Generic/ref-struct visitors can write into caller-owned spans.
+
+### Rasterizers
+
+Times are microseconds. Every after case reports zero managed allocation.
+
+| Operation | Before mean | After mean | After error | After StdDev | Before allocation |
+|---|---:|---:|---:|---:|---:|
+| Small raw fill, span sink | 0.1944 | 0.2349 | 0.05099 | 0.01324 | 0 B |
+| Small validated fill, span sink | 0.1425 | 0.1468 | 0.02466 | 0.00640 | 0 B |
+| Polygon fill, scalar sink | 702.8405 | 348.5144 | 13.81973 | 3.58894 | 29792 B |
+| Polygon fill, span sink | 94.3312 | 86.7085 | 2.02079 | 0.52479 | 0 B |
+| Triangle fill, scalar sink | 327.0646 | 200.7778 | 6.45518 | 1.67639 | 30752 B |
+| Triangle fill, span sink | 56.5977 | 56.6419 | 7.81448 | 1.20930 | 0 B |
+| Outline, scalar sink | 5.2581 | 5.2771 | 0.58262 | 0.15130 | 0 B |
+| Outline, span sink | 5.3787 | 5.4333 | 0.62853 | 0.16323 | 0 B |
+
+The required explicit span callback removes default-interface boxing. Scalar
+sinks use the shared generic emitter, while optimized whole-span sinks retain
+their implementations. The small raw-fill increase is recorded rather than
+claimed as an improvement. Unit tests separately verify zero warm allocation
+for the delegate adapter.
+
+### Triangulation and public diagrams
+
+Times are microseconds. Both duplicate-validation settings are measured for the
+raw kernel. Allocation uses 1 KB = 1,024 B.
+
+| Operation | Before mean | After mean | After error | After StdDev | Before allocation | After allocation |
+|---|---:|---:|---:|---:|---:|---:|
+| Kernel 100x100, no duplicate check | 61.91 | 64.69 | 2.614 | 0.679 | 47.63 KB | 19.05 KB |
+| Kernel 500x500, no duplicate check | 3050.68 | 2955.29 | 142.971 | 37.129 | 1168.43 KB | 470.30 KB |
+| Kernel 1000x1000, no duplicate check | 15929.09 | 13779.61 | 458.268 | 119.011 | 4677.41 KB | 1878.12 KB |
+| Kernel 100x100, duplicate check | 64.96 | 74.03 | 9.320 | 1.442 | 47.63 KB | 19.05 KB |
+| Kernel 500x500, duplicate check | 3183.40 | 3038.69 | 216.443 | 33.495 | 1168.43 KB | 470.30 KB |
+| Kernel 1000x1000, duplicate check | 16188.88 | 14186.10 | 809.693 | 210.275 | 4674.97 KB | 1878.12 KB |
+| Delaunay 100x100 | 74.60 | 78.35 | 4.681 | 1.216 | 91.71 KB | 46.21 KB |
+| Delaunay 500x500 | 4288.72 | 3855.38 | 1775.962 | 274.832 | 2324.57 KB | 1167.76 KB |
+| Delaunay 1000x1000 | 21293.89 | 16097.14 | 1464.339 | 226.608 | 9333.48 KB | 4678.88 KB |
+| Voronoi grid | 458.38 | 376.53 | 27.103 | 4.194 | 374.69 KB | 346.11 KB |
+| Voronoi jittered grid | 565.77 | 571.98 | 87.888 | 22.824 | 515.68 KB | 485.67 KB |
+| Voronoi high degree | 33.16 | 31.54 | 1.455 | 0.378 | 56.73 KB | 52.59 KB |
+
+Small triangulations measured slower; pooling and span-based scratch are not
+claimed to be free. The substantial allocation reduction, simpler result
+ownership, and favorable large-workload results justify the change, but the
+wide Delaunay 500x500 interval does not establish a precise speedup.
+
+Seven temporary arrays become a 512-int stack buffer plus one partitioned
+integer rental and one double rental. Only exact logical spans are used.
+Results own both capacity-sized mesh arrays and the exact hull array; no pool
+lease escapes. Logical mesh spans avoid two trimming allocations and copies.
+For an all-hull 32-site mesh, each capacity array has 177 entries versus 90
+logical entries: nearly twice the retained mesh payload, although construction
+allocates less. Public Delaunay/Voronoi factories discard this temporary mesh
+after building their public results. Shared pool caches also retain memory, so
+these allocation figures are not measurements of process working set.
+
+### Triangle representation and size sensitivity
+
+The after run compares production `Triangle` with a benchmark-local immutable
+reference record. A follow-up completed 24 cases using the same short-job
+settings and `--filter '*TriangleRepresentationBenchmarks*'`, with artifacts
+under `performance-p2-triangle-sizes`. The following table is from that single
+follow-up, not a mixture of runs. Times are microseconds; copying is into
+preallocated arrays and neither traversal nor copying allocates.
+
+| Count | Reference construction | Value construction | Reference traversal | Value traversal | Reference copy | Value copy | Reference allocation | Value allocation |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 16 | 0.0956 | 0.0421 | 0.0104 | 0.0089 | 0.0104 | 0.0095 | 792 B | 408 B |
+| 2048 | 15.2173 | 5.1667 | 1.6274 | 1.3168 | 0.4069 | 1.0205 | 98328 B | 49176 B |
+| 4096 | 35.4728 | 51.7054 | 3.8344 | 2.7947 | 1.0527 | 2.5751 | 196632 B | 98338 B |
+| 16384 | 921.5807 | 62.4428 | 17.3105 | 12.1450 | 3.9092 | 12.0764 | 786467 B | 393249 B |
+
+Value triangles halve per-element storage and improve traversal, but full-array
+copies move 24-byte payloads instead of 8-byte references. At 4,096 entries the
+value array's 98,304-byte payload exceeds the default 85,000-byte large-object
+threshold, while the reference-slot array does not. At 2,048 both arrays are
+below it; at 16,384 both are above it. These size effects are consistent with
+the construction crossover, not proof that GC placement alone explains every
+timing difference.
+
+The 16,384-reference construction result is especially noisy: mean 921.581 us,
+99.9% error 629.835 us, StdDev 163.566 us, versus value mean 62.443 us, error
+5.810 us, StdDev 1.509 us. Do not extrapolate a universal 15x advantage.
+The earlier matched after run also showed the 4,096 construction penalty
+(27.577 us reference versus 43.314 us value) and roughly doubled copy cost.
+The value representation is accepted for owned compact immutable geometry and
+lower per-triangle allocation, not as a claim that every operation is faster.
+
+Topology compilation storage is unchanged in P2; locality/index maintenance and
+their memory/build costs remain P3 work.
+
 ## C7/A1 topology ownership and lifetime
 
 Measured on 2026-10-19 against pre-C7 production at `0c850b7`, using the same

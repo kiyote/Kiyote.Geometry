@@ -40,9 +40,9 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 		if( IsEmpty ) {
 			return Array.Empty<T>();
 		}
-		List<T> results = new List<T>( _count );
-		FillContents( results );
-		return results;
+		ListQueryVisitor<T> visitor = new ListQueryVisitor<T>( _count );
+		FillContents( ref visitor );
+		return visitor.Results;
 	}
 
 	/// <summary>A read-only live view of entries stored directly in this node.</summary>
@@ -55,14 +55,32 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 			return Array.Empty<T>();
 		}
 		Rect query = new Rect( queryArea.X1, queryArea.Y1, queryArea.Width, queryArea.Height );
-		return Bounds.Overlaps( query ) ? QueryCore( query ) : Array.Empty<T>();
+		return Query( query );
 	}
 
-	private IReadOnlyList<T> QueryCore( Rect queryArea ) {
-		List<T> results = [];
+	/// <summary>Queries concrete bounds without boxing the query rectangle.</summary>
+	public IReadOnlyList<T> Query( Rect queryArea ) {
+		ListQueryVisitor<T> visitor = default;
+		Query( queryArea, ref visitor );
+		return visitor.Results;
+	}
+
+	/// <summary>
+	/// Visits each matching entry in query order, retaining caller-owned visitor state.
+	/// The traversal itself allocates nothing. Visitor exceptions propagate.
+	/// </summary>
+	public void Query<TVisitor>( Rect queryArea, ref TVisitor visitor )
+		where TVisitor : struct, IQueryVisitor<T>, allows ref struct {
+		if( !IsEmpty && !queryArea.IsEmpty && Bounds.Overlaps( queryArea ) ) {
+			QueryCore( queryArea, ref visitor );
+		}
+	}
+
+	private void QueryCore<TVisitor>( Rect queryArea, ref TVisitor visitor )
+		where TVisitor : struct, IQueryVisitor<T>, allows ref struct {
 		foreach( T item in _contents ) {
-			if( queryArea.Overlaps( item ) ) {
-				results.Add( item );
+			if( queryArea.Overlaps<T>( item ) ) {
+				visitor.Visit( in item );
 			}
 		}
 		foreach( SimpleQuadTreeNode<T> node in _nodes ) {
@@ -70,27 +88,27 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 				continue;
 			}
 			if( node.Bounds.Contains( queryArea ) ) {
-				results.AddRange( node.QueryCore( queryArea ) );
+				node.QueryCore( queryArea, ref visitor );
 				break;
 			}
 			if( queryArea.Contains( node.Bounds ) ) {
-				node.FillContents( results );
+				node.FillContents( ref visitor );
 				continue;
 			}
 			if( node.Bounds.Overlaps( queryArea ) ) {
-				results.AddRange( node.QueryCore( queryArea ) );
+				node.QueryCore( queryArea, ref visitor );
 			}
 		}
-		return results;
 	}
 
-	private void FillContents(
-		List<T> contents
-	) {
+	private void FillContents<TVisitor>( ref TVisitor visitor )
+		where TVisitor : struct, IQueryVisitor<T>, allows ref struct {
 		for( int i = 0; i < _nodes.Count; i++ ) {
-			_nodes[i].FillContents( contents );
+			_nodes[i].FillContents( ref visitor );
 		}
-		contents.AddRange( _contents );
+		foreach( T item in _contents ) {
+			visitor.Visit( in item );
+		}
 	}
 
 	/// <summary>Inserts a nonempty item completely contained by this node's bounds.</summary>
@@ -100,7 +118,7 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 		if( item is null ) {
 			throw new ArgumentNullException( nameof( item ) );
 		}
-		if( !Bounds.Contains( item ) ) {
+		if( !Bounds.Contains<T>( item ) ) {
 			throw new ArgumentException( "Items must be nonempty and completely contained by the quadtree bounds.", nameof( item ) );
 		}
 		InsertContained( item );
@@ -112,7 +130,7 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 			CreateSubNodes();
 		}
 		foreach( SimpleQuadTreeNode<T> node in _nodes ) {
-			if( node.Bounds.Contains( item ) ) {
+			if( node.Bounds.Contains<T>( item ) ) {
 				node.InsertContained( item );
 				_count = count;
 				return;

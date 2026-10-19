@@ -17,4 +17,11 @@ public interface IQuadTree<T> where T : IRect {
 	IReadOnlyList<T> Query(
 		IRect area
 	);
+
+	/// <summary>Queries concrete bounds without boxing the rectangle.</summary>
+	IReadOnlyList<T> Query( Rect area );
+
+	/// <summary>Visits matches without allocating result collections. Visitors must not mutate the index.</summary>
+	void Query<TVisitor>( Rect area, ref TVisitor visitor )
+		where TVisitor : struct, IQueryVisitor<T>, allows ref struct;
 }

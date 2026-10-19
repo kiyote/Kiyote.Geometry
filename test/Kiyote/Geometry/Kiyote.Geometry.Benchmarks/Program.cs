@@ -23,6 +23,8 @@ Summary[] summaries = BenchmarkSwitcher
 		typeof( RectangleBenchmarks ),
 		typeof( SimpleQuadTreeNodeBenchmarks ),
 		typeof( IntegerRasterizerBenchmarks ),
+		typeof( TriangleRepresentationBenchmarks ),
+		typeof( SearchableVoronoiBenchmarks ),
 		typeof( PointBenchmarks ),
 		typeof( DenseGridSourceBenchmarks ),
 		typeof( GridAssemblyBenchmarks ),

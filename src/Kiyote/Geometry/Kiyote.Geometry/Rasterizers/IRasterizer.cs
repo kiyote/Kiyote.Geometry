@@ -90,8 +90,6 @@ public interface IRasterizer {
 		TPixelOperation pixelAction,
 		bool filled = true
 	) where TPixelOperation : struct, IPixelOperation, allows ref struct {
-		ArgumentNullException.ThrowIfNull( triangle );
-
 		// A collection expression targeting ReadOnlySpan<Point> is stack allocated,
 		// so this forwards to the span overload without allocating.
 		ReadOnlySpan<Point> points = [triangle.P1, triangle.P2, triangle.P3];

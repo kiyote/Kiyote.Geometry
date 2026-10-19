@@ -144,6 +144,10 @@ public readonly struct Rect : IRect, ISize, IEquatable<Rect> {
 	public bool Contains(
 		IRect rect
 	) {
+		return Contains<IRect>( rect );
+	}
+
+	internal bool Contains<T>( T rect ) where T : IRect {
 		return !IsEmpty && !rect.IsEmpty
 			&& ContainsBounds( rect.X1, rect.Y1, rect.X2, rect.Y2 );
 	}
@@ -164,6 +168,10 @@ public readonly struct Rect : IRect, ISize, IEquatable<Rect> {
 	public bool Overlaps(
 		IRect rect
 	) {
+		return Overlaps<IRect>( rect );
+	}
+
+	internal bool Overlaps<T>( T rect ) where T : IRect {
 		return !IsEmpty && !rect.IsEmpty
 			&& OverlapsBounds( rect.X1, rect.Y1, rect.X2, rect.Y2 );
 	}

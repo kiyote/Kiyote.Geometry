@@ -17,16 +17,28 @@ public interface IPixelOperation {
 	/// <paramref name="xMax"/> inclusive, all on row <paramref name="y"/>.  Rasterizers
 	/// call this instead of <see cref="Pixel"/> whenever they already know a whole run,
 	/// which lets a sink backed by contiguous storage fill the run in one vectorized
-	/// write rather than one call per pixel.  The default implementation simply walks
-	/// the run, so implementing this is entirely optional.
+	/// write rather than one call per pixel. Implement this explicitly to avoid
+	/// default-interface boxing. Per-pixel sinks can delegate to <see cref="EmitSpan{TPixelOperation}"/>.
 	/// </summary>
 	void PixelSpan(
 		int xMin,
 		int xMax,
 		int y
-	) {
-		for( int x = xMin; x <= xMax; x++ ) {
-			Pixel( x, y );
+	);
+
+	/// <summary>
+	/// Emits a bounded rasterizer run through a value copy of the sink, without
+	/// boxing. Keep observable state in referenced or span-backed storage, or
+	/// implement the span loop directly when the sink needs mutable value state.
+	/// </summary>
+	public static void EmitSpan<TPixelOperation>(
+		TPixelOperation operation,
+		int xMin,
+		int xMax,
+		int y
+	) where TPixelOperation : struct, IPixelOperation, allows ref struct {
+		for( long x = xMin; x <= xMax; x++ ) {
+			operation.Pixel( (int)x, y );
 		}
 	}
 }
@@ -45,6 +57,9 @@ public readonly struct ActionPixelOperation(
 	) {
 		pixelAction( x, y );
 	}
+
+	public void PixelSpan( int xMin, int xMax, int y ) =>
+		IPixelOperation.EmitSpan( this, xMin, xMax, y );
 
 	public bool Equals(
 		ActionPixelOperation other

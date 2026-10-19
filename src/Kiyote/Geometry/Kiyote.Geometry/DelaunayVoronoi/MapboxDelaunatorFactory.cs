@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace Kiyote.Geometry.DelaunayVoronoi;
 
@@ -37,23 +38,36 @@ internal sealed class MapboxDelaunatorFactory {
 	) {
 		int n = coords.Length / 2;
 		int triangleCapacity = GetTriangleCapacity( n );
+		int hashSize = (int)Math.Ceiling( Math.Sqrt( n ) );
+		int[] scratch = ArrayPool<int>.Shared.Rent( checked( 4 * n + hashSize ) );
+		double[]? distances = null;
+		try {
+			distances = ArrayPool<double>.Shared.Rent( n );
+			return CreateCore( coords, rejectDuplicates, triangleCapacity, scratch, distances.AsSpan( 0, n ) );
+		} finally {
+			ArrayPool<int>.Shared.Return( scratch );
+			if( distances is not null ) {
+				ArrayPool<double>.Shared.Return( distances );
+			}
+		}
+	}
 
-		int[] edgeStack = new int[512];
-
-		// arrays that will store the triangulation graph
-		int[] triangles = new int[triangleCapacity];
-		int[] halfEdges = new int[triangleCapacity];
-
+	private static MapboxDelaunator CreateCore(
+		ReadOnlySpan<double> coords,
+		bool rejectDuplicates,
+		int triangleCapacity,
+		Span<int> scratch,
+		Span<double> dists
+	) {
+		int n = coords.Length / 2;
+		Span<int> edgeStack = stackalloc int[512];
 		// temporary arrays for tracking the edges of the advancing convex hull
 		int hashSize = (int)Math.Ceiling( Math.Sqrt( n ) );
-		int[] hullPrev = new int[n]; // edge to prev edge
-		int[] hullNext = new int[n]; // edge to next edge
-		int[] hullTri = new int[n]; // edge to adjacent triangle
-		int[] hullHash = new int[hashSize];
-
-		// temporary arrays for sorting points
-		int[] ids = new int[n];
-		double[] dists = new double[n];
+		Span<int> hullPrev = scratch[..n];
+		Span<int> hullNext = scratch.Slice( n, n );
+		Span<int> hullTri = scratch.Slice( 2 * n, n );
+		Span<int> ids = scratch.Slice( 3 * n, n );
+		Span<int> hullHash = scratch.Slice( 4 * n, hashSize );
 
 		if( rejectDuplicates ) {
 			// Public factories supply bounded integer sites. Their 32-bit keys fit exactly in double.
@@ -62,13 +76,17 @@ internal sealed class MapboxDelaunatorFactory {
 				dists[i] = ( ( (long)coords[i * 2] - GeometryLimits.MinimumCoordinate ) << 16 )
 					+ ( (long)coords[i * 2 + 1] - GeometryLimits.MinimumCoordinate );
 			}
-			Array.Sort( dists );
+			dists.Sort();
 			for( int i = 1; i < n; i++ ) {
 				if( dists[i - 1] == dists[i] ) {
 					throw new ArgumentException( "Duplicate sites require explicit sanitization.", nameof( coords ) );
 				}
 			}
 		}
+
+		// Result storage is owned, never rented. Only the populated prefix is exposed.
+		int[] triangles = new int[triangleCapacity];
+		int[] halfEdges = new int[triangleCapacity];
 
 		double minX = double.PositiveInfinity;
 		double minY = double.PositiveInfinity;
@@ -190,7 +208,7 @@ internal sealed class MapboxDelaunatorFactory {
 		hullTri[i1] = 1;
 		hullTri[i2] = 2;
 
-		Array.Fill( hullHash, -1 );
+		hullHash.Fill( -1 );
 		hullHash[HashKey( i0x, i0y, hashSize, circumcenterX, circumcenterY )] = i0;
 		hullHash[HashKey( i1x, i1y, hashSize, circumcenterX, circumcenterY )] = i1;
 		hullHash[HashKey( i2x, i2y, hashSize, circumcenterX, circumcenterY )] = i2;
@@ -294,14 +312,11 @@ internal sealed class MapboxDelaunatorFactory {
 			s = hullNext[s];
 		}
 
-		// trim typed triangle mesh arrays
-		triangles = triangles[0..trianglesLen];
-		halfEdges = halfEdges[0..trianglesLen];
-
 		return new MapboxDelaunator(
 			hull,
 			triangles,
-			halfEdges
+			halfEdges,
+			trianglesLen
 		);
 	}
 

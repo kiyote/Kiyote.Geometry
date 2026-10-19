@@ -35,4 +35,11 @@ internal sealed class SimpleQuadTree<T> : IQuadTree<T> where T : IRect {
 	public IReadOnlyList<T> Query( IRect bounds ) {
 		return _root.Query( bounds );
 	}
+
+	public IReadOnlyList<T> Query( Rect bounds ) => _root.Query( bounds );
+
+	public void Query<TVisitor>( Rect bounds, ref TVisitor visitor )
+		where TVisitor : struct, IQueryVisitor<T>, allows ref struct {
+		_root.Query( bounds, ref visitor );
+	}
 }

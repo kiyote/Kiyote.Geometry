@@ -69,7 +69,7 @@ public class IntegerRasterizerBenchmarks {
 	}
 
 	/// <summary>
-	/// Uses the default per-pixel implementation of PixelSpan.
+	/// Uses the shared per-pixel span emitter.
 	/// </summary>
 	private readonly struct PixelWriter(
 		uint[] buffer,
@@ -82,6 +82,9 @@ public class IntegerRasterizerBenchmarks {
 		) {
 			buffer[x + ( y * Size )] = colour;
 		}
+
+		public void PixelSpan( int xMin, int xMax, int y ) =>
+			IPixelOperation.EmitSpan( this, xMin, xMax, y );
 	}
 
 	/// <summary>

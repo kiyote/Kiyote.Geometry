@@ -43,8 +43,8 @@ public sealed class QuadTreeSearchableVoronoiFactoryTests {
 		voronoi
 			.Setup( v => v.Cells )
 			.Returns( cells );
-		int sizeWidth = 1;
-		int sizeHeight = 2;
+		int sizeWidth = 20;
+		int sizeHeight = 21;
 		Mock<ISize> size = new Mock<ISize>( MockBehavior.Strict );
 		size
 			.Setup( s => s.Width )
@@ -52,22 +52,14 @@ public sealed class QuadTreeSearchableVoronoiFactoryTests {
 		size
 			.Setup( s => s.Height )
 			.Returns( sizeHeight );
-		Mock<IQuadTree<Rect>> quadTree = new Mock<IQuadTree<Rect>>( MockBehavior.Strict );
-		quadTree
-			.Setup( qt => qt.Insert( It.IsAny<Rect>() ) )
-			.Callback<Rect>( ( rect ) => {
-				Assert.That( rect.X1, Is.EqualTo( 0 ) );
-				Assert.That( rect.Y1, Is.EqualTo( 0 ) );
-				Assert.That( rect.X2, Is.EqualTo( 19 ) );
-				Assert.That( rect.Y2, Is.EqualTo( 19 ) );
-			} );
+		IQuadTree<IndexedCell> quadTree = new SimpleQuadTree<IndexedCell>( new Rect( 0, 0, sizeWidth, sizeHeight ) );
 		_treeFactory
-			.Setup( tf => tf.Create<Rect>( It.IsAny<Rect>() ) )
+			.Setup( tf => tf.Create<IndexedCell>( It.IsAny<Rect>() ) )
 			.Callback<IRect>( ( rect ) => {
 				Assert.That( rect.Width, Is.EqualTo( sizeWidth ) );
 				Assert.That( rect.Height, Is.EqualTo( sizeHeight ) );
 			} )
-			.Returns( quadTree.Object );
+			.Returns( quadTree );
 
 		ISearchableVoronoi searchableVoronoi = _searchableFactory.Create(
 			voronoi.Object,
@@ -75,7 +67,9 @@ public sealed class QuadTreeSearchableVoronoiFactoryTests {
 		);
 
 		Assert.That( searchableVoronoi, Is.Not.Null );
-		quadTree.VerifyAll();
+		IReadOnlyList<IndexedCell> indexed = quadTree.Query( new Rect( 0, 0, sizeWidth, sizeHeight ) );
+		Assert.That( indexed, Has.Count.EqualTo( 1 ) );
+		Assert.That( indexed[0].Cell, Is.SameAs( cells[0] ) );
 		voronoi.VerifyAll();
 		size.VerifyAll();
 	}

@@ -6,6 +6,7 @@ public class SimpleQuadTreeNodeBenchmarks {
 
 	private readonly IRect _bounds;
 	private readonly IRect _query;
+	private readonly Rect _visitorQuery = new Rect( 250, 250, 20, 20 );
 	private readonly SimpleQuadTreeNode<Rect> _node;
 	private readonly Rect[] _items = new Rect[10000];
 	private readonly Rect _insert;
@@ -36,7 +37,8 @@ public class SimpleQuadTreeNodeBenchmarks {
 			&& item.Y1 <= _query.Y2 && item.Y2 >= _query.Y1 );
 		if( _node.Count != _items.Length
 			|| !Ordered( _node.GetSubTreeContents() ).SequenceEqual( Ordered( _items ) )
-			|| !Ordered( _node.Query( _query ) ).SequenceEqual( Ordered( expected ) ) ) {
+			|| !Ordered( _node.Query( _query ) ).SequenceEqual( Ordered( expected ) )
+			|| QueryVisitor() != expected.Count() ) {
 			throw new InvalidOperationException( "Quadtree benchmark differs from the seeded rectangle reference." );
 		}
 	}
@@ -71,5 +73,17 @@ public class SimpleQuadTreeNodeBenchmarks {
 	[Benchmark]
 	public IReadOnlyList<Rect> Query() {
 		return _node.Query( _query );
+	}
+
+	[Benchmark]
+	public int QueryVisitor() {
+		CountingVisitor visitor = default;
+		_node.Query( _visitorQuery, ref visitor );
+		return visitor.Count;
+	}
+
+	private struct CountingVisitor : IQueryVisitor<Rect> {
+		public int Count;
+		public void Visit( scoped in Rect item ) => Count++;
 	}
 }

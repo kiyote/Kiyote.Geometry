@@ -40,13 +40,12 @@ public sealed class IntegerRasterizer : IRasterizer {
 		}
 
 		/// <summary>
-		/// Ref structs cannot inherit the default implementation (CS9245), so it must
-		/// be provided explicitly even though <see cref="TraceLine"/> only ever calls
+		/// The sink contract requires both callback forms, although <see cref="TraceLine"/> only calls
 		/// <see cref="Pixel"/>, leaving this unreachable.  Were it to be called, only
 		/// the endpoints of a run can move the min/max, so the interior of the run is
 		/// skipped entirely.
 		/// </summary>
-		[ExcludeFromCodeCoverage( Justification = "Required by CS9245 but unreachable; TraceLine only calls Pixel." )]
+		[ExcludeFromCodeCoverage( Justification = "Required by IPixelOperation but unreachable; TraceLine only calls Pixel." )]
 		public void PixelSpan(
 			int xMin,
 			int xMax,

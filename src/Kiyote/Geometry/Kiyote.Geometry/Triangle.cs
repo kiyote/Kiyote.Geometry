@@ -1,6 +1,7 @@
 ﻿namespace Kiyote.Geometry;
 
-public sealed record Triangle {
+/// <summary>Three ordered vertices stored inline. The default value is degenerate.</summary>
+public readonly record struct Triangle {
 
 	public Triangle(
 		Point p1,

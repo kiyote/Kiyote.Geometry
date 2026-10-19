@@ -210,6 +210,9 @@ public sealed class IntegerRasterizerTests {
 		) {
 			grid[x, y] = true;
 		}
+
+		public void PixelSpan( int xMin, int xMax, int y ) =>
+			IPixelOperation.EmitSpan( this, xMin, xMax, y );
 	}
 
 	/// <summary>

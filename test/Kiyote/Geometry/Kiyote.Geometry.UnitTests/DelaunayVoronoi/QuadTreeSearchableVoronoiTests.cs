@@ -27,7 +27,7 @@ public sealed class QuadTreeSearchableVoronoiTests {
 
 	[SetUp]
 	public void SetUp() {
-		IQuadTree<Rect> quadTree = new SimpleQuadTree<Rect>( _area );
+		IQuadTree<IndexedCell> quadTree = new SimpleQuadTree<IndexedCell>( _area );
 		_searchableVoronoi = new QuadTreeSearchableVoronoi( quadTree, _voronoi );
 	}
 
@@ -84,4 +84,3 @@ public sealed class QuadTreeSearchableVoronoiTests {
 		Assert.That( cell.Center.Y, Is.EqualTo( cy2 ) );
 	}
 }
-
