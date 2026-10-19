@@ -1,5 +1,50 @@
 # Performance measurements
 
+## C6 rasterizer follow-up
+
+Measured on 2026-10-19 against pre-C6 production at `b5a4cfc`, using the same
+environment and short-run settings as P1. Two new small-square cases isolate raw
+validation from the already-validated polygon path. Polygon construction is
+outside measurement; untimed setup checks every buffer pixel against an
+independent inclusive-square reference.
+
+```powershell
+dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*IntegerRasterizerBenchmarks*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\correctness-c6-final
+```
+
+All eight cases complete. Raw fills now share the allocation-free bounded
+polygon normalizer; validated polygons bypass it. Coordinates are checked at
+raw/line entry points, not within the Bresenham pixel loop. The larger short-run
+timing changes warranted a second run, under `correctness-c6-steady`, with
+`--iterationCount 8 --warmupCount 5 --iterationTime 500`. No code changed between
+these two C6 runs.
+
+| Method | Before mean (ns) | C6 short mean (ns) | C6 longer mean (ns) | Longer error (ns) | Longer StdDev (ns) | Allocation before / after |
+|---|---:|---:|---:|---:|---:|---:|
+| FillSmallRaw_PerSpan | 124.9 | 218.3 | 225.4 | 16.53 | 8.64 | 0 / 0 B |
+| FillSmallValidated_PerSpan | 143.1 | 135.3 | 151.8 | 9.00 | 4.70 | 0 / 0 B |
+| FillPolygon_PerPixel | 482565.4 | 738948.3 | 476885.0 | 20129.20 | 10527.96 | 29792 / 29792 B |
+| FillPolygon_PerSpan | 86084.6 | 107102.2 | 97537.2 | 8872.24 | 4640.35 | 0 / 0 B |
+| FillTriangle_PerPixel | 323036.0 | 296817.1 | 276643.9 | 16533.26 | 7340.87 | 30752 / 30752 B |
+| FillTriangle_PerSpan | 53811.5 | 61132.5 | 60726.6 | 5559.17 | 2907.55 | 0 / 0 B |
+| Outline_PerPixel | 4214.6 | 5496.1 | 5553.6 | 212.57 | 111.18 | 0 / 0 B |
+| Outline_PerSpan | 5231.0 | 5530.9 | 4840.9 | 271.14 | 141.81 | 0 / 0 B |
+
+The longer run did not reproduce the initial polygon per-pixel increase, so the
+short measurement cannot establish a 53% kernel regression. It is not a paired
+long-run baseline, however: several C6 cases remain slower than the original
+short baseline, especially per-pixel outlines. Do not attribute all differences
+to validation or claim a general speedup. The small-square comparison consistently
+shows roughly 75-85 ns extra for raw validation versus an already-owned polygon.
+Callers repeatedly rendering a shape should construct its polygon once.
+
+Span-aware sinks and outlines report no managed allocation after pool warmup;
+the validator adds no owned arrays or boxed helper. The per-pixel fill cases
+retain their pre-existing default-interface allocation (32 B per emitted row for
+these fixtures). A struct sink alone is therefore not an allocation-free promise.
+That measured boundary cost is recorded for P2 rather than changing the sink
+contract as part of C6.
+
 ## C2 quadtree follow-up
 
 Measured on 2026-10-19 against the pre-C2 production implementation at `e9cdf35`,

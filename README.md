@@ -126,8 +126,22 @@ The searchable factory's size defines an origin-anchored index rectangle; it mus
 contain every cell's bounding box. Undersized or incorrectly positioned indexes
 now throw rather than silently omitting cells.
 
-Implementation is staged: topology validation and rasterizer boundary
-checks have separate remaining
+### Rasterization
+
+Rasterization accepts coordinates in `[-32768, 32767]` and validates raw input
+before invoking the pixel sink. Empty boundaries emit nothing. Filled raw
+boundaries and triangles must follow the convex, positive-area polygon contract,
+including the 128 normalized-corner limit. Harmless repeated/collinear vertices
+are normalized without constructing a temporary polygon; concave, self-crossing,
+backtracking, and nonempty degenerate fills throw.
+
+Use the line overload or `filled: false` for points and line segments. Raw
+outlines may remain concave. Already constructed `Polygon` inputs reuse their
+validated immutable boundary without another convexity scan. Struct/ref-struct
+sinks, pooled scanline scratch, and inclusive whole-span emission are preserved.
+Sink exceptions propagate to the caller and pooled buffers are returned.
+
+Implementation is staged: topology validation and performance follow-ups have remaining
 milestones in [CORRECTNESS_PLAN.md](CORRECTNESS_PLAN.md).
 
 ## Getting Started

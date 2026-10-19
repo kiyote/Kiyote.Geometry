@@ -11,6 +11,12 @@ public interface IRasterizer {
 	/// supply vertices from the stack, an array, or a pooled buffer without any
 	/// allocation, and taking a struct pixel action lets the callback be inlined.
 	/// </summary>
+	/// <remarks>
+	/// Coordinates must be within <see cref="GeometryLimits"/>. Empty input emits
+	/// nothing. Filled input follows the convex, positive-area boundary contract of
+	/// <see cref="Polygon"/>, including its normalized vertex limit. Outlines may
+	/// be concave or degenerate. Invalid input is rejected before invoking the sink.
+	/// </remarks>
 	void Rasterize<TPixelOperation>(
 		ReadOnlySpan<Point> polygon,
 		TPixelOperation pixelAction,
@@ -20,6 +26,10 @@ public interface IRasterizer {
 	/// <summary>
 	/// The core line rasterization primitive.
 	/// </summary>
+	/// <remarks>
+	/// Both endpoints must be within <see cref="GeometryLimits"/> and are validated
+	/// before invoking the sink. Coincident endpoints emit one pixel.
+	/// </remarks>
 	void Rasterize<TPixelOperation>(
 		Point p1,
 		Point p2,
@@ -61,6 +71,10 @@ public interface IRasterizer {
 		}
 	}
 
+	/// <summary>
+	/// Rasterizes an immutable, already validated polygon. Implementations may
+	/// reuse its boundary invariant without repeating convexity validation.
+	/// </summary>
 	void Rasterize<TPixelOperation>(
 		Polygon polygon,
 		TPixelOperation pixelAction,

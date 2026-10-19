@@ -40,6 +40,8 @@ public sealed class Polygon {
 
 	public bool IsEmpty => _points.IsEmpty;
 
+	internal ReadOnlySpan<Point> AsSpan() => _points.AsSpan();
+
 	/// <summary>Returns whether any point is shared, including contact and containment.</summary>
 	public bool HasIntersection(
 		Polygon polygon
@@ -344,54 +346,76 @@ public sealed class Polygon {
 		}
 		// A valid boundary can retain two extra vertices across the closing seam.
 		Span<Point> normalized = stackalloc Point[Math.Min( points.Count, MaximumVertices + 2 )];
-		int count = 0;
+		BoundaryNormalizer normalizer = new BoundaryNormalizer( normalized, nameof( points ) );
 		for( int i = 0; i < points.Count; i++ ) {
-			Point point = points[i];
-			GeometryLimits.Validate( point, nameof( points ) );
-			if( count > 0 && normalized[count - 1] == point ) {
-				continue;
+			normalizer.Add( points[i] );
+		}
+		return Own( normalizer.Complete() );
+	}
+
+	internal ref struct BoundaryNormalizer {
+		private readonly Span<Point> _normalized;
+		private readonly string _parameterName;
+		private int _count;
+
+		internal BoundaryNormalizer( Span<Point> normalized, string parameterName ) {
+			_normalized = normalized;
+			_parameterName = parameterName;
+			_count = 0;
+		}
+
+		internal void Add( Point point ) {
+			GeometryLimits.Validate( point, _parameterName );
+			if( _count > 0 && _normalized[_count - 1] == point ) {
+				return;
 			}
-			while( count >= 2 && Orientation( normalized[count - 2], normalized[count - 1], point ) == 0 ) {
-				RequireBetween( normalized[count - 2], normalized[count - 1], point );
-				count--;
+			while( _count >= 2 && Orientation( _normalized[_count - 2], _normalized[_count - 1], point ) == 0 ) {
+				RequireBetween( _normalized[_count - 2], _normalized[_count - 1], point );
+				_count--;
 			}
-			if( count == normalized.Length ) {
-				throw new ArgumentException( $"Polygon exceeds {MaximumVertices} normalized vertices.", nameof( points ) );
+			if( _count == _normalized.Length ) {
+				throw new ArgumentException( $"Polygon exceeds {MaximumVertices} normalized vertices.", _parameterName );
 			}
-			normalized[count++] = point;
+			_normalized[_count++] = point;
 		}
-		if( count > 1 && normalized[count - 1] == normalized[0] ) {
-			count--;
-		}
-		while( count >= 3 ) {
-			if( Orientation( normalized[count - 2], normalized[count - 1], normalized[0] ) == 0 ) {
-				RequireBetween( normalized[count - 2], normalized[count - 1], normalized[0] );
-				count--;
-			} else if( Orientation( normalized[count - 1], normalized[0], normalized[1] ) == 0 ) {
-				RequireBetween( normalized[count - 1], normalized[0], normalized[1] );
-				normalized.Slice( 1, --count ).CopyTo( normalized );
-			} else {
-				break;
+
+		internal ReadOnlySpan<Point> Complete() {
+			if( _count == 0 ) {
+				return ReadOnlySpan<Point>.Empty;
 			}
-		}
-		if( count < 3 ) {
-			throw new ArgumentException( "A nonempty polygon must have positive area and at least three distinct corners.", nameof( points ) );
-		}
-		if( count > MaximumVertices ) {
-			throw new ArgumentException( $"Polygon exceeds {MaximumVertices} normalized vertices.", nameof( points ) );
-		}
-		int winding = Math.Sign( Orientation( normalized[0], normalized[1], normalized[2] ) );
-		for( int i = 0; i < count; i++ ) {
-			int next = ( i + 1 ) % count;
-			for( int j = 0; j < count; j++ ) {
-				if( j != i && j != next
-					&& Orientation( normalized[i], normalized[next], normalized[j] ) * winding <= 0
-				) {
-					throw new ArgumentException( "Vertices must trace a convex boundary without self-intersection or repeated corners.", nameof( points ) );
+			if( _count > 1 && _normalized[_count - 1] == _normalized[0] ) {
+				_count--;
+			}
+			while( _count >= 3 ) {
+				if( Orientation( _normalized[_count - 2], _normalized[_count - 1], _normalized[0] ) == 0 ) {
+					RequireBetween( _normalized[_count - 2], _normalized[_count - 1], _normalized[0] );
+					_count--;
+				} else if( Orientation( _normalized[_count - 1], _normalized[0], _normalized[1] ) == 0 ) {
+					RequireBetween( _normalized[_count - 1], _normalized[0], _normalized[1] );
+					_normalized.Slice( 1, --_count ).CopyTo( _normalized );
+				} else {
+					break;
 				}
 			}
+			if( _count < 3 ) {
+				throw new ArgumentException( "A nonempty polygon must have positive area and at least three distinct corners.", _parameterName );
+			}
+			if( _count > MaximumVertices ) {
+				throw new ArgumentException( $"Polygon exceeds {MaximumVertices} normalized vertices.", _parameterName );
+			}
+			int winding = Math.Sign( Orientation( _normalized[0], _normalized[1], _normalized[2] ) );
+			for( int i = 0; i < _count; i++ ) {
+				int next = ( i + 1 ) % _count;
+				for( int j = 0; j < _count; j++ ) {
+					if( j != i && j != next
+						&& Orientation( _normalized[i], _normalized[next], _normalized[j] ) * winding <= 0
+					) {
+						throw new ArgumentException( "Vertices must trace a convex boundary without self-intersection or repeated corners.", _parameterName );
+					}
+				}
+			}
+			return _normalized[.._count];
 		}
-		return Own( normalized[..count] );
 	}
 
 	private static void RequireBetween(

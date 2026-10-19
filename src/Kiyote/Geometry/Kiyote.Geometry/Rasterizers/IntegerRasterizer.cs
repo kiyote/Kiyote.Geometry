@@ -68,6 +68,38 @@ public sealed class IntegerRasterizer : IRasterizer {
 		TPixelOperation pixelAction,
 		bool filled
 	) {
+		if( !filled ) {
+			foreach( Point point in polygon ) {
+				GeometryLimits.Validate( point, nameof( polygon ) );
+			}
+			RasterizeCore( polygon, pixelAction, false );
+			return;
+		}
+		Span<Point> normalized = stackalloc Point[Math.Min( polygon.Length, Polygon.MaximumVertices + 2 )];
+		Polygon.BoundaryNormalizer normalizer = new Polygon.BoundaryNormalizer( normalized, nameof( polygon ) );
+		foreach( Point point in polygon ) {
+			normalizer.Add( point );
+		}
+		RasterizeCore( normalizer.Complete(), pixelAction, true );
+	}
+
+	void IRasterizer.Rasterize<TPixelOperation>(
+		Polygon polygon,
+		TPixelOperation pixelAction,
+		bool filled
+	) {
+		ArgumentNullException.ThrowIfNull( polygon );
+		RasterizeCore( polygon.AsSpan(), pixelAction, filled );
+	}
+
+	private static void RasterizeCore<TPixelOperation>(
+		ReadOnlySpan<Point> polygon,
+		TPixelOperation pixelAction,
+		bool filled
+	) where TPixelOperation : struct, IPixelOperation, allows ref struct {
+		if( polygon.IsEmpty ) {
+			return;
+		}
 		// Rasterizing only the border means each edge can be emitted directly
 		// without needing to calculate the horizontal spans.
 		if( !filled ) {
@@ -99,32 +131,6 @@ public sealed class IntegerRasterizer : IRasterizer {
 
 		// Allocate an array that can hold the X(min) and X(max) for each Y value
 		int delta_y = large_y - small_y + 1;
-
-		// Horizontal line
-		if( delta_y == 1 ) {
-			int min = int.MaxValue;
-			int max = int.MinValue;
-			for( int i = 0; i < polygon.Length; i++ ) {
-				int ind = i + 1;
-				if( ind == polygon.Length ) {
-					ind = 0;
-				}
-
-				FindRange( polygon[i], polygon[ind], out int xMin, out int xMax );
-				if( xMin < min ) {
-					min = xMin;
-				}
-				if( xMax > max ) {
-					max = xMax;
-				}
-			}
-
-			int y = polygon[0].Y;
-			if( min <= max ) {
-				pixelAction.PixelSpan( min, max, y );
-			}
-			return;
-		}
 
 		// The scanline buffer scales with the height of the polygon, so it is rented
 		// rather than allocated.  Rent can hand back a larger array than requested, so
@@ -168,26 +174,13 @@ public sealed class IntegerRasterizer : IRasterizer {
 		}
 	}
 
-	private static void FindRange(
-		Point p0,
-		Point p1,
-		out int xMin,
-		out int xMax
-	) {
-		if( p0.X < p1.X ) {
-			xMin = p0.X;
-			xMax = p1.X;
-		} else {
-			xMin = p1.X;
-			xMax = p0.X;
-		}
-	}
-
 	void IRasterizer.Rasterize<TPixelOperation>(
 		Point p1,
 		Point p2,
 		TPixelOperation pixelAction
 	) {
+		GeometryLimits.Validate( p1, nameof( p1 ) );
+		GeometryLimits.Validate( p2, nameof( p2 ) );
 		TraceLine( p1, p2, pixelAction );
 	}
 

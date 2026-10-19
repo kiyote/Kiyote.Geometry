@@ -15,10 +15,13 @@ public class IntegerRasterizerBenchmarks {
 	private readonly Point[] _polygon;
 	private readonly Point[] _triangle;
 	private readonly uint[] _buffer;
+	private readonly Point[] _smallVertices = [new Point( 1, 1 ), new Point( 8, 1 ), new Point( 8, 8 ), new Point( 1, 8 )];
+	private readonly Polygon _smallPolygon;
 
 	public IntegerRasterizerBenchmarks() {
 		_rasterizer = new IntegerRasterizer();
 		_buffer = new uint[Size * Size];
+		_smallPolygon = new Polygon( _smallVertices );
 
 		_polygon = [
 			new Point( 50, 20 ),
@@ -32,6 +35,37 @@ public class IntegerRasterizerBenchmarks {
 			new Point( 980, 300 ),
 			new Point( 400, 970 ),
 		];
+	}
+
+	[GlobalSetup]
+	public void Setup() {
+		ValidateSmallPolygon( false );
+		ValidateSmallPolygon( true );
+	}
+
+	private void ValidateSmallPolygon( bool validated ) {
+		Array.Clear( _buffer );
+		_ = validated ? FillSmallValidated_PerSpan() : FillSmallRaw_PerSpan();
+		for( int y = 0; y < Size; y++ ) {
+			for( int x = 0; x < Size; x++ ) {
+				uint expected = x >= 1 && x <= 8 && y >= 1 && y <= 8 ? uint.MaxValue : 0;
+				if( _buffer[y * Size + x] != expected ) {
+					throw new InvalidOperationException( "Rasterizer benchmark differs from the inclusive square reference." );
+				}
+			}
+		}
+	}
+
+	[Benchmark]
+	public uint FillSmallRaw_PerSpan() {
+		_rasterizer.Rasterize( _smallVertices.AsSpan(), new SpanWriter( _buffer, uint.MaxValue ) );
+		return _buffer[4 * Size + 4];
+	}
+
+	[Benchmark]
+	public uint FillSmallValidated_PerSpan() {
+		_rasterizer.Rasterize( _smallPolygon, new SpanWriter( _buffer, uint.MaxValue ) );
+		return _buffer[4 * Size + 4];
 	}
 
 	/// <summary>

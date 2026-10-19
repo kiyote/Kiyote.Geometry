@@ -656,6 +656,41 @@ and [IRasterizer.cs](src/Kiyote/Geometry/Kiyote.Geometry/Rasterizers/IRasterizer
 - Preserve struct/ref-struct sinks, pooled scratch storage, and span emission.
   Validate emitted runs as well as individual pixels.
 
+**C6 implementation evidence (2026-10-19)**
+
+- Before production changes, the new regression suite compiled and produced
+  **23 failures / 9 passes**. Concave/malformed fills were accepted, invalid
+  coordinates reached callbacks, empty fills threw, and the corner limit was
+  not enforced. The initial ref-struct test-helper compilation error was fixed
+  before recording these behavioral failures.
+- Extracted the existing C3 streaming normalizer into an internal stack-backed
+  helper shared by polygon construction and raw filled rasterization. It retains
+  bounded scratch (at most 130 points), exact predicates, closing-seam handling,
+  and the 128 normalized-corner limit without allocating a temporary polygon.
+- The built-in validated-polygon overload uses its immutable point span directly;
+  delegate adapters also reach this path. Raw outlines validate every coordinate
+  before tracing but remain unrestricted by convexity. Both line endpoints are
+  checked before the first callback. No checks were added to per-pixel arithmetic.
+- Empty input is a no-op. Nonempty degenerate fills, including triangles, throw.
+  Two legacy two-point filled tests now explicitly exercise outlines; the old
+  horizontal degenerate-fill test now verifies two inclusive runs of a valid
+  flat rectangle. These are deliberate contract migrations, not relaxed invalid-
+  input assertions.
+- The final **33 regression cases** include all raw adapters, invalid-boundary
+  rejection before pixel/run emission, redundant vertices in both windings,
+  exact corner limits, sink exception propagation, and repeated pooled calls.
+  Full-domain raw and validated polygons each emit exactly **65,536 spans**
+  covering **4,294,967,296 pixels** through ref-struct sinks without expanding
+  pixels; full-domain diagonal lines emit exactly **65,536 pixels** in either
+  direction.
+- Validation: **407 unit tests + 96 integration tests** pass in Release;
+  **134 rasterizer/polygon tests** pass in Debug. The benchmark project builds
+  without warnings/errors. All eight benchmark cases complete with unchanged
+  allocation measurements. Raw small fills pay the validation cost; already
+  validated polygons avoid it. A longer measurement did not reproduce the first
+  run's large per-pixel timing increase. All measurements and remaining timing/
+  default-interface allocation caveats are recorded in [BENCHMARK.md](BENCHMARK.md).
+
 ### C7. Establish geometry and source ownership
 
 Review finding 7. Primary implementations:
@@ -750,6 +785,9 @@ and [Trees](src/Kiyote/Geometry/Kiyote.Geometry/Trees).
   traversal does not construct intermediate lists. Retain convenience wrappers.
 - [ ] Avoid a second result materialization in searchable-Voronoi queries when the
   chosen query API can emit the required cells directly.
+- [ ] Investigate default-interface per-pixel sink allocation measured by C6
+  (29,792/30,752 B per polygon/triangle fill). Preserve ref-struct and whole-span
+  paths; do not assume that a struct sink alone eliminates interface boxing.
 
 **Tests and acceptance:** Preserve all earlier correctness regressions, equality,
 result lifetime, and repeated-call isolation. Verify exceptions return rented
@@ -817,7 +855,7 @@ and [ConnectivityBuilder.cs](src/Kiyote/Geometry/Kiyote.Geometry/Topology/Connec
 | 3 (C1 complete) | C1: Voronoi capacity and factory validation; diagram-storage portion of C7 | Approved degree/domain contract; C3 and geometry-storage C7 for final result invariants |
 | 3 (C2 complete) | C2: quadtree correctness | C5; C4 for supported-coordinate arithmetic |
 | 3 (C3 complete) | C3: polygon semantics; geometry-storage portion of C7 | Approved polygon contract; C4 |
-| 3 | C6: rasterizer contract | Approved shape contract; C4; C3 for validated polygon overloads |
+| 3 (C6 complete) | C6: rasterizer contract | Approved shape contract; C4; C3 for validated polygon overloads |
 | 4 | Grid-source portion of C7 and A1 | Approved ownership/extensibility contracts; C5 |
 | 5 | P2: allocation/layout improvements | P1 and correctness fixes for each affected component |
 | 5 | P3: topology locality | P1, grid-source C7, and A1 |

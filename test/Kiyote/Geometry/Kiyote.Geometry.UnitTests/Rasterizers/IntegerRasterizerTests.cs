@@ -47,7 +47,7 @@ public sealed class IntegerRasterizerTests {
 		bool[,] poly = new bool[10, 10];
 		_rasterizer.Rasterize( points, ( x, y ) => {
 			poly[x, y] = true;
-		} );
+		}, false );
 
 		bool[,] line = new bool[10, 10];
 		_rasterizer.Rasterize( points[0], points[1], ( x, y ) => {
@@ -72,7 +72,7 @@ public sealed class IntegerRasterizerTests {
 		bool[,] poly = new bool[10, 10];
 		_rasterizer.Rasterize( points, ( x, y ) => {
 			poly[x, y] = true;
-		} );
+		}, false );
 
 		bool[,] line = new bool[10, 10];
 		_rasterizer.Rasterize( points[0], points[1], ( x, y ) => {
@@ -629,12 +629,12 @@ public sealed class IntegerRasterizerTests {
 	}
 
 	[Test]
-	public void Rasterize_HorizontalLinePolygon_EmitsSingleRun() {
-		// The delta_y == 1 special case should hand over one run rather than
-		// looping a pixel at a time.
+	public void Rasterize_FlatRectangle_EmitsOneRunPerRow() {
 		List<Point> points = [
 			new Point( 1, 5 ),
 			new Point( 8, 5 ),
+			new Point( 8, 6 ),
+			new Point( 1, 6 ),
 		];
 
 		bool[,] fromSpan = new bool[10, 10];
@@ -645,8 +645,8 @@ public sealed class IntegerRasterizerTests {
 		_rasterizer.Rasterize( points, new GridRecorder( fromPixel ) );
 
 		AssertGridsMatch( fromPixel, fromSpan, 10, "Horizontal line run" );
-		Assert.That( runs, Has.Count.EqualTo( 1 ) );
-		Assert.That( runs[0], Is.EqualTo( 8 ) );
+		Assert.That( runs, Has.Count.EqualTo( 2 ) );
+		Assert.That( runs, Is.All.EqualTo( 8 ) );
 	}
 
 	[Test]
