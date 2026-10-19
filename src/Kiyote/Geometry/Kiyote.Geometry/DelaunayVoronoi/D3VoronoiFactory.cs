@@ -1,6 +1,7 @@
 ﻿namespace Kiyote.Geometry.DelaunayVoronoi;
 
 using System.Linq;
+using System.Runtime.InteropServices;
 
 // Ported from: https://github.com/d3/d3-delaunay/blob/main/src/voronoi.js
 /*
@@ -102,9 +103,10 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				}
 				cellPoints.Add( new Point( x, y ) );
 			}
-			Polygon polygon = new Polygon(
-				cellPoints
-			);
+			Polygon polygon = Polygon.FromRoundedConvexVertices( CollectionsMarshal.AsSpan( cellPoints ) );
+			if( polygon.IsEmpty ) {
+				throw new InvalidOperationException( "Quantized Voronoi cell does not enclose positive area." );
+			}
 			Cell cell = new Cell(
 				points[i],
 				polygon,

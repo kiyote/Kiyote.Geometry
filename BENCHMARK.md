@@ -1,5 +1,68 @@
 # Performance measurements
 
+## C3 polygon follow-up
+
+Measured on 2026-10-19 with the same environment and job settings as P1 below.
+The matched polygon baseline uses production at `a70d952` (after C4/C5); the
+final run completes all 13 polygon cases and both selected Voronoi workloads.
+Setup independently checks known polygon vertices/predicates and diagram site
+containment outside the timed operation. HighDegree remains a C1 defect and is
+not included in this selection.
+
+```powershell
+dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*PolygonBenchmarks*' '*VoronoiWorkloadBenchmarks*Grid*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\correctness-c3-final
+```
+
+Construction now validates convexity and owns a stable vertex snapshot: about
+137 ns versus 45 ns, and 216 B versus 208 B. This once-per-construction cost buys
+the invariant reused by subsequent operations. Clipping builds owned edges once
+and uses bounded stack scratch: 1,136 B falls to 264 B for the six-corner result;
+disjoint clipping drops from 32 B to no measured allocation. The initial C3 hull
+sort allocated 88 B per call through a struct comparer; the final static
+comparison delegate removes that per-call overhead.
+
+These are not equivalent algorithms: containment now checks the entire target,
+intersection includes containment/contact, and boundary queries deduplicate
+rounded points. Do not interpret the timing differences as interchangeable-work
+speedups. Short iterations and wide confidence intervals still limit conclusions
+about small timing differences.
+
+### Polygon comparison
+
+Times are ns; error and standard deviation describe C3. Boundary-query rows use
+the new `TryFindBoundaryIntersections` name; the baseline used
+`TryFindIntersections` with the same inputs.
+
+| Method | Before mean | C3 mean | Error | StdDev | Before allocation | C3 allocation |
+|---|---:|---:|---:|---:|---:|---:|
+| Ctor | 44.97 | 136.919 | 10.4299 | 1.6140 | 208 B | 216 B |
+| Contains_Polygon | 30.08 | 23.297 | 1.8635 | 0.4839 | - | - |
+| HasOverlap | 28.57 | 9.854 | 0.5423 | 0.1408 | - | - |
+| IsEquivalentTo | 29.57 | 13.854 | 1.7874 | 0.4642 | - | - |
+| TryIntersect_WithIntersection | 791.61 | 427.734 | 63.4212 | 16.4703 | 1136 B | 264 B |
+| TryIntersect_WithoutIntersection | 202.07 | 159.034 | 13.0970 | 3.4012 | 32 B | - |
+| TryFindBoundaryIntersections_Edge_WithIntersections | 86.47 | 73.418 | 2.7673 | 0.4282 | 88 B | 64 B |
+| TryFindBoundaryIntersections_Edge_WithoutIntersections | 47.80 | 23.699 | 1.0361 | 0.2691 | - | - |
+| TryFindBoundaryIntersections_Polygon_WithIntersections | 253.92 | 156.570 | 20.0674 | 5.2114 | 88 B | 80 B |
+| TryFindBoundaryIntersections_Polygon_WithoutIntersections | 189.65 | 98.086 | 3.5179 | 0.5444 | - | - |
+| HasIntersection_Edge | 12.06 | 10.558 | 0.7853 | 0.2040 | - | - |
+| HasIntersection_Polygon | 77.78 | 9.882 | 0.7576 | 0.1967 | - | - |
+| HasIntersection_EdgeArray | 76.87 | 20.663 | 2.5960 | 0.6742 | - | - |
+
+### Voronoi integration measurements
+
+The first C3 run rejected a jittered cell whose existing floor quantization
+introduced concavity. A permanent red-green integration regression now checks
+all 400 cells. The producer takes the convex hull of its floored vertices without
+weakening public polygon validation. Both workloads complete after that repair.
+These measurements are current snapshots, not matched factory speedup claims;
+C1 site/capacity validation and diagram ownership are still pending.
+
+| Workload | Mean (us) | Error (us) | StdDev (us) | Allocated |
+|---|---:|---:|---:|---:|
+| Grid | 337.8 | 35.73 | 9.28 | 402.42 KB |
+| JitteredGrid | 587.4 | 59.71 | 15.51 | 575.05 KB |
+
 ## C5 rectangle follow-up
 
 Measured on 2026-10-19 with the same environment and job settings as P1 below.

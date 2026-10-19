@@ -344,6 +344,51 @@ Review finding 3. Primary implementation:
 - Test exact expected vertices, area, and boundary behavior under the selected
   rounding rules. Do not validate clipping using the equivalence routine being fixed.
 
+**C3 implementation evidence**
+
+- The pre-fix Release polygon suite had **27 failures / 37 passes**, covering
+  partial containment, boundary-free clipping, colliding equivalence keys,
+  invalid/over-limit construction, mutable input aliasing, duplicate boundary
+  output, and quantized clipping. Regression expectations were retained.
+- Construction now normalizes redundancy into bounded stack scratch, validates
+  every other vertex against each edge's interior half-plane, and owns exact
+  point/edge arrays. The bounded quadratic construction check rejects repeated
+  circuits and stars that local turn checks miss. Public order/winding are
+  preserved; arbitrary invalid input is not repaired by hull construction.
+- Clipping gathers contained vertices and intersections of original edges using
+  exact bounded predicates before nearest-even snapping. The convex hull of the
+  snapped candidates is the documented integer approximation. This explicitly
+  removes rounding-induced concavity without feeding rounded coordinates back
+  into geometric classification. Candidate scratch is at most 256 points and
+  hull scratch 512; outputs above 128 corners fail explicitly.
+- Permanent tests include exact vertices/area, positive and negative half ties,
+  post-quantization collapse, 128-corner inputs/outputs and over-limit results,
+  closing-seam normalization, 250 seeded rectangle pairs, and 500 full-domain
+  triangle pairs checked against independent separating-axis predicates.
+  Rounded results are independently checked for strict convexity, symmetry,
+  and the nearest-grid half-plane error bound.
+- A new seeded 400-site jittered Voronoi regression failed with a convexity
+  exception before the producer fix. Existing floor quantization can turn a
+  continuous convex cell concave. The trusted generated-vertex path shares the
+  bounded hull implementation, preserving flooring and explicitly rejecting
+  collapse; public construction stays strict. The unchanged regression now
+  verifies site containment, bounds, and every cell's convex half-planes.
+- `TryFindBoundaryIntersections` replaces the old ambiguous name in tests,
+  benchmarks, and the visualizer. It returns owned read-only deduplicated point
+  results. Boolean intersection includes all contacts/containment; polygon-valued
+  clipping requires positive area after snapping.
+- Release solution build: zero warnings/errors. All **347 unit + 53 integration**
+  tests pass. **104 unit + 3 integration** targeted tests also pass in Debug.
+  Polygon snapshot ownership and single-pass edge storage are complete; diagram
+  ownership, site validation, and Voronoi complexity limits remain C1 work.
+- All 15 selected benchmark cases complete: 13 polygon operations and regular/
+  jittered Voronoi creation. Correct validated construction costs about 137 ns
+  versus 45 ns before C3 and allocates 216 B versus 208 B. Clipping allocation
+  falls from 1,136 B to 264 B; disjoint clipping drops from 32 B to no measured
+  allocation. A cached static comparison delegate avoids 88 B of sort-comparer
+  overhead seen in the initial implementation. Full measurements and semantic
+  comparison caveats are in [BENCHMARK.md](BENCHMARK.md).
+
 ### C4. Correct arithmetic within the supported domain
 
 Review finding 4. Primary implementations:
@@ -590,7 +635,8 @@ and [Trees](src/Kiyote/Geometry/Kiyote.Geometry/Trees).
 
 - [ ] Benchmark a readonly value-type triangle against the current per-triangle
   object representation, including construction, traversal, and copying costs.
-- [ ] Build owned polygon edge storage once, without an intermediate full copy.
+- [x] Build owned polygon edge storage once, without an intermediate full copy
+  (completed with C3).
 - [ ] Evaluate reuse/pooling of the seven triangulation work arrays and avoidance
   of both output-trimming copies. Keep scratch ownership separate from result ownership.
 - [ ] Add caller-owned destination or struct-visitor query paths so recursive tree
@@ -663,7 +709,7 @@ and [ConnectivityBuilder.cs](src/Kiyote/Geometry/Kiyote.Geometry/Topology/Connec
 | 2 (complete) | C4 arithmetic and C5 rectangle foundations | Milestone 0; P1 for performance comparisons |
 | 3 | C1: Voronoi capacity and factory validation | Approved degree/domain contract; C3 and geometry-storage C7 for final result invariants |
 | 3 | C2: quadtree correctness | C5; C4 for supported-coordinate arithmetic |
-| 3 | C3: polygon semantics; geometry-storage portion of C7 | Approved polygon contract; C4 |
+| 3 (C3 complete) | C3: polygon semantics; geometry-storage portion of C7 | Approved polygon contract; C4 |
 | 3 | C6: rasterizer contract | Approved shape contract; C4; C3 for validated polygon overloads |
 | 4 | Grid-source portion of C7 and A1 | Approved ownership/extensibility contracts; C5 |
 | 5 | P2: allocation/layout improvements | P1 and correctness fixes for each affected component |

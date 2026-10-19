@@ -88,7 +88,7 @@ public sealed class PolygonVisualizer {
 		_rasterizer.Rasterize( polygon2, new BufferPixelWriter( buffer, 0xFFFFFFFFU ), false );
 
 
-		if (polygon1.TryFindIntersections( polygon2, out IReadOnlyList<Point> intersections)) {
+		if (polygon1.TryFindBoundaryIntersections( polygon2, out IReadOnlyList<Point> intersections)) {
 			foreach( Point p in intersections ) {
 				buffer[p.X, p.Y] = 0xFF0000FFU; ;
 			}

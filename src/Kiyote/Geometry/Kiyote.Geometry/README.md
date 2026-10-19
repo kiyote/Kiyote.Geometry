@@ -35,8 +35,39 @@ Concrete and `IRect` overloads use the same rules; `IRect` now exposes `IsEmpty`
 Dimensions and endpoints must fit signed 32-bit integers; invalid construction
 or an unrepresentable union throws `ArgumentOutOfRangeException`.
 
-Implementation is staged: topology validation, convex polygon
-invariants, and factory/rasterizer boundary checks have separate remaining
+## Polygon contracts
+
+`Polygon` owns an immutable snapshot of its vertices and edges. Nonempty polygons
+must be convex, have positive area, and have at most `Polygon.MaximumVertices`
+(128) normalized corners. Construction removes consecutive/closing duplicates
+and intermediate collinear vertices while preserving winding and boundary order.
+Concave, self-intersecting, backtracking, and degenerate nonempty input throws
+`ArgumentException`; arbitrary input is never sorted into a different shape.
+An empty vertex collection and `Polygon.None` represent absence.
+
+Containment includes edges and corners and requires the entire nonempty target
+to be contained. Empty targets are not contained. `IsEquivalentTo` compares
+geometric boundaries independently of starting vertex and winding.
+`HasIntersection` (also exposed as `HasOverlap`) includes contact and containment.
+`TryFindBoundaryIntersections` replaces `TryFindIntersections`: it returns
+deduplicated, nearest-even point intersections of boundary edges, not containment
+or an arbitrary point from a shared length. Its returned collection is read-only.
+
+`TryIntersect` returns a polygon only when the snapped result has positive area.
+It classifies contained vertices and crossings of the original edges before
+rounding, then takes the convex hull of the nearest-even snapped vertices.
+This convex integer approximation can move the mathematical intersection's
+boundary slightly. Contact or quantization collapse returns false and
+`Polygon.None`; a result exceeding 128 corners throws `InvalidOperationException`.
+Scratch storage is bounded, and contained immutable operands can be reused.
+
+Generated Voronoi cells retain their existing floor-to-integer quantization.
+Their convex hull removes quantization-induced concavity; a collapsed cell
+throws rather than publishing a degenerate polygon. This trusted producer path
+does not relax public polygon construction.
+
+Implementation is staged: topology validation and factory/rasterizer boundary
+checks have separate remaining
 milestones in the repository's correctness plan.
 
 ## Getting Started

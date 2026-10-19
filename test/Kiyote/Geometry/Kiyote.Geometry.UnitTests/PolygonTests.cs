@@ -99,7 +99,7 @@ public sealed class PolygonTests {
 	}
 
 	[Test]
-	public void TryFindIntersections_PointList_Overlapping_ReturnsPoints() {
+	public void TryFindBoundaryIntersections_PointList_Overlapping_ReturnsPoints() {
 		Polygon polygon = new Polygon( [
 			new Point( 0, 0 ),
 			new Point( 20, 0 ),
@@ -114,7 +114,7 @@ public sealed class PolygonTests {
 				new Point( -5, 10 )
 			] );
 
-		bool result = polygon.TryFindIntersections( other, out IReadOnlyList<Point> intersections );
+		bool result = polygon.TryFindBoundaryIntersections( other, out IReadOnlyList<Point> intersections );
 		Assert.That( result, Is.True );
 		Assert.That( intersections, Is.Not.Empty );
 		Assert.That( intersections[0].X, Is.EqualTo( 0 ) );
@@ -214,13 +214,13 @@ public sealed class PolygonTests {
 	}
 
 	[Test]
-	public void TryFindIntersections_Intersection_ReturnsPoints() {
+	public void TryFindBoundaryIntersections_Intersection_ReturnsPoints() {
 		Edge edge = new Edge(
 			new Point( -5, 10 ),
 			new Point( 10, -5 )
 		);
 
-		bool result = _polygon.TryFindIntersections(
+		bool result = _polygon.TryFindBoundaryIntersections(
 			edge,
 			out IReadOnlyList<Point> intersections
 		);
@@ -236,13 +236,13 @@ public sealed class PolygonTests {
 	}
 
 	[Test]
-	public void TryFindIntersections_NoIntersection_ReturnsFalse() {
+	public void TryFindBoundaryIntersections_NoIntersection_ReturnsFalse() {
 		Edge edge = new Edge(
 			new Point( 30, 0 ),
 			new Point( 50, 20 )
 		);
 
-		bool result = _polygon.TryFindIntersections(
+		bool result = _polygon.TryFindBoundaryIntersections(
 			edge,
 			out IReadOnlyList<Point> intersections
 		);
@@ -395,8 +395,8 @@ public sealed class PolygonTests {
 		Polygon other = new Polygon( [
 			new Point( 0, 20 ),
 			new Point( 20, 20 ),
-			new Point( 10, 10 ),
-			new Point( 20, 0 ),
+			new Point( 20, 10 ),
+			new Point( 10, 0 ),
 			new Point( 0, 0 )
 		] );
 
