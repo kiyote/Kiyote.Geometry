@@ -1,130 +1,120 @@
-﻿namespace Kiyote.Geometry;
+namespace Kiyote.Geometry;
 
 public static class Intersect {
 
 	/// <summary>
-	/// Determines if the edge defined by (aX1,aY1)->(bX1,bY1) intersects
-	/// the edge defined by (aX2,aY2)->(bX2,bY2).
+	/// Returns whether two closed segments share any point, including endpoints,
+	/// point-segments, and collinear overlap. Coordinates must satisfy
+	/// <see cref="GeometryLimits"/>.
 	/// </summary>
-	/// <param name="aX1">The X coordinate of the first point of the first edge.</param>
-	/// <param name="aY1">The Y coordinate of the first point of the first edge.</param>
-	/// <param name="bX1">The X coordinate of the second point of the first edge.</param>
-	/// <param name="bY1">The Y coordinate of the second point of the first edge.</param>
-	/// <param name="aX2">The X coordinate of the first point of the second edge.</param>
-	/// <param name="aY2">The Y coordinate of the first point of the second edge.</param>
-	/// <param name="bX2">The X coordinate of the second point of the second edge.</param>
-	/// <param name="bY2">The Y coordinate of the second point of the second edge.</param>
-	/// <returns>
-	/// Returns <c>True</c> if an intersection occurs, otherwise returns <c>False</c>.
-	/// </returns>
 	public static bool HasIntersection(
-		int aX1,
-		int aY1,
-		int bX1,
-		int bY1,
-		int aX2,
-		int aY2,
-		int bX2,
-		int bY2
+		int aX1, int aY1, int bX1, int bY1,
+		int aX2, int aY2, int bX2, int bY2
 	) {
-		// Make sure none of the lines are zero length
-		if( ( aX1 == bX1 && aY1 == bY1 )
-			|| ( aX2 == bX2 && aY2 == bY2 )
-		) {
-			return false;
-		}
-
-		double denominator = ( ( ( bY2 - aY2 ) * ( bX1 - aX1 ) )
-			- ( ( bX2 - aX2 ) * ( bY1 - aY1 ) ) );
-
-		// If this is zero then the lines are parallel
-		if( denominator == 0.0 ) {
-			return false;
-		}
-
-		double ua = ( ( ( bX2 - aX2 ) * ( aY1 - aY2 ) )
-			- ( ( bY2 - aY2 ) * ( aX1 - aX2 ) ) ) / denominator;
-
-		double ub = ( ( ( bX1 - aX1 ) * ( aY1 - aY2 ) )
-			- ( ( bY1 - aY1 ) * ( aX1 - aX2 ) ) ) / denominator;
-
-		// Is the intersection somewhere along actual line segments?
-		if( ua < 0 || ua > 1 || ub < 0 || ub > 1 ) {
-			return false;
-		}
-
-		return true;
+		ValidateEndpoints( aX1, aY1, bX1, bY1, aX2, aY2, bX2, bY2 );
+		return HasIntersectionUnchecked(
+			new Edge( aX1, aY1, bX1, bY1 ),
+			new Edge( aX2, aY2, bX2, bY2 )
+		);
 	}
 
 	/// <summary>
-	/// Determines if the edge defined by (aX1,aY1)->(bX1,bY1) intersects
-	/// the edge defined by (aX2,aY2)->(bX2,bY2).
+	/// Finds a unique shared point of two closed segments. Coordinates must satisfy
+	/// <see cref="GeometryLimits"/>. Returns false for disjoint segments or a shared
+	/// length, setting both outputs to zero. Determines existence before rounding
+	/// coordinates to nearest, with exact halves to even; the rounded approximation
+	/// need not lie exactly on the mathematical segments.
 	/// </summary>
-	/// <param name="aX1">The X coordinate of the first point of the first edge.</param>
-	/// <param name="aY1">The Y coordinate of the first point of the first edge.</param>
-	/// <param name="bX1">The X coordinate of the second point of the first edge.</param>
-	/// <param name="bY1">The Y coordinate of the second point of the first edge.</param>
-	/// <param name="aX2">The X coordinate of the first point of the second edge.</param>
-	/// <param name="aY2">The Y coordinate of the first point of the second edge.</param>
-	/// <param name="bX2">The X coordinate of the second point of the second edge.</param>
-	/// <param name="bY2">The Y coordinate of the second point of the second edge.</param>
-	/// <param name="intersection">
-	/// The point at which the two edges intersect, if at all.  Otherwise will
-	/// contain <c>Point.None</c> if there is no intersection.
-	/// </param>
-	/// <returns>
-	/// Returns <c>True</c> if an intersection occurs, otherwise returns <c>False</c>.
-	/// </returns>
 	public static bool TryFindIntersection(
-		int aX1,
-		int aY1,
-		int bX1,
-		int bY1,
-		int aX2,
-		int aY2,
-		int bX2,
-		int bY2,
-		out int intersectionX,
-		out int intersectionY
+		int aX1, int aY1, int bX1, int bY1,
+		int aX2, int aY2, int bX2, int bY2,
+		out int intersectionX, out int intersectionY
 	) {
-		// Make sure none of the lines are zero length
-		if( ( aX1 == bX1 && aY1 == bY1 )
-			|| ( aX2 == bX2 && aY2 == bY2 )
+		ValidateEndpoints( aX1, aY1, bX1, bY1, aX2, aY2, bX2, bY2 );
+		bool found = TryFindIntersectionUnchecked(
+			new Edge( aX1, aY1, bX1, bY1 ),
+			new Edge( aX2, aY2, bX2, bY2 ),
+			out Point point
+		);
+		intersectionX = found ? point.X : 0;
+		intersectionY = found ? point.Y : 0;
+		return found;
+	}
+
+	internal static bool HasIntersectionUnchecked( Edge a, Edge b ) {
+		long denominator = GetParameters( a, b, out long numeratorA, out long numeratorB );
+		if( denominator == 0 ) {
+			return numeratorA == 0 && numeratorB == 0
+				&& TryGetSharedBounds( a, b, out _, out _ );
+		}
+		return numeratorA >= 0 && numeratorA <= denominator
+			&& numeratorB >= 0 && numeratorB <= denominator;
+	}
+
+	internal static bool TryFindIntersectionUnchecked( Edge a, Edge b, out Point point ) {
+		point = Point.None;
+		long denominator = GetParameters( a, b, out long numeratorA, out long numeratorB );
+		if( denominator == 0 ) {
+			if( numeratorA != 0 || numeratorB != 0
+				|| !TryGetSharedBounds( a, b, out Point low, out Point high )
+				|| low != high
+			) {
+				return false;
+			}
+			point = low;
+			return true;
+		}
+		if( numeratorA < 0 || numeratorA > denominator
+			|| numeratorB < 0 || numeratorB > denominator
 		) {
-			intersectionX = 0;
-			intersectionY = 0;
 			return false;
 		}
 
-		double denominator = ( ( ( bY2 - aY2 ) * ( bX1 - aX1 ) )
-			- ( ( bX2 - aX2 ) * ( bY1 - aY1 ) ) );
-
-		// If this is zero then the lines are parallel
-		if( denominator == 0.0 ) {
-			intersectionX = 0;
-			intersectionY = 0;
-			return false;
-		}
-
-		double ua = ( ( ( bX2 - aX2 ) * ( aY1 - aY2 ) )
-			- ( ( bY2 - aY2 ) * ( aX1 - aX2 ) ) ) / denominator;
-
-		double ub = ( ( ( bX1 - aX1 ) * ( aY1 - aY2 ) )
-			- ( ( bY1 - aY1 ) * ( aX1 - aX2 ) ) ) / denominator;
-
-		// Is the intersection somewhere along actual line segments?
-		if( ua < 0 || ua > 1 || ub < 0 || ub > 1 ) {
-			intersectionX = 0;
-			intersectionY = 0;
-			return false;
-		}
-
-		double x = aX1 + ( ua * ( bX1 - aX1 ) );
-		double y = aY1 + ( ua * ( bY1 - aY1 ) );
-
-		intersectionX = (int)Math.Round( x );
-		intersectionY = (int)Math.Round( y );
-
+		// Exact numerators and bounded rational spacing preserve half ties in double.
+		long x = a.A.X * denominator + numeratorA * ( a.B.X - a.A.X );
+		long y = a.A.Y * denominator + numeratorA * ( a.B.Y - a.A.Y );
+		point = new Point(
+			(int)Math.Round( (double)x / denominator ),
+			(int)Math.Round( (double)y / denominator )
+		);
 		return true;
+	}
+
+	private static long GetParameters( Edge a, Edge b, out long numeratorA, out long numeratorB ) {
+		long rx = (long)a.B.X - a.A.X;
+		long ry = (long)a.B.Y - a.A.Y;
+		long sx = (long)b.B.X - b.A.X;
+		long sy = (long)b.B.Y - b.A.Y;
+		long qx = (long)b.A.X - a.A.X;
+		long qy = (long)b.A.Y - a.A.Y;
+		long denominator = rx * sy - ry * sx;
+		numeratorA = qx * sy - qy * sx;
+		numeratorB = qx * ry - qy * rx;
+		if( denominator < 0 ) {
+			numeratorA = -numeratorA;
+			numeratorB = -numeratorB;
+			return -denominator;
+		}
+		return denominator;
+	}
+
+	private static bool TryGetSharedBounds( Edge a, Edge b, out Point low, out Point high ) {
+		low = Point.Max( Point.Min( a.A, a.B ), Point.Min( b.A, b.B ) );
+		high = Point.Min( Point.Max( a.A, a.B ), Point.Max( b.A, b.B ) );
+		return low.X <= high.X && low.Y <= high.Y;
+	}
+
+	private static void ValidateEndpoints(
+		int aX1, int aY1, int bX1, int bY1,
+		int aX2, int aY2, int bX2, int bY2
+	) {
+		GeometryLimits.ValidateCoordinate( aX1 );
+		GeometryLimits.ValidateCoordinate( aY1 );
+		GeometryLimits.ValidateCoordinate( bX1 );
+		GeometryLimits.ValidateCoordinate( bY1 );
+		GeometryLimits.ValidateCoordinate( aX2 );
+		GeometryLimits.ValidateCoordinate( aY2 );
+		GeometryLimits.ValidateCoordinate( bX2 );
+		GeometryLimits.ValidateCoordinate( bY2 );
 	}
 }

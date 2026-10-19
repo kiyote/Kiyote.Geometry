@@ -57,15 +57,15 @@ public class EdgeBenchmarks {
 	}
 
 	[Benchmark]
-	public Point GetMidpoint() {
-		return _edge.GetMidpoint( 0.5f );
+	public Point Interpolate() {
+		return _edge.Interpolate( 0.5f );
 	}
 
 	[GlobalSetup]
 	public void Validate() {
 		if( !HasIntersection()
 			|| TryFindIntersection() != (true, new Point( 300, 300 ))
-			|| GetMidpoint() != new Point( 300, 300 )
+			|| Interpolate() != new Point( 300, 300 )
 			|| GetBoundingBox() != new Rect( 200, 200, 201, 201 )
 			|| Ctor_PointPoint() != _edge
 			|| Ctor_IntIntIntInt() != _edge

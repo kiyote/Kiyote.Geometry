@@ -1,5 +1,61 @@
 # Performance measurements
 
+## C4 arithmetic follow-up
+
+Measured on 2026-10-19 with the same machine, SDK/runtime, isolated toolchain,
+job settings, and fixtures as P1 below. All 21 cases completed with no measured
+managed allocation. The interpolation benchmark was renamed with the API.
+
+```powershell
+dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*EdgeBenchmarks*' '*IntersectBenchmarks*' '*GeometryWorkloadBenchmarks*' '*PointBenchmarks.*Distance*' '*PointBenchmarks.IsAdjacentTo*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\correctness-c4-final
+```
+
+Public range validation and correct contact/arithmetic handling add approximately
+3-4 ns per predicate and 6-8 ns per unique-point query in the batched fixtures.
+This is an explicit correctness cost relative to P1, not a performance improvement.
+An initial integer quotient/remainder rounding implementation measured
+28.6-30.1 ns per unique-point query. Exact integer numerators followed by bounded
+double division reduced that to 17.1-18.0 ns without changing regression assertions.
+The nearest-even proof is recorded in [CORRECTNESS_PLAN.md](CORRECTNESS_PLAN.md).
+
+Short-run uncertainty and constructor near-zero warnings still apply. Point
+distances were not remeasured in P1, so their historical timings are not a matched
+before/after comparison. Polygon/factory results below remain P1 snapshots, not
+post-C4 measurements; those components have further correctness work pending.
+
+### Batched geometry comparison
+
+All times are ns per edge pair; `Error` and `StdDev` describe C4.
+
+| Method | Workload | P1 mean | C4 mean | Error | StdDev | Allocated |
+|---|---|---:|---:|---:|---:|---:|
+| HasIntersection | Small | 5.546 | 9.253 | 1.6746 | 0.4349 | - |
+| TryFindIntersection | Small | 10.759 | 17.284 | 0.9227 | 0.1428 | - |
+| HasIntersection | Screen | 5.569 | 9.161 | 0.8911 | 0.1379 | - |
+| TryFindIntersection | Screen | 10.218 | 17.428 | 1.4844 | 0.3855 | - |
+| HasIntersection | Boundary | 5.398 | 8.747 | 0.3742 | 0.0579 | - |
+| TryFindIntersection | Boundary | 10.562 | 18.048 | 4.4917 | 1.1665 | - |
+| HasIntersection | Irregular | 5.538 | 8.938 | 0.3610 | 0.0938 | - |
+| TryFindIntersection | Irregular | 10.024 | 17.060 | 1.1787 | 0.1824 | - |
+
+### C4 individual primitives
+
+| Benchmark | Mean (ns) | Error (ns) | StdDev (ns) | Allocated |
+|---|---:|---:|---:|---:|
+| Edge.HasIntersection | 7.9260 | 0.3887 | 0.0602 | - |
+| Edge.TryFindIntersection | 15.6570 | 0.8849 | 0.2298 | - |
+| Edge.GetBoundingBox | 2.7102 | 0.2034 | 0.0528 | - |
+| Edge.Interpolate | 5.2409 | 0.2472 | 0.0383 | - |
+| Edge.Ctor_PointPoint | 0.1999 | 0.0271 | 0.0070 | - |
+| Edge.Ctor_IntIntIntInt | 0.0116 | 0.0470 | 0.0122 | - |
+| Intersect.HasIntersection | 9.306 | 0.3911 | 0.1016 | - |
+| Intersect.TryFindIntersection | 16.691 | 0.5107 | 0.0790 | - |
+| Point.IsAdjacentTo_Orthogonal | 3.457 | 0.5115 | 0.1328 | - |
+| Point.IsAdjacentTo_Diagonal | 3.438 | 1.0729 | 0.2786 | - |
+| Point.ManhattanDistance | 3.244 | 0.5678 | 0.0879 | - |
+| Point.ChebyshevDistance | 3.148 | 0.0707 | 0.0109 | - |
+| Point.DistanceSquared | 3.323 | 1.9018 | 0.4939 | - |
+
 ## P1 baseline
 
 Measured on 2026-10-19 against production code at `eb28f3b`, with the P1

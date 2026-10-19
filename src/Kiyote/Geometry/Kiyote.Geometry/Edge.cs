@@ -26,6 +26,10 @@ public readonly struct Edge : IEquatable<Edge> {
 
 	public Point B { get; }
 
+	/// <summary>
+	/// Returns whether bounded segments share any point, including endpoints and
+	/// collinear overlap. A zero-length segment is a point.
+	/// </summary>
 	public bool HasIntersection(
 		Edge other
 	) {
@@ -41,6 +45,11 @@ public readonly struct Edge : IEquatable<Edge> {
 		);
 	}
 
+	/// <summary>
+	/// Returns a unique intersection, rounded to nearest with exact halves to even.
+	/// Collinear shared lengths return false and <see cref="Point.None"/>.
+	/// Coordinates must satisfy <see cref="GeometryLimits"/>.
+	/// </summary>
 	public bool TryFindIntersection(
 		Edge other,
 		out Point intersection
@@ -74,6 +83,10 @@ public readonly struct Edge : IEquatable<Edge> {
 			|| ( other.A == B && other.B == A ) );
 	}
 
+	/// <summary>
+	/// Returns inclusive bounds across the shared coordinate domain.
+	/// Throws <see cref="OverflowException"/> if a dimension is unrepresentable.
+	/// </summary>
 	public static Rect GetBoundingBox(
 		Point p1,
 		Point p2
@@ -85,8 +98,8 @@ public readonly struct Edge : IEquatable<Edge> {
 		return new Rect(
 			minX,
 			minY,
-			maxX - minX + 1,
-			maxY - minY + 1
+			checked( (int)( (long)maxX - minX + 1 ) ),
+			checked( (int)( (long)maxY - minY + 1 ) )
 		);
 
 	}
@@ -95,50 +108,64 @@ public readonly struct Edge : IEquatable<Edge> {
 		return GetBoundingBox( A, B );
 	}
 
-	public static Point GetMidpoint(
+	/// <summary>
+	/// Interpolates from <paramref name="p1"/> to <paramref name="p2"/>, rounding
+	/// each coordinate to nearest, with exact halves to even. Positions must satisfy
+	/// <see cref="GeometryLimits"/>; amount must be finite and in [0, 1].
+	/// </summary>
+	public static Point Interpolate(
 		Point p1,
 		Point p2,
-		float distance
+		float amount
 	) {
-		int mx = Math.Min( p1.X, p2.X );
-		int dx = Math.Max( p1.X, p2.X ) - mx;
-		int my = Math.Min( p1.Y, p2.Y );
-		int dy = Math.Max( p1.Y, p2.Y ) - my;
-		int x = mx + (int)Math.Floor( dx * distance );
-		int y = my + (int)Math.Floor( dy * distance );
-
+		GeometryLimits.Validate( p1, nameof( p1 ) );
+		GeometryLimits.Validate( p2, nameof( p2 ) );
+		if( !( amount >= 0f && amount <= 1f ) ) {
+			throw new ArgumentOutOfRangeException( nameof( amount ), amount, "Interpolation amount must be finite and in [0, 1]." );
+		}
+		int x = (int)Math.Round( p1.X + ( (double)p2.X - p1.X ) * amount );
+		int y = (int)Math.Round( p1.Y + ( (double)p2.Y - p1.Y ) * amount );
 		return new Point( x, y );
 	}
 
-	public Point GetMidpoint(
-		float distance
+	/// <summary>
+	/// Interpolates from A to B; see <see cref="Interpolate(Point, Point, float)"/>.
+	/// </summary>
+	public Point Interpolate(
+		float amount
 	) {
-		return GetMidpoint( A, B, distance );
+		return Interpolate( A, B, amount );
 	}
 
+	/// <summary>Returns the Euclidean length between bounded geometry positions.</summary>
 	public static float Magnitude(
 		Point p1,
 		Point p2
 	) {
-		Point norm = Normalize( p1, p2 );
-		return (float)Math.Sqrt( ( norm.X * norm.X ) + ( norm.Y * norm.Y ) );
+		return (float)Math.Sqrt( p1.DistanceSquared( p2 ) );
 	}
 
 	public float Magnitude() {
 		return Magnitude( A, B );
 	}
 
+	/// <summary>
+	/// Returns the absolute per-axis displacement, not a unit vector.
+	/// Supports shared coordinates; unrepresentable displacements throw
+	/// <see cref="OverflowException"/>.
+	/// </summary>
 	public static Point Normalize(
 		Point p1,
 		Point p2
 	) {
-		Rect bb = GetBoundingBox( p1, p2 );
-		return new Point( bb.X2 - bb.X1, bb.Y2 - bb.Y1 );
+		return new Point(
+			checked( (int)Math.Abs( (long)p2.X - p1.X ) ),
+			checked( (int)Math.Abs( (long)p2.Y - p1.Y ) )
+		);
 	}
 
 	public Point Normalize() {
-		Rect bb = GetBoundingBox( A, B );
-		return new Point( bb.X2 - bb.X1, bb.Y2 - bb.Y1 );
+		return Normalize( A, B );
 	}
 
 	public override bool Equals(

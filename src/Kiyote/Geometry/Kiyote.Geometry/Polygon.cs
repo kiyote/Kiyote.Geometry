@@ -9,6 +9,9 @@ public sealed class Polygon {
 	public Polygon(
 		IReadOnlyList<Point> points
 	) {
+		for( int i = 0; i < points.Count; i++ ) {
+			GeometryLimits.Validate( points[i], nameof( points ) );
+		}
 		Points = points;
 
 		Edges = CreateEdges( points );
@@ -136,6 +139,8 @@ public sealed class Polygon {
 		int x,
 		int y
 	) {
+		GeometryLimits.ValidateCoordinate( x );
+		GeometryLimits.ValidateCoordinate( y );
 		// Refined from https://web.archive.org/web/20130126163405/http://geomalgorithms.com/a03-_inclusion.html
 		int pc = Points.Count;
 		int wn = 0;
@@ -147,7 +152,7 @@ public sealed class Polygon {
 			int jx = Points[j].X;
 			int jy = Points[j].Y;
 
-			int isLeft = IsLeft( ix, iy, jx, jy, x, y );
+			long isLeft = IsLeft( ix, iy, jx, jy, x, y );
 
 			if( IsOnEdge( isLeft, ix, iy, jx, jy, x, y ) ) {
 				return true;
@@ -226,8 +231,8 @@ public sealed class Polygon {
 			}
 		}
 
-		int centerX = allPoints.ElementAt( 0 ).X;
-		int centerY = allPoints.ElementAt( 0 ).Y;
+		long centerX = allPoints.ElementAt( 0 ).X;
+		long centerY = allPoints.ElementAt( 0 ).Y;
 		for( int i = 1; i < allPoints.Count; i++ ) {
 			centerX += allPoints.ElementAt( i ).X;
 			centerY += allPoints.ElementAt( i ).Y;
@@ -282,7 +287,7 @@ public sealed class Polygon {
 	}
 
 	[MethodImpl( MethodImplOptions.AggressiveInlining )]
-	private static int IsLeft(
+	private static long IsLeft(
 		int p0x,
 		int p0y,
 		int p1x,
@@ -290,12 +295,12 @@ public sealed class Polygon {
 		int p2x,
 		int p2y
 	) {
-		return ( ( ( p1x - p0x ) * ( p2y - p0y ) ) - ( ( p2x - p0x ) * ( p1y - p0y ) ) );
+		return ( (long)p1x - p0x ) * ( p2y - p0y ) - ( (long)p2x - p0x ) * ( p1y - p0y );
 	}
 
 	[MethodImpl( MethodImplOptions.AggressiveInlining )]
 	private static bool IsOnEdge(
-		int isLeft,
+		long isLeft,
 		int p0x,
 		int p0y,
 		int p1x,

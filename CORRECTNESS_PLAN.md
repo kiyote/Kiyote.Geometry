@@ -379,6 +379,56 @@ Review finding 4. Primary implementations:
 - Benchmark representative primitive operations after fixing benchmark consumption.
   Do not pay for arbitrary precision when bounded arithmetic is sufficient.
 
+**C4 implementation evidence**
+
+- The pre-fix Release run of arithmetic, intersection, and point tests had
+  **32 failures / 34 passes**. Failures included the 50,000-unit crossing returning
+  false, magnitude returning NaN, descending quarter interpolation returning
+  `(2,2)` instead of `(2,8)`, missed large-square containment, point/collinear
+  contacts, missing domain rejection, and wrapping shared translations.
+- The same assertions pass after the fix. Only calls to the renamed interpolation
+  API changed from `GetMidpoint` to `Interpolate`; expectations were not relaxed.
+  The seeded test checks 500 segment pairs against independent decimal
+  orientation/intersection calculations, including symmetry and translation.
+- `GeometryLimits` centralizes public primitive/polygon coordinate checks.
+  Shared constructors remain unrestricted; point translation and edge
+  bounds/displacements reject unrepresentable results. Internal segment kernels
+  can reuse validated inputs without repeating public validation.
+- Release solution build: zero warnings/errors, including visualizer, profiler,
+  and benchmarks. Release tests: **294 unit + 52 integration** pass. The focused
+  **126 tests** also pass in Debug.
+- Matched Release benchmarks: all 21 cases complete with no measured allocation.
+  Correct predicates cost approximately 3-4 ns more per pair and unique-point
+  queries 6-8 ns more than P1's incomplete implementation. See
+  [BENCHMARK.md](BENCHMARK.md); these are correctness costs, not speedup claims.
+
+**C4 arithmetic bounds and follow-through**
+
+- Coordinate difference magnitude is at most 65,535. Squared distance and a
+  conservative cross-product bound are `2 * 65535^2 = 8,589,672,450 < 2^33`;
+  promote before products and sums. Manhattan distance is at most 131,070.
+- Segment parameter numerators/denominator fit `long`. For an accepted
+  intersection, forming each coordinate numerator as
+  `origin * denominator + parameterNumerator * displacement` is bounded by
+  `(32768 + 65535) * 8,589,672,450 < 2^50`. Numerators and denominator therefore
+  convert exactly to `double`.
+- A non-half rational coordinate differs from a half-integer by at least
+  `1 / (2 * denominator) > 2^-34`. Correctly rounded double division within
+  `[-32768,32767]` has error at most `2^-38`, so it cannot move a non-tie onto or
+  across a half tie. Exact halves are representable. This justifies nearest-even
+  rounding without slower integer quotient/remainder division or arbitrary precision.
+- Polygon orientation uses `long`; even an `int`-length collection's coordinate
+  sum is below `2^46`, so the interim centroid accumulation also fits `long`.
+  C3 replaces centroid sorting with convex clipping and establishes owned storage.
+- In-domain raster deltas are at most 65,535 and doubled scanline indices at most
+  131,071. Bresenham error stays bounded by a small multiple of those deltas;
+  its doubled error fits `int`. Public input validation remains C6's responsibility.
+- The audit also confirmed unguarded full-range rectangle endpoints and topology
+  allocation products. Their fixes/tests stay in C5 and grid-source C7,
+  respectively, rather than widening the screen-space restriction to topology.
+  Factory capacities and diagram validation remain C1. The overall section 1
+  bounds prerequisite remains open until those packages derive their capacities.
+
 ### C5. Unify rectangle semantics
 
 Review finding 5. Primary implementations:
@@ -396,6 +446,8 @@ Review finding 5. Primary implementations:
 - Cover shared-cell overlap, eight-way adjacency, and intersection failure.
   `Touches` includes overlapping rectangles, not only adjacent ones.
 - Check concrete and interface overloads for identical results.
+- Check full signed-32-bit endpoint positions and reject unrepresentable dimensions
+  or bounds without intermediate arithmetic wrapping.
 
 **Fix and acceptance**
 
@@ -448,6 +500,9 @@ Review finding 7. Primary implementations:
 - Reject direct source shape mutation while attached; verify assembly-coordinated
   edits still work and direct editing becomes available after detach. Cover a
   custom source implementing the approved lifecycle contract.
+- Cover full signed-32-bit topology positions, out-of-domain neighbours,
+  overflowing translations and grid allocation products, including unchanged
+  assembly/source state after rejection. These follow through C4's arithmetic audit.
 
 **Fix and acceptance**
 
@@ -581,7 +636,7 @@ and [ConnectivityBuilder.cs](src/Kiyote/Geometry/Kiyote.Geometry/Topology/Connec
 |---|---|---|
 | 0 (complete) | Approve domain, shape, ownership, and extensibility contracts | Decisions recorded in section 1 |
 | 1 (complete) | P1: repaired baseline; high-degree timing deferred to C1 | None; domain approval for boundary fixtures |
-| 2 | C4 and C5: arithmetic and rectangle foundations | Milestone 0; P1 for performance comparisons |
+| 2 (C4 complete) | C4 arithmetic complete; C5 rectangles pending | Milestone 0; P1 for performance comparisons |
 | 3 | C1: Voronoi capacity and factory validation | Approved degree/domain contract; C3 and geometry-storage C7 for final result invariants |
 | 3 | C2: quadtree correctness | C5; C4 for supported-coordinate arithmetic |
 | 3 | C3: polygon semantics; geometry-storage portion of C7 | Approved polygon contract; C4 |

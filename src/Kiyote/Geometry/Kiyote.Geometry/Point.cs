@@ -1,5 +1,10 @@
 namespace Kiyote.Geometry;
 
+/// <summary>
+/// A signed 32-bit coordinate or displacement. Addition, subtraction and negation
+/// throw <see cref="OverflowException"/> when the result cannot be represented.
+/// Distance and adjacency algorithms require bounded <see cref="GeometryLimits"/> positions.
+/// </summary>
 public readonly struct Point : IEquatable<Point>, ISize {
 
 	public static readonly Point None = new Point( int.MinValue, int.MaxValue );
@@ -30,7 +35,7 @@ public readonly struct Point : IEquatable<Point>, ISize {
 		int x,
 		int y
 	) {
-		return new Point( X - x, Y - y );
+		return new Point( checked( X - x ), checked( Y - y ) );
 	}
 
 	public readonly Point Add(
@@ -43,7 +48,7 @@ public readonly struct Point : IEquatable<Point>, ISize {
 		int x,
 		int y
 	) {
-		return new Point( X + x, Y + y );
+		return new Point( checked( X + x ), checked( Y + y ) );
 	}
 
 	public readonly void Deconstruct(
@@ -55,7 +60,7 @@ public readonly struct Point : IEquatable<Point>, ISize {
 	}
 
 	public readonly Point Negate() {
-		return new Point( -X, -Y );
+		return new Point( checked( -X ), checked( -Y ) );
 	}
 
 	/// <summary>
@@ -80,28 +85,37 @@ public readonly struct Point : IEquatable<Point>, ISize {
 
 	/// <summary>
 	/// The number of orthogonal steps between the two points.
+	/// Both positions must satisfy <see cref="GeometryLimits"/>.
 	/// </summary>
 	public readonly int ManhattanDistance(
 		Point other
 	) {
+		GeometryLimits.Validate( this, nameof( Point ) );
+		GeometryLimits.Validate( other, nameof( other ) );
 		return Math.Abs( X - other.X ) + Math.Abs( Y - other.Y );
 	}
 
 	/// <summary>
 	/// The number of steps between the two points when diagonal steps are allowed.
+	/// Both positions must satisfy <see cref="GeometryLimits"/>.
 	/// </summary>
 	public readonly int ChebyshevDistance(
 		Point other
 	) {
+		GeometryLimits.Validate( this, nameof( Point ) );
+		GeometryLimits.Validate( other, nameof( other ) );
 		return Math.Max( Math.Abs( X - other.X ), Math.Abs( Y - other.Y ) );
 	}
 
 	/// <summary>
 	/// The squared Euclidean distance between the two points.
+	/// Both positions must satisfy <see cref="GeometryLimits"/>.
 	/// </summary>
 	public readonly long DistanceSquared(
 		Point other
 	) {
+		GeometryLimits.Validate( this, nameof( Point ) );
+		GeometryLimits.Validate( other, nameof( other ) );
 		long dx = (long)X - other.X;
 		long dy = (long)Y - other.Y;
 		return ( dx * dx ) + ( dy * dy );
@@ -110,6 +124,7 @@ public readonly struct Point : IEquatable<Point>, ISize {
 	/// <summary>
 	/// Returns true when <paramref name="other"/> is a direct neighbour of this
 	/// point.  A point is not adjacent to itself.
+	/// Both positions must satisfy <see cref="GeometryLimits"/>.
 	/// </summary>
 	public readonly bool IsAdjacentTo(
 		Point other,

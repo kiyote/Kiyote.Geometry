@@ -94,13 +94,11 @@ public sealed class PointTests {
 	}
 
 	[Test]
-	public void DistanceSquared_ExtremeValues_DoesNotOverflow() {
+	public void DistanceSquared_OutsideGeometryDomain_Throws() {
 		Point p1 = new Point( 0, 0 );
 		Point p2 = new Point( int.MaxValue, 0 );
 
-		long expected = (long)int.MaxValue * int.MaxValue;
-
-		Assert.That( p1.DistanceSquared( p2 ), Is.EqualTo( expected ) );
+		Assert.Throws<ArgumentOutOfRangeException>( () => p1.DistanceSquared( p2 ) );
 	}
 
 	[TestCase( 1, 0, false, true )]

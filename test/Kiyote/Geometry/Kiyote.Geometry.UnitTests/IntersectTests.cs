@@ -8,7 +8,7 @@ public sealed class IntersectTests {
 
 	[TestCase(0, 0, 0, 0, 0, 0, 10, 10)]
 	[TestCase( 0, 0, 10, 10, 10, 10, 10, 10 )]
-	public void HasIntersection_ZeroLengthLines_ReturnsFalse(
+	public void HasIntersection_PointOnSegment_ReturnsTrue(
 		int aX1,
 		int aY1,
 		int aX2,
@@ -19,12 +19,12 @@ public sealed class IntersectTests {
 		int bY2
 	) {
 		bool result = Intersect.HasIntersection( aX1, aY1, aX2, aY2, bX1, bY1, bX2, bY2 );
-		Assert.That( result, Is.False );
+		Assert.That( result, Is.True );
 	}
 
 	[TestCase( 0, 0, 0, 0, 0, 0, 10, 10 )]
 	[TestCase( 0, 0, 10, 10, 10, 10, 10, 10 )]
-	public void TryFindIntersection_ZeroLengthLines_ReturnsFalse(
+	public void TryFindIntersection_PointOnSegment_ReturnsPoint(
 		int aX1,
 		int aY1,
 		int aX2,
@@ -35,15 +35,15 @@ public sealed class IntersectTests {
 		int bY2
 	) {
 		bool result = Intersect.TryFindIntersection( aX1, aY1, aX2, aY2, bX1, bY1, bX2, bY2, out int ix, out int iy );
-		Assert.That( result, Is.False );
-		Assert.That( ix, Is.Zero );
-		Assert.That( iy, Is.Zero );
+		Assert.That( result, Is.True );
+		Assert.That( ix, Is.EqualTo( bX1 ) );
+		Assert.That( iy, Is.EqualTo( bY1 ) );
 	}
 
 	[Test]
-	public void HasIntersection_ParallelLines_ReturnsFalse() {
+	public void HasIntersection_IdenticalSegments_ReturnsTrue() {
 		bool result = Intersect.HasIntersection( 0, 0, 10, 10, 0, 0, 10, 10 );
-		Assert.That( result, Is.False );
+		Assert.That( result, Is.True );
 	}
 
 	[Test]
