@@ -456,6 +456,30 @@ Review finding 5. Primary implementations:
 - Validate both dimensions and endpoint arithmetic.
 - Re-run quadtree, polygon, and topology tests that depend on rectangle bounds.
 
+**C5 implementation evidence**
+
+- Before production changes, the rectangle selection had **20 failures / 69
+  passes**: asymmetric adjacent overlap, empty origin containment/overlap,
+  noncanonical zero dimensions, missing dimension/endpoint rejection, broken
+  empty union, and `int.MaxValue` adjacency overflow were all observed.
+- The same rectangle assertions pass after the fix, with the obsolete
+  `HasOverlap` call migrated to `Overlaps`. `IRect.IsEmpty` is explicit; equality
+  and equivalence distinguish empty from the origin cell, while endpoint-based
+  equivalence always describes a nonempty rectangle.
+- Shared bounds remain full signed-32-bit coordinates. Endpoint additions and
+  inclusive dimension subtraction use `long` before range checks. Touching
+  comparisons widen before adding one, so extreme coordinates cannot wrap.
+- A seeded 300-pair occupied-cell-set reference independently checks containment,
+  overlap, touching, and intersection for small rectangles including empty ones.
+- Quadtree callers now use `Overlaps`. Two old fixtures relied on obsolete
+  rectangle behavior: shrinking a 2x2 rectangle to zero area now uses a genuine
+  1x1 item, and queries ending at 9 versus 10 explicitly distinguish adjacency
+  from sharing a cell at 10. C2's separate tree defects remain pending.
+- Full Release build: zero warnings/errors. **315 unit + 52 integration tests**
+  pass; **109 rectangle/tree tests** also pass in Debug. All eight rectangle
+  benchmark cases complete with no measured managed allocation; results and
+  timing uncertainty are in [BENCHMARK.md](BENCHMARK.md).
+
 ### C6. Make rasterizer shape support explicit
 
 Review finding 6. Primary implementations:
@@ -636,7 +660,7 @@ and [ConnectivityBuilder.cs](src/Kiyote/Geometry/Kiyote.Geometry/Topology/Connec
 |---|---|---|
 | 0 (complete) | Approve domain, shape, ownership, and extensibility contracts | Decisions recorded in section 1 |
 | 1 (complete) | P1: repaired baseline; high-degree timing deferred to C1 | None; domain approval for boundary fixtures |
-| 2 (C4 complete) | C4 arithmetic complete; C5 rectangles pending | Milestone 0; P1 for performance comparisons |
+| 2 (complete) | C4 arithmetic and C5 rectangle foundations | Milestone 0; P1 for performance comparisons |
 | 3 | C1: Voronoi capacity and factory validation | Approved degree/domain contract; C3 and geometry-storage C7 for final result invariants |
 | 3 | C2: quadtree correctness | C5; C4 for supported-coordinate arithmetic |
 | 3 | C3: polygon semantics; geometry-storage portion of C7 | Approved polygon contract; C4 |

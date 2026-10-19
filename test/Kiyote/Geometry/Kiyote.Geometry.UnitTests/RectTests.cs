@@ -151,15 +151,15 @@ internal sealed class RectTests {
 
 	[Test]
 	public void Ctor_NegativeWidth_ThrowsException() {
-		Assert.Throws<InvalidOperationException>( () => new Rect( 0, 0, -1, 10 ) );
+		Assert.Throws<ArgumentOutOfRangeException>( () => new Rect( 0, 0, -1, 10 ) );
 	}
 
 	[Test]
-	public void Ctor_ZeroWidth_CollapsesToOrigin() {
+	public void Ctor_ZeroWidth_CanonicalEmpty() {
 		Rect r = new Rect( 5, 7, 0, 0 );
 
-		Assert.That( r.X2, Is.EqualTo( 5 ) );
-		Assert.That( r.Y2, Is.EqualTo( 7 ) );
+		Assert.That( r.X2, Is.Zero );
+		Assert.That( r.Y2, Is.Zero );
 	}
 
 	[Test]
@@ -254,7 +254,7 @@ internal sealed class RectTests {
 	[TestCase( 10, 10, 50, 50, true )]
 	[TestCase( 100, 100, 10, 10, false )]
 	[TestCase( 55, 55, 20, 20, true )]
-	public void HasOverlap_TestCases_ExpectedResult(
+	public void Overlaps_IRect_TestCases_ExpectedResult(
 		int x,
 		int y,
 		int w,
@@ -264,7 +264,7 @@ internal sealed class RectTests {
 		Rect r1 = CreateRect();
 		IRect r2 = new Rect( x, y, w, h );
 
-		Assert.That( r1.HasOverlap( r2 ), Is.EqualTo( expected ) );
+		Assert.That( r1.Overlaps( r2 ), Is.EqualTo( expected ) );
 	}
 
 	[TestCase( 10, 10, 50, 50, true )]

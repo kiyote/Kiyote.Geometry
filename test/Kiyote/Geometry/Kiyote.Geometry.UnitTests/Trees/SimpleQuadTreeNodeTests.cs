@@ -73,7 +73,7 @@ internal sealed class SimpleQuadTreeNodeTests {
 	public void Insert_SubdivisionTooSmall_StillInserts() {
 		Rect bounds = new Rect( 0, 0, 2, 2 );
 		SimpleQuadTreeNode<Rect> node = new SimpleQuadTreeNode<Rect>( bounds );
-		Rect item = SmallerBy( bounds, 1 );
+		Rect item = new Rect( 1, 1, 1, 1 );
 
 		node.Insert( item );
 
@@ -177,17 +177,19 @@ internal sealed class SimpleQuadTreeNodeTests {
 		Assert.That( items, Is.EquivalentTo( new List<Rect> { item1, item2 } ) );
 	}
 
-	[Test]
-	public void Query_QueryIntersectsContainedNode_AllContainedNodesReturned() {
+	[TestCase( 15, false )]
+	[TestCase( 16, true )]
+	public void Query_QueryBounds_IncludeOnlySharedCells( int size, bool includesSecond ) {
 		Rect item1 = new Rect( 5, 5, 40, 40 );
 		_node.Insert( item1 );
 		Rect item2 = new Rect( 10, 10, 30, 30 );
 		_node.Insert( item2 );
 
-		Rect query = new Rect( -5, -5, 15, 15 );
+		Rect query = new Rect( -5, -5, size, size );
 
 		IReadOnlyList<Rect> items = _node.Query( query );
-		Assert.That( items, Is.EquivalentTo( new List<Rect> { item1, item2 } ) );
+		Rect[] expected = includesSecond ? [item1, item2] : [item1];
+		Assert.That( items, Is.EquivalentTo( expected ) );
 	}
 
 	private static Rect SmallerBy(

@@ -1,5 +1,28 @@
 # Performance measurements
 
+## C5 rectangle follow-up
+
+Measured on 2026-10-19 with the same environment and job settings as P1 below.
+All eight cases completed with no measured managed allocation. Empty-state
+checks and canonical equality are included; the benchmark fixtures remain
+nonempty. Short-run and subnanosecond measurement caveats still apply, so this
+does not establish small speedups or empty-workload throughput.
+
+```powershell
+dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*RectangleBenchmarks*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\correctness-c5
+```
+
+| Method | Mean (ns) | Error (ns) | StdDev (ns) | Allocated |
+|---|---:|---:|---:|---:|
+| Contains_Rect | 1.5841 | 0.3814 | 0.0590 | - |
+| Contains_IRect | 2.2548 | 0.8615 | 0.1333 | - |
+| Contains_Point | 1.0234 | 0.1014 | 0.0263 | - |
+| Contains_IntInt | 0.2579 | 0.0552 | 0.0143 | - |
+| IsEquivalentTo_Rect | 2.2112 | 0.2083 | 0.0541 | - |
+| IsEquivalentTo_IRect | 3.1152 | 0.6399 | 0.1662 | - |
+| IsEquivalentTo_PointPoint | 0.7882 | 0.3809 | 0.0590 | - |
+| IsEquivalentTo_IntIntIntInt | 0.7046 | 0.0769 | 0.0119 | - |
+
 ## C4 arithmetic follow-up
 
 Measured on 2026-10-19 with the same machine, SDK/runtime, isolated toolchain,

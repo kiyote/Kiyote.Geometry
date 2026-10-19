@@ -1,5 +1,10 @@
 namespace Kiyote.Geometry;
 
+/// <summary>
+/// An inclusive rectangle of occupied cells in signed 32-bit coordinate space.
+/// Either zero dimension normalizes to the canonical empty value, <c>default(Rect)</c>.
+/// Negative dimensions and unrepresentable bounds/dimensions are rejected.
+/// </summary>
 public readonly struct Rect : IRect, ISize, IEquatable<Rect> {
 
 	public Rect(
@@ -11,8 +16,13 @@ public readonly struct Rect : IRect, ISize, IEquatable<Rect> {
 		Y1 = Math.Min( topLeft.Y, bottomRight.Y );
 		Y2 = Math.Max( topLeft.Y, bottomRight.Y );
 
-		Width = X2 - X1 + 1;
-		Height = Y2 - Y1 + 1;
+		long width = (long)X2 - X1 + 1;
+		long height = (long)Y2 - Y1 + 1;
+		if( width > int.MaxValue || height > int.MaxValue ) {
+			throw new ArgumentOutOfRangeException( nameof( bottomRight ), "Rectangle dimensions must fit a signed 32-bit integer." );
+		}
+		Width = (int)width;
+		Height = (int)height;
 	}
 
 	public Rect(
@@ -28,17 +38,24 @@ public readonly struct Rect : IRect, ISize, IEquatable<Rect> {
 		int width,
 		int height
 	) {
+		ArgumentOutOfRangeException.ThrowIfNegative( width );
+		ArgumentOutOfRangeException.ThrowIfNegative( height );
+		if( width == 0 || height == 0 ) {
+			this = default;
+			return;
+		}
+		long x2 = (long)x + width - 1;
+		long y2 = (long)y + height - 1;
+		if( x2 > int.MaxValue ) {
+			throw new ArgumentOutOfRangeException( nameof( width ), "Rectangle X2 must fit a signed 32-bit integer." );
+		}
+		if( y2 > int.MaxValue ) {
+			throw new ArgumentOutOfRangeException( nameof( height ), "Rectangle Y2 must fit a signed 32-bit integer." );
+		}
 		X1 = x;
 		Y1 = y;
-		if( width > 0 ) {
-			X2 = x + width - 1;
-			Y2 = y + height - 1;
-		} else if( width == 0 ) {
-			X2 = X1;
-			Y2 = Y1;
-		} else {
-			throw new InvalidOperationException( "Rect cannot have negative area." );
-		}
+		X2 = (int)x2;
+		Y2 = (int)y2;
 		Width = width;
 		Height = height;
 	}
@@ -55,26 +72,23 @@ public readonly struct Rect : IRect, ISize, IEquatable<Rect> {
 
 	public int Height { get; }
 
+	/// <summary>True for the canonical empty rectangle, which has no occupied cells.</summary>
+	public bool IsEmpty => Width == 0;
+
 	public bool IsEquivalentTo(
 		Rect other
 	) {
-		return IsEquivalentTo(
-			other.X1,
-			other.Y1,
-			other.X2,
-			other.Y2
-		);
+		return this == other;
 	}
 
 	public bool IsEquivalentTo(
 		IRect other
 	) {
-		return IsEquivalentTo(
-			other.X1,
-			other.Y1,
-			other.X2,
-			other.Y2
-		);
+		if( IsEmpty || other.IsEmpty ) {
+			return IsEmpty && other.IsEmpty;
+		}
+		return X1 == other.X1 && Y1 == other.Y1
+			&& X2 == other.X2 && Y2 == other.Y2;
 	}
 
 	public bool IsEquivalentTo(
@@ -95,21 +109,16 @@ public readonly struct Rect : IRect, ISize, IEquatable<Rect> {
 		int x2,
 		int y2
 	) {
-		int sx1 = Math.Min( X1, X2 );
-		int sx2 = Math.Max( X1, X2 );
-		int sy1 = Math.Min( Y1, Y2 );
-		int sy2 = Math.Max( Y1, Y2 );
-
 		int tx1 = Math.Min( x1, x2 );
 		int tx2 = Math.Max( x1, x2 );
 		int ty1 = Math.Min( y1, y2 );
 		int ty2 = Math.Max( y1, y2 );
 
-		return
-			sx1 == tx1
-			&& sy1 == ty1
-			&& sx2 == tx2
-			&& sy2 == ty2;
+		return !IsEmpty
+			&& X1 == tx1
+			&& Y1 == ty1
+			&& X2 == tx2
+			&& Y2 == ty2;
 	}
 
 	public bool Contains(
@@ -122,80 +131,73 @@ public readonly struct Rect : IRect, ISize, IEquatable<Rect> {
 		int x,
 		int y
 	) {
-		if (x < X1 || x > X2 || y < Y1 || y > Y2) {
-			return false;
-		}
-
-		return true;
-
+		return !IsEmpty && x >= X1 && x <= X2 && y >= Y1 && y <= Y2;
 	}
 
 	public bool Contains(
 		Rect rect
 	) {
-		return X1 <= rect.X1
-			&& Y1 <= rect.Y1
-			&& X2 >= rect.X2
-			&& Y2 >= rect.Y2;
+		return !IsEmpty && !rect.IsEmpty
+			&& ContainsBounds( rect.X1, rect.Y1, rect.X2, rect.Y2 );
 	}
 
 	public bool Contains(
 		IRect rect
 	) {
-		return X1 <= rect.X1
-			&& Y1 <= rect.Y1
-			&& X2 >= rect.X2
-			&& Y2 >= rect.Y2;
+		return !IsEmpty && !rect.IsEmpty
+			&& ContainsBounds( rect.X1, rect.Y1, rect.X2, rect.Y2 );
 	}
 
-	public bool HasOverlap(
-		IRect rect
+	private bool ContainsBounds(
+		int x1, int y1, int x2, int y2
 	) {
-		return X1 + Width >= rect.X1
-			 && X1 <= rect.X2
-			 && Y1 + Height >= rect.Y1
-			 && Y1 <= rect.Y2;
+		return X1 <= x1 && Y1 <= y1 && X2 >= x2 && Y2 >= y2;
 	}
 
 	public bool Overlaps(
 		Rect rect
 	) {
-		return X1 <= rect.X2
-			&& rect.X1 <= X2
-			&& Y1 <= rect.Y2
-			&& rect.Y1 <= Y2;
+		return !IsEmpty && !rect.IsEmpty
+			&& OverlapsBounds( rect.X1, rect.Y1, rect.X2, rect.Y2 );
 	}
 
 	public bool Overlaps(
 		IRect rect
 	) {
-		return X1 <= rect.X2
-			&& rect.X1 <= X2
-			&& Y1 <= rect.Y2
-			&& rect.Y1 <= Y2;
+		return !IsEmpty && !rect.IsEmpty
+			&& OverlapsBounds( rect.X1, rect.Y1, rect.X2, rect.Y2 );
+	}
+
+	private bool OverlapsBounds(
+		int x1, int y1, int x2, int y2
+	) {
+		return X1 <= x2 && x1 <= X2 && Y1 <= y2 && y1 <= Y2;
 	}
 
 	public bool Touches(
 		Rect rect
 	) {
-		return X1 <= rect.X2 + 1
-			&& rect.X1 <= X2 + 1
-			&& Y1 <= rect.Y2 + 1
-			&& rect.Y1 <= Y2 + 1;
+		return !IsEmpty && !rect.IsEmpty
+			&& TouchesBounds( rect.X1, rect.Y1, rect.X2, rect.Y2 );
 	}
 
 	public bool Touches(
 		IRect rect
 	) {
-		return X1 <= rect.X2 + 1
-			&& rect.X1 <= X2 + 1
-			&& Y1 <= rect.Y2 + 1
-			&& rect.Y1 <= Y2 + 1;
+		return !IsEmpty && !rect.IsEmpty
+			&& TouchesBounds( rect.X1, rect.Y1, rect.X2, rect.Y2 );
+	}
+
+	private bool TouchesBounds(
+		int x1, int y1, int x2, int y2
+	) {
+		return X1 <= (long)x2 + 1 && x1 <= (long)X2 + 1
+			&& Y1 <= (long)y2 + 1 && y1 <= (long)Y2 + 1;
 	}
 
 	/// <summary>
 	/// Computes the cells shared by both rectangles.  Returns false when they
-	/// do not overlap, since an empty rectangle cannot be represented.
+	/// do not overlap; the output is then the canonical empty rectangle.
 	/// </summary>
 	public static bool TryIntersect(
 		Rect a,
@@ -216,8 +218,7 @@ public readonly struct Rect : IRect, ISize, IEquatable<Rect> {
 
 	/// <summary>
 	/// Computes the cells shared by this rectangle and <paramref name="other"/>.
-	/// Returns false when they do not overlap, since an empty rectangle cannot
-	/// be represented.
+	/// Returns false and the canonical empty rectangle when they do not overlap.
 	/// </summary>
 	public bool TryIntersect(
 		Rect other,
@@ -228,11 +229,18 @@ public readonly struct Rect : IRect, ISize, IEquatable<Rect> {
 
 	/// <summary>
 	/// Computes the smallest rectangle containing both rectangles.
+	/// Empty is the identity; unrepresentable dimensions are rejected.
 	/// </summary>
 	public static Rect Union(
 		Rect a,
 		Rect b
 	) {
+		if( a.IsEmpty ) {
+			return b;
+		}
+		if( b.IsEmpty ) {
+			return a;
+		}
 		return new Rect(
 			new Point( Math.Min( a.X1, b.X1 ), Math.Min( a.Y1, b.Y1 ) ),
 			new Point( Math.Max( a.X2, b.X2 ), Math.Max( a.Y2, b.Y2 ) )
@@ -252,31 +260,25 @@ public readonly struct Rect : IRect, ISize, IEquatable<Rect> {
 	public override bool Equals(
 		object? obj
 	) {
-		return obj is Rect r
-			&& r.X1 == X1
-			&& r.X2 == X2
-			&& r.Y1 == Y1
-			&& r.Y2 == Y2;
+		return obj is Rect r && this == r;
 	}
 
 	public override int GetHashCode() {
-		return HashCode.Combine( X1, Y1, X2, Y2 );
+		return HashCode.Combine( X1, Y1, X2, Y2, IsEmpty );
 	}
 
 	bool IEquatable<Rect>.Equals(
 		Rect other
 	) {
-		return other.X1 == X1
-			&& other.Y1 == Y1
-			&& other.X2 == X2
-			&& other.Y2 == Y2;
+		return this == other;
 	}
 
 	public static bool operator ==(
 		Rect left,
 		Rect right
 	) {
-		return left.X1 == right.X1
+		return left.IsEmpty == right.IsEmpty
+			&& left.X1 == right.X1
 			&& left.Y1 == right.Y1
 			&& left.X2 == right.X2
 			&& left.Y2 == right.Y2;
@@ -289,4 +291,3 @@ public readonly struct Rect : IRect, ISize, IEquatable<Rect> {
 		return !( left  ==  right );
 	}
 }
-

@@ -83,7 +83,7 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 		// its four sub-quads. Iterate through the items in this quad 
 		// to see if they intersect.
 		foreach( T item in Contents ) {
-			if( queryArea.HasOverlap( item ) ) {
+			if( queryArea.Overlaps( item ) ) {
 				results.Add( item );
 			}
 		}
@@ -114,7 +114,7 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 			// Case 3: search area intersects with sub-quad
 			// traverse into this quad, continue the loop to search other
 			// quads
-			if( node.Bounds.HasOverlap( queryArea ) ) {
+			if( node.Bounds.Overlaps( queryArea ) ) {
 				results.AddRange( node.Query( queryArea ) );
 			}
 		}

@@ -24,7 +24,21 @@ with exact halves to even, after determining intersection existence.
 `Edge.Interpolate(amount)` replaces `GetMidpoint`: it follows A to B for finite
 amounts in `[0, 1]`, using the same rounding rule, without extrapolation.
 
-Implementation is staged: rectangle/topology validation, convex polygon
+## Rectangle contracts
+
+Rectangle bounds are inclusive occupied cells: `Rect(0,0,10,10)` covers `0..9`.
+`default(Rect)` and either zero dimension are canonical empty; negative dimensions
+throw even if the other dimension is zero. Empty rectangles contain nothing,
+never overlap or touch, and are the identity for union. They are not equivalent
+to the occupied origin cell `Rect(0,0,1,1)`.
+
+`Rect.Overlaps` replaces `HasOverlap` and requires a shared cell. `Touches`
+includes overlap and immediate eight-way adjacency, including corners.
+Concrete and `IRect` overloads use the same rules; `IRect` now exposes `IsEmpty`.
+Dimensions and endpoints must fit signed 32-bit integers; invalid construction
+or an unrepresentable union throws `ArgumentOutOfRangeException`.
+
+Implementation is staged: topology validation, convex polygon
 invariants, and factory/rasterizer boundary checks have separate remaining
 milestones in [CORRECTNESS_PLAN.md](CORRECTNESS_PLAN.md).
 
