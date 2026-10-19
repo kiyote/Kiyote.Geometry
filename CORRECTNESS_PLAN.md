@@ -21,6 +21,42 @@ after cleanup was 258 passing unit tests and 52 passing integration tests, with 
 successful Release benchmark build. Temporary review probes reproduced the issues
 below but were removed; their cases must become permanent regression tests.
 
+## Current status and next-session handoff (2026-10-19)
+
+**Paused after P2.** P1, C1-C7, A1, and P2 are complete. The latest implementation
+package is commit `bcda979` (allocation and representation boundaries), following
+`61fcfe5` (C7/A1 topology ownership). Package evidence below and
+[BENCHMARK.md](BENCHMARK.md) record the completed fixes and measured tradeoffs.
+
+Last verified state:
+
+- Full Release solution build: zero warnings/errors.
+- Release tests: **429 unit + 138 integration** passing.
+- Targeted Debug tests: **145** passing.
+- P2: five observed red-to-green regressions, 22 added test cases, 35 matched
+  benchmark cases, three additional visitor cases, and a 24-case triangle sweep.
+- P3 has not started; final plan-wide sign-off remains pending.
+
+**Resume with P3, not another correctness or P2 rewrite:**
+
+1. Establish the P3-specific scaling baseline before changing production code:
+   fixed local edits with independently increasing chunks, placements, seams,
+   and fragmentation, plus clean/one-dirty/all-dirty commits.
+2. Add the P3 edit-sequence reference tests and recording-binding assertions
+   described below. Observe the intended failing assertions before fixes where
+   behavior must change; keep timing/scaling evidence in benchmarks.
+3. Implement only locality/indexing changes justified by those measurements.
+   Include index construction, maintenance, and retained-memory costs. Preserve
+   exclusive source ownership, coordinated edits, stale-commit rejection,
+   disposal, and layer-swapping behavior.
+4. Validate, record before/after evidence, and commit P3 separately. Then perform
+   the final documentation/validation milestone and close the completion
+   checklist. If a proposed optimization is not justified, record the decision
+   to retain the simpler implementation instead.
+
+Continue one package at a time with a separate green commit per package. No new
+product decision is currently blocking the next step.
+
 ## 1. Approved contracts
 
 ### Geometry size and arithmetic
@@ -863,6 +899,9 @@ Accept only measured benefits that justify complexity; pooling is not an end in 
 
 ### P3. Make topology mutation and commit scale with affected data
 
+**Status:** Next package; not started. Existing topology benchmarks provide
+fixtures, but the P3-specific scaling baseline and production changes are pending.
+
 Review finding 10. Primary implementations:
 [GridAssembly.cs](src/Kiyote/Geometry/Kiyote.Geometry/Topology/GridAssembly.cs) and
 [CompiledGridAssembly.cs](src/Kiyote/Geometry/Kiyote.Geometry/Topology/CompiledGridAssembly.cs).
@@ -1005,6 +1044,10 @@ optimization work: if measurements do not justify a proposed change, retain the
 simpler implementation and record that decision.
 
 ## 5. Completion criteria
+
+These are final plan-wide sign-off gates, intentionally left open until P3 and
+the final validation milestone are finished. They do not negate the completed
+package validations recorded above.
 
 - [ ] Every supported-domain defect has a permanent test observed failing before
   the fix and passing afterward, with the intended failure reason recorded.
