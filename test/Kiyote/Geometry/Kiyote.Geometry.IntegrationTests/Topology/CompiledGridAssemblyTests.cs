@@ -1,5 +1,3 @@
-using Kiyote.Buffers.ChunkedGrids;
-
 namespace Kiyote.Geometry.Topology.IntegrationTests;
 
 [TestFixture]
@@ -198,7 +196,7 @@ internal sealed class CompiledGridAssemblyTests {
 		GridAssembly<TestCell> assembly = CreateFilledAssembly( 64, 64, out _ );
 		using ICompiledGridAssembly<TestCell> compiledAssembly = _compiler.Compile( assembly, GridCompiler.DefaultChunkSize );
 		IGridLayer<int> layer = compiledAssembly.CreateLayer<int>();
-		ChunkedGridLayout layout = compiledAssembly.ChunkLayout;
+		GridLayout layout = compiledAssembly.ChunkLayout;
 		Assert.That( layout.TryLocate( 40, 37, out int chunkIndex, out int localIndex ), Is.True );
 
 		layer[40, 37] = 42;
@@ -206,7 +204,7 @@ internal sealed class CompiledGridAssemblyTests {
 		using( Assert.EnterMultipleScope() ) {
 			Assert.That( layer.Layout, Is.SameAs( layout ) );
 			Assert.That( localIndex, Is.EqualTo( ( ( 37 & layout.ChunkMask ) << layout.ChunkShift ) + ( 40 & layout.ChunkMask ) ) );
-			Assert.That( layer.Values.GetValues( chunkIndex )[localIndex], Is.EqualTo( 42 ) );
+			Assert.That( layer.GetValues( chunkIndex )[localIndex], Is.EqualTo( 42 ) );
 		}
 	}
 
@@ -222,7 +220,7 @@ internal sealed class CompiledGridAssemblyTests {
 			Assert.That( assembly.TryRemoveCell( placement, hole.X, hole.Y ), Is.True );
 		}
 		using ICompiledGridAssembly<TestCell> compiledAssembly = _compiler.Compile( assembly, chunkSize );
-		ChunkedGridLayout layout = compiledAssembly.ChunkLayout;
+		GridLayout layout = compiledAssembly.ChunkLayout;
 
 		IGridLayer<Direction> vacuum = compiledAssembly.CreateVacuumLayer();
 
@@ -254,7 +252,7 @@ internal sealed class CompiledGridAssemblyTests {
 		IGridLayer<Direction> vacuum = compiledAssembly.CreateVacuumLayer();
 
 		Assert.That( compiledAssembly.ChunkLayout.TryGetChunk( 0, 0, out int chunkIndex ), Is.True );
-		Assert.That( vacuum.Values.GetValues( chunkIndex )[10], Is.EqualTo( Direction.None ) );
+		Assert.That( vacuum.GetValues( chunkIndex )[10], Is.EqualTo( Direction.None ) );
 		Assert.That( vacuum[9, 0], Is.EqualTo( Direction.North | Direction.NorthEast | Direction.East | Direction.SouthEast | Direction.South | Direction.SouthWest | Direction.NorthWest ) );
 	}
 
@@ -263,7 +261,7 @@ internal sealed class CompiledGridAssemblyTests {
 	) {
 		List<int> values = [];
 		foreach( int chunkIndex in layer.Layout.EnumerateChunks() ) {
-			values.AddRange( layer.Values.GetValues( chunkIndex ).ToArray() );
+			values.AddRange( layer.GetValues( chunkIndex ).ToArray() );
 		}
 		return values;
 	}

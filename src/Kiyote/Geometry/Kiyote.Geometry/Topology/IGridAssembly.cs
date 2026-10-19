@@ -8,6 +8,11 @@ namespace Kiyote.Geometry.Topology;
 /// compiled spaces stale; per-cell edits are propagated immediately to compiled
 /// spaces.  Not thread-safe; callers must synchronise access.
 /// </summary>
+/// <remarks>
+/// A consumption interface for <see cref="GridAssembly{TCell}"/>. The built-in
+/// compiler rejects replacement implementations because live edit observation
+/// belongs to the closed assembly/compiler family.
+/// </remarks>
 public interface IGridAssembly<TCell> {
 
 	/// <summary>
@@ -19,12 +24,17 @@ public interface IGridAssembly<TCell> {
 	/// <summary>
 	/// The union of all placement bounds, or <see langword="null"/> when empty.
 	/// </summary>
+	/// <exception cref="ArgumentOutOfRangeException">
+	/// The combined extent cannot be represented by a rectangle's signed 32-bit
+	/// dimensions, even though each placement has valid coordinates.
+	/// </exception>
 	Rect? Bounds { get; }
 
 	IReadOnlyList<IGridPlacement<TCell>> Placements { get; }
 
 	/// <summary>
-	/// All seams between placements, captured at attach time.
+	/// A read-only snapshot of the current seams. Later edits do not change a
+	/// previously retrieved snapshot.
 	/// </summary>
 	IReadOnlyList<GridSeam> Seams { get; }
 
@@ -32,7 +42,11 @@ public interface IGridAssembly<TCell> {
 	/// Attempts to place <paramref name="source"/> with its origin at the
 	/// supplied assembly-space location.  The attach is rejected, leaving the
 	/// assembly unchanged, if any occupied cell overlaps an existing placement.
+	/// A source may have only one placement across all assemblies. Invalid source
+	/// dimensions, runs, or translated bounds are rejected before mutation.
 	/// </summary>
+	/// <exception cref="InvalidOperationException">The source is already attached.</exception>
+	/// <exception cref="ArgumentException">The source geometry or placement bounds are invalid.</exception>
 	AttachResult TryAttach(
 		IGridSource<TCell> source,
 		int column,
@@ -53,7 +67,9 @@ public interface IGridAssembly<TCell> {
 	);
 
 	/// <summary>
-	/// Removes the placement and any seams it participates in.
+	/// Removes the placement and any seams it participates in, releasing source
+	/// ownership for direct shape editing or attachment elsewhere. Commit before
+	/// detaching: every earlier compilation becomes stale and cannot commit.
 	/// </summary>
 	bool TryDetach(
 		PlacementId placement

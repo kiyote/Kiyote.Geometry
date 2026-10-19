@@ -10,8 +10,12 @@ internal sealed class GridPlacement<TCell> : IGridPlacement<TCell> {
 		int column,
 		int row
 	) {
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero( source.Width );
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero( source.Height );
 		Id = id;
 		Source = source;
+		Ownership = source.Ownership;
+		ArgumentNullException.ThrowIfNull( Ownership );
 		Column = column;
 		Row = row;
 		Bounds = new Rect( column, row, source.Width, source.Height );
@@ -28,12 +32,17 @@ internal sealed class GridPlacement<TCell> : IGridPlacement<TCell> {
 
 	public Rect Bounds { get; }
 
+	internal GridSourceOwnership Ownership { get; }
+
 	/// <remarks>
 	/// The returned span is only valid until the next call.
 	/// </remarks>
 	public ReadOnlySpan<CellRun> GetOccupiedRuns(
 		int row
 	) {
+		if( row < Bounds.Y1 || row > Bounds.Y2 ) {
+			return [];
+		}
 		ReadOnlySpan<CellRun> runs = Source.GetOccupiedRuns( row - Row );
 		if( runs.Length > _scratch.Length ) {
 			_scratch = new CellRun[runs.Length];

@@ -1,5 +1,82 @@
 # Performance measurements
 
+## C7/A1 topology ownership and lifetime
+
+Measured on 2026-10-19 against pre-C7 production at `0c850b7`, using the same
+environment and short-run settings as P1. All 28 matched cases completed before
+and after. Existing seeded fixtures and workloads are unchanged.
+
+```powershell
+dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*GridAssemblyBenchmarks.TryAttach_TryDetach*' '*GridAssemblyBenchmarks.TryRemoveCell_TryAddCell_Interior*' '*CompiledGridAssemblyBenchmarks.TryRemoveCell_TryAddCell_Propagated*' '*ConnectivityBuilderBenchmarks*' '*GridCompilerBenchmarks*' '*DenseGridSourceBenchmarks*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\correctness-c7-after
+```
+
+### Attachment, edits, and connectivity
+
+All times below are microseconds. Allocation remains zero for the edit/update
+rows after warmup. Attachment/detachment rises by 32 B per pair in both fixtures:
+32,176 -> 32,208 B at size 64, and 330,424 -> 330,456 B at size 256.
+Ownership is one stable object per source, not a per-edit allocation or global
+registry. Read-only views are created per owner/snapshot, not per cell.
+
+| Method | Size | Fragmented | Before mean (us) | C7 mean (us) | C7 error (us) | C7 StdDev (us) |
+|---|---:|---|---:|---:|---:|---:|
+| Attach/detach | 64 | - | 262.4169 | 589.7755 | 1943.15566 | 300.70549 |
+| Attach/detach | 256 | - | 5409.0250 | 5026.1850 | 751.62662 | 195.19505 |
+| Interior remove/add | 64 | - | 0.4567 | 0.4910 | 0.02036 | 0.00315 |
+| Interior remove/add | 256 | - | 1.6969 | 1.8625 | 0.35868 | 0.09315 |
+| Propagated remove/add | 64 | false | 2.404 | 2.502 | 0.5095 | 0.1323 |
+| Propagated remove/add | 64 | true | 27.348 | 26.551 | 5.6009 | 1.4545 |
+| Propagated remove/add | 256 | false | 17.672 | 18.418 | 3.9880 | 1.0357 |
+| Propagated remove/add | 256 | true | 474.377 | 413.671 | 79.9610 | 20.7656 |
+| Update single cell | 64 | - | 0.8872 | 1.118 | 0.2999 | 0.0779 |
+| Update seam cell | 64 | - | 1.0051 | 1.282 | 0.2100 | 0.0545 |
+| Update 32x32 | 64 | - | 86.5445 | 140.319 | 200.4756 | 52.0629 |
+| Update single cell | 256 | - | 1.3495 | 1.423 | 0.0564 | 0.0147 |
+| Update seam cell | 256 | - | 1.5752 | 1.411 | 0.0804 | 0.0124 |
+| Update 32x32 | 256 | - | 258.4342 | 134.933 | 122.9671 | 31.9342 |
+
+These short runs are visibly noisy: post-change size-64 attachment has a
+456.291 us median and a confidence interval much wider than its mean; pre-change
+size-256 32x32 update has a 99.873 us median versus its 258.434 us mean. Do not
+interpret those means as reliable regression/speedup ratios. Some small edits
+and updates do have higher measured costs; ownership and full-int neighbour/
+padding validation are not claimed to be free. Existing full run/seam scans
+remain, and the fragmented propagation results still justify P3 locality work.
+
+### Compilation
+
+The read-only layout and layer-list views add small fixed allocations rather
+than per-cell wrappers. Most rows show about 64 B more per compilation; the
+largest row's rounded measurement does not show that difference.
+
+| Source size | Chunk size | Before mean (us) | C7 mean (us) | C7 error (us) | C7 StdDev (us) | Before allocation | C7 allocation |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 64 | 32 | 35.33 | 39.89 | 4.453 | 1.156 | 73.14 KB | 73.20 KB |
+| 64 | 64 | 25.82 | 41.91 | 6.749 | 1.753 | 56.35 KB | 56.41 KB |
+| 256 | 32 | 387.22 | 401.34 | 30.317 | 7.873 | 675.86 KB | 675.86 KB |
+| 256 | 64 | 199.31 | 207.85 | 11.991 | 1.856 | 401.29 KB | 401.35 KB |
+
+No throughput improvement is claimed. The small-assembly/chunk-64 timing increase
+is retained here rather than attributed entirely to validation or dismissed.
+Compiler representation/allocation work remains P2.
+
+### Dense sources and other layer paths
+
+All ten dense-source cases still report zero steady-state managed allocation.
+Cached-run means change from 121.4 -> 122.5 ns (size 64) and 463.4 -> 473.1 ns
+(size 256). Clear/set with run rebuilding changes from 115.3 -> 114.5 ns and
+653.5 -> 663.1 ns respectively. Existing-cell access does not acquire ownership
+or add per-cell objects.
+
+An additional run under `correctness-c7-layers`, with filters
+`*CompiledGridAssemblyMutationBenchmarks*` and
+`*CompiledGridAssemblyBenchmarks.Commit*`, completed all 18 cases covering bind,
+connectivity build, vacuum generation, and clean/one-dirty/all-dirty commits.
+These are coverage measurements, not a new matched before/after comparison.
+Public chunk-value access remains span-based; padding copies use caller-owned
+scratch. Correctness tests separately verify these APIs after removal of mutable
+layout and raw layer-storage exposure.
+
 ## C6 rasterizer follow-up
 
 Measured on 2026-10-19 against pre-C6 production at `b5a4cfc`, using the same

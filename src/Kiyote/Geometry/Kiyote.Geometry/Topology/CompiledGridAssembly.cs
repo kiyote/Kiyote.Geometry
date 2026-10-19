@@ -5,24 +5,24 @@ using Kiyote.Buffers.ChunkedGrids;
 namespace Kiyote.Geometry.Topology;
 
 /// <summary>
-/// The default <see cref="ICompiledGridAssembly{TCell}"/>.  When compiled from a
-/// <see cref="GridAssembly{TCell}"/>, per-cell edits are applied to the chunk
+/// The built-in <see cref="ICompiledGridAssembly{TCell}"/>. Per-cell edits are applied to the chunk
 /// layout and to every layer as they happen.  Not thread-safe.
 /// </summary>
 internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>, IGridAssemblyObserver {
 
 	private readonly ChunkedGridLayout _layout;
-	private readonly GridAssembly<TCell>? _observed;
+	private readonly GridAssembly<TCell> _observed;
 	private readonly List<SourceRun> _runs;
 	private readonly List<ChunkSeamLink> _seamLinks;
 	private readonly List<IGridLayer> _layers;
+	private readonly IReadOnlyList<IGridLayer> _layerView;
 	private readonly List<IGridLayerStorage> _storage;
 	private readonly List<IBoundGridLayer<TCell>> _bound;
 	private readonly Dictionary<PlacementId, IGridSource<TCell>> _sources;
 	private bool _disposed;
 
 	public CompiledGridAssembly(
-		IGridAssembly<TCell> assembly,
+		GridAssembly<TCell> assembly,
 		int chunkSize
 	) {
 		if( chunkSize < GridCompiler.MinimumChunkSize
@@ -39,9 +39,11 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 		Assembly = assembly;
 		Version = assembly.Version;
 		_layout = new ChunkedGridLayout( chunkSize );
+		ChunkLayout = new GridLayout( _layout );
 		_runs = [];
 		_seamLinks = [];
 		_layers = [];
+		_layerView = _layers.AsReadOnly();
 		_storage = [];
 		_bound = [];
 		_sources = [];
@@ -62,8 +64,8 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 			}
 		}
 
-		_observed = assembly as GridAssembly<TCell>;
-		_observed?.AddObserver( this );
+		_observed = assembly;
+		_observed.AddObserver( this );
 	}
 
 	public IGridAssembly<TCell> Assembly { get; }
@@ -72,21 +74,30 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 
 	public bool IsStale => Assembly.Version != Version;
 
-	public ChunkedGridLayout ChunkLayout => _layout;
+	public GridLayout ChunkLayout { get; }
+
+	internal ChunkedGridLayout Layout => _layout;
 
 	public ReadOnlySpan<SourceRun> SourceRuns => CollectionsMarshal.AsSpan( _runs );
 
 	public ReadOnlySpan<ChunkSeamLink> SeamLinks => CollectionsMarshal.AsSpan( _seamLinks );
 
-	public IReadOnlyList<IGridLayer> Layers => _layers;
+	public IReadOnlyList<IGridLayer> Layers => _layerView;
+
+	internal void EnsureUsable() {
+		ObjectDisposedException.ThrowIf( _disposed, this );
+		if( IsStale ) {
+			throw new InvalidOperationException( "The assembly has changed structurally; recompile it before further operations." );
+		}
+	}
 
 	public IGridLayer<T> Bind<T, TBinding>(
 		TBinding binding
 	) where T : unmanaged
 		where TBinding : struct, IGridLayerBinding<TCell, T> {
-		ObjectDisposedException.ThrowIf( _disposed, this );
+		EnsureUsable();
 
-		BoundGridLayer<TCell, T, TBinding> layer = new BoundGridLayer<TCell, T, TBinding>( _layout, binding );
+		BoundGridLayer<TCell, T, TBinding> layer = new BoundGridLayer<TCell, T, TBinding>( ChunkLayout, binding );
 		foreach( SourceRun run in _runs ) {
 			layer.Load( _sources[run.Placement], run );
 		}
@@ -98,9 +109,9 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 	}
 
 	public IGridLayer<T> CreateLayer<T>() where T : unmanaged {
-		ObjectDisposedException.ThrowIf( _disposed, this );
+		EnsureUsable();
 
-		GridLayer<T> layer = new GridLayer<T>( _layout );
+		GridLayer<T> layer = new GridLayer<T>( ChunkLayout );
 		AddLayer( layer );
 		return layer;
 	}
@@ -108,6 +119,7 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 	public bool RemoveLayer(
 		IGridLayer layer
 	) {
+		EnsureUsable();
 		if( !_layers.Remove( layer ) ) {
 			return false;
 		}
@@ -122,7 +134,7 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 		IGridLayer<T> a,
 		IGridLayer<T> b
 	) where T : unmanaged {
-		ObjectDisposedException.ThrowIf( _disposed, this );
+		EnsureUsable();
 
 		if( a is not GridLayer<T> left || !_layers.Contains( a ) ) {
 			throw new ArgumentException( "Layer does not belong to this assembly.", nameof( a ) );
@@ -137,9 +149,9 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 	}
 
 	public IGridLayer<Direction> CreateVacuumLayer() {
-		ObjectDisposedException.ThrowIf( _disposed, this );
+		EnsureUsable();
 
-		GridLayer<Direction> result = new GridLayer<Direction>( _layout );
+		GridLayer<Direction> result = new GridLayer<Direction>( ChunkLayout );
 		ChunkedGridLayer<Direction> values = result.Values;
 		int size = _layout.ChunkSize;
 		int shift = _layout.ChunkShift;
@@ -184,7 +196,7 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 	}
 
 	public void Commit() {
-		ObjectDisposedException.ThrowIf( _disposed, this );
+		EnsureUsable();
 
 		foreach( IBoundGridLayer<TCell> layer in _bound ) {
 			foreach( SourceRun run in _runs ) {
@@ -200,7 +212,7 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 		if( _disposed ) {
 			return;
 		}
-		_observed?.RemoveObserver( this );
+		_observed.RemoveObserver( this );
 		_disposed = true;
 	}
 
@@ -211,6 +223,7 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 	internal void AddLayer<T>(
 		GridLayer<T> layer
 	) where T : unmanaged {
+		EnsureUsable();
 		_layers.Add( layer );
 		_storage.Add( layer );
 	}
@@ -400,9 +413,11 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 			_ = _layout.SetPopulatedRun( column, row, length );
 			_runs.Add( new SourceRun( placement.Id, sourceColumn, sourceRun.Row, chunkIndex, localRowStart + localColumn, length ) );
 
-			column += length;
 			sourceColumn += length;
 			remaining -= length;
+			if( remaining > 0 ) {
+				column += length;
+			}
 		}
 	}
 

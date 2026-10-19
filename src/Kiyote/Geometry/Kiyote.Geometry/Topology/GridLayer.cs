@@ -11,15 +11,26 @@ internal class GridLayer<T> : IGridLayer<T>, IGridLayerStorage where T : unmanag
 	private bool[] _dirty;
 
 	public GridLayer(
-		ChunkedGridLayout layout
+		GridLayout layout
 	) {
-		Values = new ChunkedGridLayer<T>( layout );
+		Layout = layout;
+		Values = new ChunkedGridLayer<T>( layout.Storage );
 		_dirty = [];
 	}
 
-	public ChunkedGridLayout Layout => Values.Layout;
+	public GridLayout Layout { get; }
 
-	public ChunkedGridLayer<T> Values { get; }
+	internal ChunkedGridLayer<T> Values { get; }
+
+	public Span<T> GetValues( int chunkIndex ) => Values.GetValues( chunkIndex );
+
+	public Span<T> GetRowValues( int chunkIndex, int row ) => Values.GetRowValues( chunkIndex, row );
+
+	public void CopyPadded( int chunkIndex, int halo, Span<T> values ) =>
+		Values.GetNeighbourhood( chunkIndex ).CopyPadded( halo, values );
+
+	public void CopyPaddedRow( int chunkIndex, int row, int halo, Span<T> values ) =>
+		Values.GetNeighbourhood( chunkIndex ).CopyPaddedRow( row, halo, values );
 
 	public ref T this[int column, int row] => ref Values.GetReference( column, row );
 

@@ -19,30 +19,39 @@ public sealed class ConnectivityBuilder : IConnectivityBuilder {
 		TStrategy strategy
 	) where TStrategy : struct, IConnectivityStrategy<TCell> {
 		CompiledGridAssembly<TCell> compiled = GetCompiled( compiledGridAssembly );
-		ChunkedGridLayout layout = compiled.ChunkLayout;
-		GridLayer<Direction> result = new GridLayer<Direction>( layout );
+		ChunkedGridLayout layout = compiled.Layout;
+		GridLayer<Direction> result = new GridLayer<Direction>( compiled.ChunkLayout );
 
 		// TCell is unconstrained, so owners and cells are gathered into pooled
 		// arrays, one chunk-sized block per chunk index, rather than layers.
 		int size = layout.ChunkSize;
 		int area = size * size;
-		int length = layout.ChunkCapacity * area;
+		int length = GridCapacity.GetLength( (long)layout.ChunkCapacity * area, nameof( compiledGridAssembly ) );
 		int paddedLength = ChunkPadding.GetPaddedLength( size, 1 );
 		bool clearCells = RuntimeHelpers.IsReferenceOrContainsReferences<TCell>();
 		PlacementId[] owners = ArrayPool<PlacementId>.Shared.Rent( length );
-		TCell[] cells = ArrayPool<TCell>.Shared.Rent( length );
-		PlacementId[] paddedOwners = ArrayPool<PlacementId>.Shared.Rent( paddedLength );
-		TCell[] paddedCells = ArrayPool<TCell>.Shared.Rent( paddedLength );
+		TCell[]? cells = null;
+		PlacementId[]? paddedOwners = null;
+		TCell[]? paddedCells = null;
 		try {
+			cells = ArrayPool<TCell>.Shared.Rent( length );
+			paddedOwners = ArrayPool<PlacementId>.Shared.Rent( paddedLength );
+			paddedCells = ArrayPool<TCell>.Shared.Rent( paddedLength );
 			Array.Clear( owners, 0, length );
 			Array.Clear( cells, 0, length );
 			Load( compiled, owners, cells, area );
 			CalculateAll( ref strategy, layout, result.Values, owners, cells, paddedOwners, paddedCells );
 		} finally {
 			ArrayPool<PlacementId>.Shared.Return( owners );
-			ArrayPool<TCell>.Shared.Return( cells, clearCells );
-			ArrayPool<PlacementId>.Shared.Return( paddedOwners );
-			ArrayPool<TCell>.Shared.Return( paddedCells, clearCells );
+			if( cells is not null ) {
+				ArrayPool<TCell>.Shared.Return( cells, clearCells );
+			}
+			if( paddedOwners is not null ) {
+				ArrayPool<PlacementId>.Shared.Return( paddedOwners );
+			}
+			if( paddedCells is not null ) {
+				ArrayPool<TCell>.Shared.Return( paddedCells, clearCells );
+			}
 		}
 
 		compiled.AddLayer( result );
@@ -110,26 +119,37 @@ public sealed class ConnectivityBuilder : IConnectivityBuilder {
 			throw new ArgumentException( "The layer does not belong to the compiled assembly.", nameof( layer ) );
 		}
 
-		ChunkedGridLayout layout = compiled.ChunkLayout;
+		if( area.IsEmpty ) {
+			return;
+		}
+		ChunkedGridLayout layout = compiled.Layout;
 
 		// A cell affects its neighbours' connections, including diagonals it
 		// flanks, so everything within one cell of the area is recalculated,
 		// which in turn requires the cells within two of the area.
-		int left = area.X1 - 2;
-		int top = area.Y1 - 2;
-		int width = area.X2 - area.X1 + 5;
-		int height = area.Y2 - area.Y1 + 5;
-		int length = width * height;
+		long left = (long)area.X1 - 2;
+		long top = (long)area.Y1 - 2;
+		long paddedWidth = (long)area.Width + 4;
+		long paddedHeight = (long)area.Height + 4;
+		int length = GridCapacity.GetLength( paddedWidth * paddedHeight, nameof( area ) );
+		int width = (int)paddedWidth;
+		int height = (int)paddedHeight;
 
 		PlacementId[] owners = ArrayPool<PlacementId>.Shared.Rent( length );
-		TCell[] cells = ArrayPool<TCell>.Shared.Rent( length );
+		TCell[]? cells = null;
 		try {
+			cells = ArrayPool<TCell>.Shared.Rent( length );
 			int at = 0;
-			for( int row = top; row < top + height; row++ ) {
-				for( int column = left; column < left + width; column++ ) {
-					if( compiled.Assembly.TryGetPlacementAt( column, row, out IGridPlacement<TCell>? placement ) ) {
+			for( int y = 0; y < height; y++ ) {
+				long row = top + y;
+				for( int x = 0; x < width; x++ ) {
+					long column = left + x;
+					if( column >= int.MinValue && column <= int.MaxValue
+						&& row >= int.MinValue && row <= int.MaxValue
+						&& compiled.Assembly.TryGetPlacementAt( (int)column, (int)row, out IGridPlacement<TCell>? placement )
+					) {
 						owners[at] = placement.Id;
-						cells[at] = placement.Source.GetCell( column - placement.Column, row - placement.Row );
+						cells[at] = placement.Source.GetCell( (int)( column - placement.Column ), (int)( row - placement.Row ) );
 					} else {
 						owners[at] = PlacementId.None;
 						cells[at] = default!;
@@ -139,26 +159,33 @@ public sealed class ConnectivityBuilder : IConnectivityBuilder {
 			}
 
 			ChunkedGridLayer<Direction> output = result.Values;
-			for( int row = top + 1; row < top + height - 1; row++ ) {
-				for( int column = left + 1; column < left + width - 1; column++ ) {
-					if( !layout.TryLocate( column, row, out int chunkIndex, out int localIndex ) ) {
+			for( int y = 1; y < height - 1; y++ ) {
+				long row = top + y;
+				for( int x = 1; x < width - 1; x++ ) {
+					long column = left + x;
+					if( column < int.MinValue || column > int.MaxValue
+						|| row < int.MinValue || row > int.MaxValue
+						|| !layout.TryLocate( (int)column, (int)row, out int chunkIndex, out int localIndex )
+					) {
 						continue;
 					}
-					int index = ( ( row - top ) * width ) + ( column - left );
+					int index = ( y * width ) + x;
 					output.GetValues( chunkIndex )[localIndex] = Calculate(
 						ref strategy,
 						owners,
 						cells,
 						index,
 						width,
-						column,
-						row
+						(int)column,
+						(int)row
 					);
 				}
 			}
 		} finally {
 			ArrayPool<PlacementId>.Shared.Return( owners );
-			ArrayPool<TCell>.Shared.Return( cells, RuntimeHelpers.IsReferenceOrContainsReferences<TCell>() );
+			if( cells is not null ) {
+				ArrayPool<TCell>.Shared.Return( cells, RuntimeHelpers.IsReferenceOrContainsReferences<TCell>() );
+			}
 		}
 	}
 
@@ -235,9 +262,7 @@ public sealed class ConnectivityBuilder : IConnectivityBuilder {
 		if( compiledGridAssembly is not CompiledGridAssembly<TCell> compiled ) {
 			throw new ArgumentException( $"Only assemblies compiled by {nameof( GridCompiler )} are supported.", nameof( compiledGridAssembly ) );
 		}
-		if( compiled.IsStale ) {
-			throw new InvalidOperationException( "The assembly has been attached to or detached from since it was compiled; recompile it." );
-		}
+		compiled.EnsureUsable();
 		return compiled;
 	}
 
@@ -262,7 +287,11 @@ public sealed class ConnectivityBuilder : IConnectivityBuilder {
 		for( int dy = -1; dy <= 1; dy++ ) {
 			int rowIndex = index + ( dy * stride );
 			for( int dx = -1; dx <= 1; dx++ ) {
-				window[w++] = new TopologyCell<TCell>( column + dx, row + dy, owners[rowIndex + dx], cells[rowIndex + dx] );
+				long x = (long)column + dx;
+				long y = (long)row + dy;
+				window[w++] = x < int.MinValue || x > int.MaxValue || y < int.MinValue || y > int.MaxValue
+					? default
+					: new TopologyCell<TCell>( (int)x, (int)y, owners[rowIndex + dx], cells[rowIndex + dx] );
 			}
 		}
 

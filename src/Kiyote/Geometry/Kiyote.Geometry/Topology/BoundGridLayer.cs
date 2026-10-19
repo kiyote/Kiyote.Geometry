@@ -1,5 +1,3 @@
-using Kiyote.Buffers.ChunkedGrids;
-
 namespace Kiyote.Geometry.Topology;
 
 /// <summary>
@@ -13,7 +11,7 @@ internal sealed class BoundGridLayer<TCell, T, TBinding> : GridLayer<T>, IBoundG
 	private readonly TBinding _binding;
 
 	public BoundGridLayer(
-		ChunkedGridLayout layout,
+		GridLayout layout,
 		TBinding binding
 	) : base( layout ) {
 		_binding = binding;

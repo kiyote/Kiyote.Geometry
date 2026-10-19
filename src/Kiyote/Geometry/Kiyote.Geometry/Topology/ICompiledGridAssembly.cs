@@ -1,5 +1,3 @@
-using Kiyote.Buffers.ChunkedGrids;
-
 namespace Kiyote.Geometry.Topology;
 
 /// <summary>
@@ -9,6 +7,13 @@ namespace Kiyote.Geometry.Topology;
 /// live at a time; the caller is responsible for disposing it before
 /// compiling again.
 /// </summary>
+/// <remarks>
+/// This is a consumption interface for the closed built-in implementation family.
+/// Layer management, commit, and connectivity operations reject stale or disposed
+/// compilations. Disposal remains idempotent and snapshot inspection is allowed. Commit before
+/// attaching or detaching, then dispose and recompile. Retained layers and spans
+/// are detached snapshots after invalidation; they no longer receive cell edits.
+/// </remarks>
 public interface ICompiledGridAssembly<TCell> : IDisposable {
 
 	IGridAssembly<TCell> Assembly { get; }
@@ -21,7 +26,7 @@ public interface ICompiledGridAssembly<TCell> : IDisposable {
 	/// <summary>
 	/// True when the assembly has been attached to or detached from since
 	/// compilation.  Per-cell edits do not make a space stale; they are applied
-	/// immediately.  A stale space can still be committed.
+	/// immediately. A stale space cannot be committed or used for further operations.
 	/// </summary>
 	bool IsStale { get; }
 
@@ -30,20 +35,21 @@ public interface ICompiledGridAssembly<TCell> : IDisposable {
 	/// its index, neighbours and cell occupancy.  Holds no cell data.  Every
 	/// layer in <see cref="Layers"/> stores its values over this layout, so a
 	/// chunk index and local index identify the same cell in all layers.
-	/// Treat it as read-only: occupancy is changed through
+	/// This view exposes no topology mutation: occupancy is changed through
 	/// <see cref="IGridAssembly{TCell}.TryAddCell"/> and
 	/// <see cref="IGridAssembly{TCell}.TryRemoveCell"/>.  Chunks are never
 	/// removed while the compiled assembly is live, so chunk indices are stable.
 	/// </summary>
-	ChunkedGridLayout ChunkLayout { get; }
+	GridLayout ChunkLayout { get; }
 
 	/// <summary>
-	/// Every source-to-chunk mapping.
+	/// Every source-to-chunk mapping. The span is valid until the next cell edit.
 	/// </summary>
 	ReadOnlySpan<SourceRun> SourceRuns { get; }
 
 	/// <summary>
-	/// The assembly's seams resolved to chunk storage.
+	/// The assembly's seams resolved to chunk storage. The span is valid until
+	/// the next cell edit.
 	/// </summary>
 	ReadOnlySpan<ChunkSeamLink> SeamLinks { get; }
 
@@ -68,9 +74,8 @@ public interface ICompiledGridAssembly<TCell> : IDisposable {
 	/// </param>
 	/// <remarks>
 	/// For stencil-style passes that read neighbouring cells across chunk
-	/// borders, use <see cref="ChunkedGridLayer{T}.GetNeighbourhood"/> on
-	/// <see cref="IGridLayer{T}.Values"/> and copy each chunk with a border
-	/// into scratch with <see cref="GridChunkNeighbourhood{T}.CopyPadded"/>.
+	/// borders, copy each chunk with a border into scratch using
+	/// <see cref="IGridLayer{T}.CopyPadded"/>.
 	/// </remarks>
 	/// <exception cref="ObjectDisposedException">
 	/// This compiled assembly has been disposed.

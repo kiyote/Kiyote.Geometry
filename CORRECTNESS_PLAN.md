@@ -8,9 +8,10 @@ inside a deliberately supported domain, not support for every possible integer,
 polygon, or workload.
 
 The product/API decisions below have been agreed in a question-by-question review.
-Implementation has not started. Checked contract items record decisions, not
-completed fixes; unchecked work items describe the implementation and verification
-still required. Breaking changes are acceptable. Prefer narrower, explicit
+Implementation is proceeding in separately committed packages. Checked contract
+items record decisions; package evidence and the execution table record completed
+fixes. Unchecked work items describe remaining implementation and verification.
+Breaking changes are acceptable. Prefer narrower, explicit
 contracts over costly generality. Use the existing NUnit and BenchmarkDotNet
 infrastructure; no new runtime or test dependencies are required.
 
@@ -61,7 +62,7 @@ Coordinate addressing does not imply that arbitrarily large grids can be allocat
 - [x] All coordinates participating in a supported geometry operation use the
   same fixed interval. Their combined per-axis difference is at most 65,535;
   individually small shapes do not permit arbitrarily distant coordinates.
-- [ ] Implementation prerequisite, not an unresolved product decision: derive
+- [x] Implementation prerequisite, not an unresolved product decision: derive
   bounds for intermediate differences, products, sums, indices, and buffer sizes
   from the approved domains and count limits. Include accumulation length.
 - [x] Enforce the supported coordinate range at suitable public construction,
@@ -206,6 +207,12 @@ bounded geometry algorithms instead of requiring those algorithms to support the
   points. Consumption interfaces do not promise support for arbitrary replacement
   assembly implementations. Make the construction path explicit and reject
   unsupported implementations early, rather than accepting partial functionality.
+- [x] C7 lifecycle clarification (2026-10-19): reject **every stale commit**.
+  Commit before attaching/detaching, then dispose and recompile. This deliberately
+  replaces the old promise that stale compilations could commit: otherwise a
+  detached source reused elsewhere could be overwritten by its former owner.
+  Stale compilations stop observing cell edits and reject layer/connectivity work
+  as well. Disposal remains idempotent; retained snapshots can still be inspected.
 
 Record the decisions in the public XML documentation, the
 [package README](src/Kiyote/Geometry/Kiyote.Geometry/README.md), and the
@@ -724,6 +731,10 @@ Review finding 7. Primary implementations:
   contract rather than an unbounded global ownership registry.
 - Do not implement shared-source propagation.
 - Preserve documented source-value edits and commit behavior.
+  The stale-commit exception to the old behavior was explicitly approved above.
+
+**Status:** Geometry ownership completed with C3, diagram ownership with C1, and
+source ownership with C7/A1. Combined implementation evidence appears under A1.
 
 ### P1. Repair the measurement foundation
 
@@ -845,6 +856,79 @@ and [ConnectivityBuilder.cs](src/Kiyote/Geometry/Kiyote.Geometry/Topology/Connec
 - Audit the closely related lifecycle and mutable-layout exposure. Do not make an
   unrelated class-splitting or DI-framework refactor part of this package.
 
+**C7/A1 implementation evidence (2026-10-19)**
+
+- The original **37-case** regression suite produced **29 failures / 8 passes**
+  against unchanged production. It reproduced cross-placement/cross-assembly
+  source reuse, direct shape mutation, stale writes into reused sources, disposed
+  connectivity/layer operations, wrapped seams, empty-update mutation, dense-size overflow,
+  mutable public collections, and missed live edits through an assembly proxy.
+  The empty-update failure initially prevented the following scratch-size
+  assertion from running; those checks are now separate tests. The overflowing
+  placement test's exception type was corrected to the existing rectangle
+  `ArgumentOutOfRangeException` contract; its original failure was no exception,
+  not acceptance of a different rejection.
+- `GridSourceOwnership` provides stable per-source state, no global registry.
+  Attachment validates dimensions, translated bounds, and run metadata before
+  acquiring ownership or changing occupancy. Overlap and validation rejection
+  leave sources available. Detach releases ownership. Assembly-authorized source
+  edits use `try/finally` to close their edit scope even when custom code throws.
+  Existing-cell value edits and dirty-layer commits remain supported.
+- Custom sources remain trusted extensions: dimensions/runs must stay consistent,
+  occupancy cannot be changed through writable value references, failed mutations
+  must leave their source unchanged, and callbacks cannot reenter the assembly.
+  The helper does not make arbitrary custom code transactional or thread-safe.
+- `GridCompiler` now rejects alternate assembly implementations at entry.
+  Before this change, the proxy fixture compiled successfully but silently missed
+  a subsequent added cell. That behavioral regression was migrated to assert
+  early rejection; supported custom sources, bindings, and struct strategies
+  remain covered through the built-in construction path.
+- `GridLayout` replaces mutable public chunk-layout access, including writable
+  presence spans. Layer `Values` is no longer public: chunk/row value spans and
+  padded copies are exposed directly, without access to occupancy mutation or
+  raw storage swaps. Existing callers were migrated. The old public-layout test
+  first reproduced actual occupancy desynchronization; its revised API assertions
+  verify removal of the mutation path. Placement/layer lists are read-only live
+  views; seam/contact collections are read-only snapshots.
+- Stale/disposed entry-point checks precede binding, layer management, connectivity,
+  and commit. Structural edits unregister the old observers. An old dirty
+  compilation cannot write a detached/reassigned source or import newly attached
+  placements. Valid compilations still mirror coordinated per-cell edits.
+- The final **42 regression cases** additionally cover empty-source ownership,
+  custom non-row-major binding/commit, exact capacity limits without huge
+  allocations, pooled recovery after strategy exceptions, full-int connectivity,
+  writable span/padded-copy access through the read-only view, and stale snapshots.
+  Full Release validation passes **407 unit + 138 integration tests**; targeted
+  Debug validation passes **36 unit + 76 integration topology tests**. The full
+  Release solution builds with zero warnings/errors.
+- **28 matched benchmark cases** complete before and after; another **18 cases**
+  cover layer construction, connectivity build, vacuum, and commit. Source edits,
+  propagated edits, and connectivity updates remain allocation-free after warmup.
+  Read-only state adds small per-object costs, not per-cell objects. Timing
+  uncertainty, retained locality costs, and measurements are in
+  [BENCHMARK.md](BENCHMARK.md); P2/P3 remain separate.
+
+**Topology arithmetic bounds**
+
+- Source dimensions are positive `int`s. Their product is below `2^62`, computed
+  in `long` and checked against `Array.MaxLength` before allocating. Dense indices
+  then stay below that checked length; bitmask rounding also uses `long`.
+- Placement endpoints use checked rectangle construction before overlap scanning.
+  Validated source runs translate wholly inside those bounds. A final chunk-run
+  cursor is not advanced beyond `int.MaxValue`. Run endpoints themselves use
+  checked arithmetic.
+- Neighbour coordinates and connectivity padding use `long`; values outside the
+  signed-32-bit interval are absent rather than cast/wrapped. An update's padded
+  dimensions are at most `2^31 + 3`; their product fits `long` and must pass the
+  array-capacity check before narrowing or indexing. Empty updates do no work.
+- Supported chunk sizes are powers of two from 32 through 4096. A chunk has at
+  most `2^24` cells; flattening an `int` chunk capacity therefore fits `long` and
+  is checked before pool rental. Chunk-neighbour lookup stays within integer
+  chunk coordinates even at extreme valid cell positions.
+- Individually valid, widely separated placements may not have a representable
+  aggregate `Rect`. Their cells remain addressable; querying aggregate `Bounds`
+  explicitly throws rather than silently restricting the topology domain.
+
 ## 4. Execution order and dependencies
 
 | Milestone | Work | Prerequisites |
@@ -856,7 +940,7 @@ and [ConnectivityBuilder.cs](src/Kiyote/Geometry/Kiyote.Geometry/Topology/Connec
 | 3 (C2 complete) | C2: quadtree correctness | C5; C4 for supported-coordinate arithmetic |
 | 3 (C3 complete) | C3: polygon semantics; geometry-storage portion of C7 | Approved polygon contract; C4 |
 | 3 (C6 complete) | C6: rasterizer contract | Approved shape contract; C4; C3 for validated polygon overloads |
-| 4 | Grid-source portion of C7 and A1 | Approved ownership/extensibility contracts; C5 |
+| 4 (complete) | Grid-source portion of C7 and A1 | Approved ownership/extensibility contracts; C5 |
 | 5 | P2: allocation/layout improvements | P1 and correctness fixes for each affected component |
 | 5 | P3: topology locality | P1, grid-source C7, and A1 |
 | 6 | Documentation, full validation, updated measurements | All accepted packages |

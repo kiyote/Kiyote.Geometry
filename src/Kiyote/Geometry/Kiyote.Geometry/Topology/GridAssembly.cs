@@ -24,17 +24,19 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 
 	private readonly Dictionary<PlacementId, GridPlacement<TCell>> _placements;
 	private readonly List<IGridPlacement<TCell>> _placementList;
+	private readonly IReadOnlyList<IGridPlacement<TCell>> _placementView;
 	private readonly ChunkedGrid<PlacementId> _occupancy;
 	private readonly Dictionary<(PlacementId A, PlacementId B), List<GridContact>> _seams;
 	private readonly List<IGridAssemblyObserver> _observers;
 	private readonly List<GridContact> _addedContacts;
 	private readonly List<(PlacementId A, PlacementId B)> _emptySeams;
-	private List<GridSeam>? _seamCache;
+	private IReadOnlyList<GridSeam>? _seamCache;
 	private int _lastId;
 
 	public GridAssembly() {
 		_placements = [];
 		_placementList = [];
+		_placementView = _placementList.AsReadOnly();
 		_occupancy = new ChunkedGrid<PlacementId>();
 		_seams = [];
 		_observers = [];
@@ -54,15 +56,16 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 		}
 	}
 
-	public IReadOnlyList<IGridPlacement<TCell>> Placements => _placementList;
+	public IReadOnlyList<IGridPlacement<TCell>> Placements => _placementView;
 
 	public IReadOnlyList<GridSeam> Seams {
 		get {
 			if( _seamCache is null ) {
-				_seamCache = new List<GridSeam>( _seams.Count );
+				List<GridSeam> snapshot = new List<GridSeam>( _seams.Count );
 				foreach( KeyValuePair<(PlacementId A, PlacementId B), List<GridContact>> seam in _seams ) {
-					_seamCache.Add( new GridSeam( seam.Key.A, seam.Key.B, [.. seam.Value] ) );
+					snapshot.Add( new GridSeam( seam.Key.A, seam.Key.B, Array.AsReadOnly( seam.Value.ToArray() ) ) );
 				}
+				_seamCache = snapshot.AsReadOnly();
 			}
 			return _seamCache;
 		}
@@ -90,12 +93,16 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 			throw new ArgumentException( $"Placement {id.Value} is already attached.", nameof( id ) );
 		}
 
+		GridPlacement<TCell> placement = new GridPlacement<TCell>( id, source, column, row );
+		if( placement.Ownership.IsAttached ) {
+			throw new InvalidOperationException( "The source is already attached to an assembly." );
+		}
 		List<GridOverlap> overlaps = FindOverlaps( source, column, row );
 		if( overlaps.Count > 0 ) {
-			return new AttachResult( PlacementId.None, overlaps, [] );
+			return new AttachResult( PlacementId.None, overlaps.AsReadOnly(), [] );
 		}
 
-		GridPlacement<TCell> placement = new GridPlacement<TCell>( id, source, column, row );
+		placement.Ownership.Attach();
 		_placements[id] = placement;
 		_placementList.Add( placement );
 
@@ -126,11 +133,12 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 		List<GridSeam> seams = [];
 		foreach( PlacementId other in touched ) {
 			(PlacementId A, PlacementId B) key = Order( id, other );
-			seams.Add( new GridSeam( key.A, key.B, [.. _seams[key]] ) );
+			seams.Add( new GridSeam( key.A, key.B, Array.AsReadOnly( _seams[key].ToArray() ) ) );
 		}
 
 		Version++;
-		return new AttachResult( id, [], seams );
+		_observers.Clear();
+		return new AttachResult( id, [], seams.AsReadOnly() );
 	}
 
 	public bool TryDetach(
@@ -163,7 +171,9 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 		}
 		_seamCache = null;
 
+		existing.Ownership.Detach();
 		Version++;
+		_observers.Clear();
 		return true;
 	}
 
@@ -208,10 +218,16 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 		IGridSource<TCell> source = existing.Source;
 
 		Point location = new Point( column + existing.Column, row + existing.Row );
-		if( _occupancy.IsPopulated( location.X, location.Y )
-			|| !source.TrySetCell( column, row, in cell )
-		) {
+		if( _occupancy.IsPopulated( location.X, location.Y ) ) {
 			return false;
+		}
+		existing.Ownership.BeginEdit();
+		try {
+			if( !source.TrySetCell( column, row, in cell ) ) {
+				return false;
+			}
+		} finally {
+			existing.Ownership.EndEdit();
 		}
 		_occupancy[location.X, location.Y] = placement;
 
@@ -231,6 +247,8 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 		int row
 	) {
 		if( !_placements.TryGetValue( placement, out GridPlacement<TCell>? existing )
+			|| (uint)column >= (uint)existing.Source.Width
+			|| (uint)row >= (uint)existing.Source.Height
 			|| !existing.Source.IsOccupied( column, row )
 		) {
 			return false;
@@ -238,8 +256,13 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 		IGridSource<TCell> source = existing.Source;
 
 		Point location = new Point( column + existing.Column, row + existing.Row );
-		if( !source.TryClearCell( column, row ) ) {
-			return false;
+		existing.Ownership.BeginEdit();
+		try {
+			if( !source.TryClearCell( column, row ) ) {
+				return false;
+			}
+		} finally {
+			existing.Ownership.EndEdit();
 		}
 		_occupancy.Clear( location.X, location.Y );
 		RemoveContacts( placement, location );
@@ -281,7 +304,14 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 	) {
 		Dictionary<PlacementId, List<CellRun>> cells = [];
 		for( int sourceRow = 0; sourceRow < source.Height; sourceRow++ ) {
+			int previousEnd = -2;
 			foreach( CellRun run in source.GetOccupiedRuns( sourceRow ) ) {
+				if( run.Row != sourceRow || run.Column < 0 || run.Length <= 0
+					|| (long)run.Column + run.Length > source.Width || run.Column <= previousEnd + 1
+				) {
+					throw new ArgumentException( "Occupied runs must be ordered, separated, and within their source row.", nameof( source ) );
+				}
+				previousEnd = run.LastColumn;
 				for( int c = run.Column; c <= run.LastColumn; c++ ) {
 					int x = c + column;
 					int y = sourceRow + row;
@@ -294,7 +324,7 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 					}
 					if( runs.Count > 0
 						&& runs[^1].Row == y
-						&& runs[^1].LastColumn == x - 1
+						&& (long)runs[^1].LastColumn == (long)x - 1
 					) {
 						CellRun last = runs[^1];
 						runs[^1] = last with { Length = last.Length + 1 };
@@ -311,7 +341,7 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 			for( int i = 1; i < entry.Value.Count; i++ ) {
 				bounds = bounds.Union( RunBounds( entry.Value[i] ) );
 			}
-			overlaps.Add( new GridOverlap( entry.Key, bounds, entry.Value ) );
+			overlaps.Add( new GridOverlap( entry.Key, bounds, entry.Value.AsReadOnly() ) );
 		}
 		return overlaps;
 	}
@@ -336,8 +366,13 @@ public sealed class GridAssembly<TCell> : IGridAssembly<TCell> {
 	) {
 		foreach( Direction direction in _neighbours ) {
 			Point offset = direction.ToOffset();
-			int nx = column + offset.X;
-			int ny = row + offset.Y;
+			long x = (long)column + offset.X;
+			long y = (long)row + offset.Y;
+			if( x < int.MinValue || x > int.MaxValue || y < int.MinValue || y > int.MaxValue ) {
+				continue;
+			}
+			int nx = (int)x;
+			int ny = (int)y;
 			if( !_occupancy.TryGet( nx, ny, out PlacementId other )
 				|| other == placement
 			) {

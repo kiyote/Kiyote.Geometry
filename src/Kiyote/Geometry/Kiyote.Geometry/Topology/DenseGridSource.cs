@@ -20,8 +20,9 @@ public sealed class DenseGridSource<TCell> : IGridSource<TCell> {
 
 		Width = width;
 		Height = height;
-		_cells = new TCell[width * height];
-		_occupied = new ulong[( ( width * height ) + 63 ) >> 6];
+		int length = GridCapacity.GetLength( (long)width * height, nameof( width ) );
+		_cells = new TCell[length];
+		_occupied = new ulong[( (long)length + 63 ) >> 6];
 		_rowRuns = new CellRun[height][];
 		_rowRunCounts = new int[height];
 		_rowDirty = new bool[height];
@@ -33,6 +34,8 @@ public sealed class DenseGridSource<TCell> : IGridSource<TCell> {
 	public int Width { get; }
 
 	public int Height { get; }
+
+	public GridSourceOwnership Ownership { get; } = new GridSourceOwnership();
 
 	public ReadOnlySpan<CellRun> GetOccupiedRuns(
 		int row
@@ -89,6 +92,9 @@ public sealed class DenseGridSource<TCell> : IGridSource<TCell> {
 		) {
 			return false;
 		}
+		if( !IsOccupied( column, row ) ) {
+			Ownership.EnsureShapeChangeAllowed();
+		}
 		int index = GetIndex( column, row );
 		_cells[index] = cell;
 		_occupied[index >> 6] |= 1UL << index;
@@ -104,6 +110,9 @@ public sealed class DenseGridSource<TCell> : IGridSource<TCell> {
 			|| (uint)row >= (uint)Height
 		) {
 			return false;
+		}
+		if( IsOccupied( column, row ) ) {
+			Ownership.EnsureShapeChangeAllowed();
 		}
 		int index = GetIndex( column, row );
 		_cells[index] = default!;
@@ -156,7 +165,7 @@ public sealed class DenseGridSource<TCell> : IGridSource<TCell> {
 	) {
 		if( count == runs.Length ) {
 			// A row holds at most ceil( Width / 2 ) runs.
-			int capacity = Math.Min( Math.Max( 4, runs.Length * 2 ), ( Width + 1 ) / 2 );
+			int capacity = (int)Math.Min( Math.Max( 4, (long)runs.Length * 2 ), ( (long)Width + 1 ) / 2 );
 			Array.Resize( ref runs, capacity );
 		}
 		runs[count++] = run;

@@ -1,5 +1,3 @@
-using Kiyote.Buffers.ChunkedGrids;
-
 namespace Kiyote.Geometry.Topology;
 
 /// <summary>
@@ -11,7 +9,7 @@ public interface IGridLayer {
 	/// The chunk layout the layer's values follow; the same instance as
 	/// <see cref="ICompiledGridAssembly{TCell}.ChunkLayout"/>.
 	/// </summary>
-	ChunkedGridLayout Layout { get; }
+	GridLayout Layout { get; }
 
 	/// <summary>
 	/// True when the chunk has been marked dirty since the last
@@ -42,18 +40,30 @@ public interface IGridLayer {
 /// The library never makes an unoccupied cell hold anything other than
 /// <see langword="default"/>: new layers start zeroed, unoccupied cells are
 /// never loaded and removed cells are reset.  Values written directly into
-/// unoccupied cells through <see cref="Values"/> are the caller's
+/// unoccupied cells through <see cref="GetValues"/> are the caller's
 /// responsibility.
 /// </remarks>
 public interface IGridLayer<T> : IGridLayer where T : unmanaged {
 
 	/// <summary>
-	/// The layer's values.  A chunk index and local index from
+	/// Writable chunk values. A chunk index and local index from
 	/// <see cref="Layout"/> identify the same cell in every layer of the
-	/// compiled assembly.  Do not change the layout's topology through it;
-	/// cell edits are made through the assembly.
+	/// compiled assembly. Mark the chunk dirty after writing a bound layer.
+	/// Obtained spans cannot be revoked; do not retain them across storage swaps.
 	/// </summary>
-	ChunkedGridLayer<T> Values { get; }
+	Span<T> GetValues( int chunkIndex );
+
+	/// <summary>Returns writable values for one local row of a chunk.</summary>
+	Span<T> GetRowValues( int chunkIndex, int row );
+
+	/// <summary>
+	/// Copies a chunk and a halo into caller-owned row-major scratch. The halo
+	/// must be between zero and the chunk size. Missing chunks contribute zeroes.
+	/// </summary>
+	void CopyPadded( int chunkIndex, int halo, Span<T> values );
+
+	/// <summary>Copies one local row of a chunk's padded neighbourhood.</summary>
+	void CopyPaddedRow( int chunkIndex, int row, int halo, Span<T> values );
 
 	/// <summary>
 	/// Returns a reference to the value at the supplied assembly-space cell.

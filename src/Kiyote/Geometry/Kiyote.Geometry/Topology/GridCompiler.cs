@@ -27,12 +27,17 @@ public sealed class GridCompiler : IGridCompiler {
 	/// <see cref="MinimumChunkSize"/> and
 	/// <see cref="Kiyote.Buffers.ChunkedGrids.ChunkedGridLayout.MaximumChunkSize"/>.
 	/// </exception>
+	/// <exception cref="ArgumentException">
+	/// <paramref name="assembly"/> is not a <see cref="GridAssembly{TCell}"/>.
+	/// </exception>
 	public ICompiledGridAssembly<TCell> Compile<TCell>(
 		IGridAssembly<TCell> assembly,
 		int chunkSize
 	) {
 		ArgumentNullException.ThrowIfNull( assembly );
-
-		return new CompiledGridAssembly<TCell>( assembly, chunkSize );
+		if( assembly is not GridAssembly<TCell> supported ) {
+			throw new ArgumentException( $"Only {nameof( GridAssembly<TCell> )} instances support compilation and live edits.", nameof( assembly ) );
+		}
+		return new CompiledGridAssembly<TCell>( supported, chunkSize );
 	}
 }

@@ -75,7 +75,7 @@ internal sealed class ConnectivityBuilderTests {
 	) {
 		List<Direction> values = [];
 		foreach( int chunkIndex in layer.Layout.EnumerateChunks() ) {
-			values.AddRange( layer.Values.GetValues( chunkIndex ).ToArray() );
+			values.AddRange( layer.GetValues( chunkIndex ).ToArray() );
 		}
 		return values;
 	}

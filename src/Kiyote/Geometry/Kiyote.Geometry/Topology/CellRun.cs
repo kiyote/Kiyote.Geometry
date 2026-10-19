@@ -14,5 +14,5 @@ public readonly record struct CellRun(
 	/// <summary>
 	/// The inclusive right-most column of the run.
 	/// </summary>
-	public int LastColumn => Column + Length - 1;
+	public int LastColumn => checked( Column + ( Length - 1 ) );
 }

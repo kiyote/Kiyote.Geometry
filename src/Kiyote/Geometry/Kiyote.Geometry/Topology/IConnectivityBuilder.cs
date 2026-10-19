@@ -15,6 +15,8 @@ public interface IConnectivityBuilder {
 	/// <exception cref="InvalidOperationException">
 	/// <paramref name="compiledGridAssembly"/> is stale.
 	/// </exception>
+	/// <exception cref="ObjectDisposedException">The compilation has been disposed.</exception>
+	/// <exception cref="ArgumentException">The compilation is not a built-in implementation.</exception>
 	IGridLayer<Direction> Build<TCell, TStrategy>(
 		ICompiledGridAssembly<TCell> compiledGridAssembly,
 		TStrategy strategy
@@ -27,6 +29,8 @@ public interface IConnectivityBuilder {
 	/// Changes must already be in the sources;
 	/// commit any bound layers first.  Attaching or detaching makes the
 	/// compiled assembly stale; recompile and build a new layer instead.
+	/// An empty area does nothing. Neighbours outside signed 32-bit coordinates
+	/// are absent; padded scratch must fit the runtime's array capacity.
 	/// </summary>
 	/// <param name="compiledGridAssembly">The compiled assembly the layer was built from.</param>
 	/// <param name="layer">A layer returned by <see cref="Build"/> for <paramref name="compiledGridAssembly"/>.</param>
@@ -38,6 +42,8 @@ public interface IConnectivityBuilder {
 	/// <exception cref="InvalidOperationException">
 	/// <paramref name="compiledGridAssembly"/> is stale.
 	/// </exception>
+	/// <exception cref="ObjectDisposedException">The compilation has been disposed.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">The padded area exceeds array capacity.</exception>
 	void Update<TCell, TStrategy>(
 		ICompiledGridAssembly<TCell> compiledGridAssembly,
 		IGridLayer<Direction> layer,

@@ -141,7 +141,45 @@ validated immutable boundary without another convexity scan. Struct/ref-struct
 sinks, pooled scanline scratch, and inclusive whole-span emission are preserved.
 Sink exceptions propagate to the caller and pooled buffers are returned.
 
-Implementation is staged: topology validation and performance follow-ups have remaining
+### Topology ownership and lifetime
+
+Topology retains signed 32-bit coordinates, independent of screen-space geometry.
+Placements must have positive, representable dimensions and endpoints. Neighbours
+beyond the coordinate domain are absent, not wrapped. Dense storage and padded
+connectivity scratch are capacity-checked before allocation; available memory
+still limits allocations. Widely separated placements remain supported even when
+their combined `Bounds` cannot fit one `Rect`; that property then throws.
+
+A source can belong to only one placement across all assemblies. Detach releases
+it for reuse. Direct occupancy changes while attached throw; use the assembly's
+`TryAddCell`/`TryRemoveCell` so seams and compiled layers stay synchronized.
+Existing-cell value edits and explicit dirty-layer commits remain supported.
+Custom sources expose one stable `GridSourceOwnership` and call
+`EnsureShapeChangeAllowed` before changing occupancy. Source queries must remain
+consistent during an operation, failed mutations must leave the source unchanged,
+and callbacks must not reenter the assembly. These are trusted extension contracts,
+not a transactional sandbox for arbitrary custom implementations.
+
+Assembly/compiler/layer machinery is a closed implementation family: compile a
+`GridAssembly<TCell>` with `GridCompiler`. Consumption interfaces do not promise
+support for replacement implementations. Custom sources, struct bindings, and
+struct connectivity strategies remain extension points.
+
+**Commit before attaching or detaching.** Every structural change makes earlier
+compilations stale and stops their live edit propagation. Stale or disposed
+compilations reject commits, layer management, and connectivity operations;
+dispose and recompile rather than writing old data into a reused source.
+
+Placement and layer lists are read-only live views; seams are read-only snapshots.
+`GridLayout` exposes chunk topology and read-only presence spans, not mutation.
+The former mutable layer `Values` property is replaced by `GetValues`,
+`GetRowValues`, `CopyPadded`, and `CopyPaddedRow`. These preserve writable value
+spans and caller-owned stencil scratch without exposing occupancy or raw storage
+swapping. Mark bound chunks dirty after writing; use compiled `Swap` to exchange
+values and dirty flags together. Retained spans cannot be revoked and must not
+be used across storage swaps. None of these APIs is thread-safe.
+
+Implementation is staged: allocation and topology-locality follow-ups have remaining
 milestones in [CORRECTNESS_PLAN.md](CORRECTNESS_PLAN.md).
 
 ## Getting Started
