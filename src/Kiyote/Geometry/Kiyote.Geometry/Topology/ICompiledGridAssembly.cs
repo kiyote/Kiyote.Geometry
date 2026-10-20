@@ -44,12 +44,14 @@ public interface ICompiledGridAssembly<TCell> : IDisposable {
 
 	/// <summary>
 	/// Every source-to-chunk mapping. The span is valid until the next cell edit.
+	/// Mapping order is unspecified.
 	/// </summary>
 	ReadOnlySpan<SourceRun> SourceRuns { get; }
 
 	/// <summary>
 	/// The assembly's seams resolved to chunk storage. The span is valid until
 	/// the next cell edit.
+	/// Link order is unspecified.
 	/// </summary>
 	ReadOnlySpan<ChunkSeamLink> SeamLinks { get; }
 
@@ -147,7 +149,12 @@ public interface ICompiledGridAssembly<TCell> : IDisposable {
 
 	/// <summary>
 	/// Writes the dirty chunks of every bound layer back to the
-	/// sources, then clears their dirty flags.
+	/// sources, then clears their dirty flags. Only currently occupied cells
+	/// are written; the order of binding callbacks is unspecified. A clean
+	/// layer requires no source-run scan. Partial commits visit the selected
+	/// chunks; fully dirty layers use sequential run traversal.
+	/// If a binding throws, that layer remains dirty for retry; earlier writes
+	/// are not rolled back.
 	/// </summary>
 	void Commit();
 }

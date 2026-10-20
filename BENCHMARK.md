@@ -1,5 +1,162 @@
 # Performance measurements
 
+## P3 topology locality
+
+Measured on 2026-10-20 against production at `53c4dff`, with the same machine,
+.NET 10.0.13 runtime, SDK 11 preview, and BenchmarkDotNet 0.15.8 as P2.
+All **48 matched cases** completed before and after. Two intermediate candidates
+were also measured and revised rather than accepting their regressions.
+
+```powershell
+dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj -c Release --no-build --no-restore -- --filter '*TopologyLocalityBenchmarks*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\performance-p3-accepted
+```
+
+### Fixtures and interpretation
+
+Every case edits the same seam cell in two adjacent 32x32 local sources.
+Remote geometry varies independently:
+
+- **Chunks:** one remote dense source grows from 16 to 256 chunks.
+- **Placements:** the same 256 isolated remote cells/chunks are partitioned
+  among 16 or 256 sources, without adding remote seams.
+- **Seams:** the same 512 remote placements, 256 chunks, and 16,384 cells
+  contain 16 or 256 touching pairs; moving the other pairs two cells apart
+  changes seams without changing mapping/occupancy totals.
+- **Fragmentation:** the same 4,096 occupied cells in 16 remote chunks are
+  split into 16 or 256 runs per source row.
+
+Each setup checks total occupied mapping length, remove/add preservation,
+and a dirty-layer round trip. Compile-and-bind uses a separate unobserved
+assembly and disposes each new compilation. Diagnostics print chunk capacity,
+run count, and seam-link count outside timed regions.
+
+### Local compiled operations
+
+All times are **nanoseconds**. Error is half the 99.9% confidence interval.
+Every edit/commit case reports **zero managed allocation after warmup**.
+
+| Operation | Workload | Scale | Before mean | Accepted mean | Error | StdDev |
+|---|---|---:|---:|---:|---:|---:|
+| Edit | Chunks | 16 | 1374.1 | 781.18 | 58.66 | 9.08 |
+| Edit | Chunks | 256 | 13343.3 | 852.99 | 148.78 | 38.64 |
+| Edit | Fragmentation | 16 | 1018.9 | 799.60 | 103.03 | 26.76 |
+| Edit | Fragmentation | 256 | 7164.7 | 893.33 | 222.49 | 57.78 |
+| Edit | Placements | 16 | 1023.9 | 860.39 | 161.28 | 41.88 |
+| Edit | Placements | 256 | 1080.9 | 882.04 | 110.27 | 28.64 |
+| Edit | Seams | 16 | 14282.3 | 890.42 | 272.42 | 70.75 |
+| Edit | Seams | 256 | 24488.7 | 1279.97 | 196.92 | 30.47 |
+| Clean commit | Chunks | 16 | 1520.8 | 8.79 | 0.42 | 0.11 |
+| Clean commit | Chunks | 256 | 22286.2 | 8.31 | 0.57 | 0.09 |
+| Clean commit | Fragmentation | 16 | 759.6 | 8.89 | 1.29 | 0.33 |
+| Clean commit | Fragmentation | 256 | 11741.3 | 9.53 | 1.16 | 0.18 |
+| Clean commit | Placements | 16 | 834.4 | 10.71 | 2.96 | 0.77 |
+| Clean commit | Placements | 256 | 823.1 | 8.54 | 1.51 | 0.39 |
+| Clean commit | Seams | 16 | 23969.1 | 15.48 | 3.73 | 0.97 |
+| Clean commit | Seams | 256 | 22479.8 | 9.29 | 1.21 | 0.32 |
+| One dirty chunk | Chunks | 16 | 9470.6 | 787.46 | 107.63 | 27.95 |
+| One dirty chunk | Chunks | 256 | 23405.4 | 924.09 | 104.77 | 27.21 |
+| One dirty chunk | Fragmentation | 16 | 1556.9 | 766.01 | 49.06 | 12.74 |
+| One dirty chunk | Fragmentation | 256 | 12549.2 | 827.07 | 153.97 | 39.99 |
+| One dirty chunk | Placements | 16 | 1891.8 | 859.67 | 336.58 | 87.41 |
+| One dirty chunk | Placements | 256 | 1665.3 | 872.36 | 145.42 | 37.77 |
+| One dirty chunk | Seams | 16 | 22958.1 | 856.47 | 79.77 | 20.72 |
+| One dirty chunk | Seams | 256 | 24261.0 | 820.85 | 145.22 | 22.47 |
+
+The baseline 16-chunk one-dirty case was particularly noisy: error 18,544 ns
+exceeds its 9,471 ns mean. Do not derive a precise speedup from that row.
+The scaling benefit is removing whole-mapping scans, not a promise about a
+specific nanosecond ratio. Dirty tracking remains per chunk, not per cell.
+
+### Full commits and compilation
+
+The initial indexed full commit lost source-memory locality: the 16-chunk
+case rose from 16.54 us to 63.40 us. Fully dirty layers now retain sequential
+run traversal; partial commits use chunk indexes. This exact full-coverage
+check needs no arbitrary crossover threshold.
+
+The accepted short run still contained noisy results: 256-chunk full commit
+mean 475.41 us, error 530.46 us, StdDev 137.76 us; 16-fragment compilation
+mean 191.37 us, error 214.79 us, StdDev 55.78 us. A separate **16-case** run
+used filters `*TopologyLocalityBenchmarks.CommitAllDirty*` and
+`*TopologyLocalityBenchmarks.CompileAndBind*`, with 10 iterations, 5 warmups,
+500 ms iteration time, one launch, and artifacts `performance-p3-confirm`.
+This is confirmation of the accepted code, not a second matched baseline.
+
+Times below are **microseconds**. The longer run is identified separately
+rather than silently replacing the noisy short measurements.
+
+| Workload | Scale | Full commit before | Accepted short | Longer mean | Longer error | Longer StdDev |
+|---|---:|---:|---:|---:|---:|---:|
+| Chunks | 16 | 16.536 | 15.520 | 13.177 | 0.526 | 0.348 |
+| Chunks | 256 | 231.158 | 475.405 | 226.788 | 12.655 | 8.371 |
+| Fragmentation | 16 | 6.211 | 6.518 | 6.063 | 0.282 | 0.186 |
+| Fragmentation | 256 | 53.536 | 52.111 | 49.126 | 1.636 | 1.082 |
+| Placements | 16 | 5.942 | 6.348 | 6.047 | 0.317 | 0.209 |
+| Placements | 256 | 6.315 | 7.433 | 6.364 | 0.313 | 0.207 |
+| Seams | 16 | 113.204 | 109.823 | 110.305 | 8.348 | 4.968 |
+| Seams | 256 | 124.844 | 115.340 | 108.784 | 8.282 | 5.478 |
+
+| Workload | Scale | Compile/bind before | Accepted short | Longer mean | Longer error | Before allocation | Accepted allocation |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Chunks | 16 | 44.266 | 44.831 | 47.152 | 2.843 | 141576 B | 163248 B |
+| Chunks | 256 | 1279.476 | 1171.533 | 1144.294 | 169.319 | 2021899 B | 2295474 B |
+| Fragmentation | 16 | 42.211 | 191.366 | 32.233 | 2.669 | 117000 B | 130456 B |
+| Fragmentation | 256 | 564.105 | 551.261 | 280.416 | 20.062 | 485766 B | 622198 B |
+| Placements | 16 | 241.714 | 315.355 | 162.476 | 26.770 | 1261720 B | 1281008 B |
+| Placements | 256 | 326.942 | 238.351 | 207.216 | 45.395 | 1281928 B | 1301264 B |
+| Seams | 16 | 1595.927 | 1960.447 | 1873.009 | 253.974 | 2106275 B | 2408486 B |
+| Seams | 256 | 2373.796 | 2915.183 | 2802.565 | 259.573 | 2728480 B | 3522503 B |
+
+Allocation columns are the matched short runs. Long-run allocation differs by
+small amortized diagnostic/GC amounts in some rows. No general compilation
+speedup is claimed: seam-heavy compilation costs more, and all fixtures allocate
+more to build the indexes. These costs buy repeated local-edit/partial-commit
+improvements; applications compiling once for one operation may not benefit.
+
+### Retained capacity and rejected changes
+
+The index uses flat previous/next integer links, with one head per chunk:
+one index for runs and two for seam endpoints. It adds no object per mapping,
+contact, or chunk. For run capacity `R`, seam-link capacity `L`, and the three
+head-array lengths `Hr`, `Hs`, `Hn`, additional index payload is
+`8*R + 16*L + 4*(Hr + Hs + Hn)` bytes.
+
+| Workload | Scale | Runs | Seam links | Chunks | Added retained index payload |
+|---|---:|---:|---:|---:|---:|
+| Chunks | 16 | 576 | 94 | 18 | 10512 B |
+| Chunks | 256 | 8256 | 94 | 258 | 137232 B |
+| Fragmentation | 16 | 320 | 94 | 18 | 6416 B |
+| Fragmentation | 256 | 4160 | 94 | 18 | 67856 B |
+| Placements | 16 | 320 | 94 | 258 | 10256 B |
+| Placements | 256 | 320 | 94 | 258 | 10256 B |
+| Seams | 16 | 8256 | 830 | 258 | 151568 B |
+| Seams | 256 | 8256 | 11870 | 258 | 397328 B |
+
+These are capacity calculations for the current .NET list growth and printed
+fixture metadata, not process-working-set measurements. They exclude object/
+array headers and the dirty list. After all chunks have been marked, the latter
+retains another 128 B (18-chunk fixtures) or 2,048 B (258-chunk fixtures) of
+integer payload per layer, plus headers. Capacities retain their high-water mark
+after removals; they are not repeatedly trimmed and reallocated.
+
+An intermediate index resized its heads to the layout's exact capacity, which
+grows one chunk at a time. The allocation regression observed **2,142,392 B**
+for 1,024 incremental chunks against a **65,536 B** budget. Geometric head growth
+passes that budget and avoids quadratic construction allocation.
+
+A neighbour-directed uncompiled seam-removal candidate was rejected. At 16
+remote seam pairs it measured 520.8 ns versus the baseline 262.9 ns; at 256 pairs
+it improved only from 677.1 ns to 541.1 ns. The original assembly code was
+restored. Its accepted measurements are 255.2 ns and 786.3 ns respectively.
+Consequently, uncompiled seam-pair scanning remains, and the entire mutation
+pipeline is not claimed to be independent of the global seam count.
+
+The acceptance tests preserve exact dirty-cell writes, exception retry, swapping,
+empty/repopulated chunks, and seeded mappings/seams against fresh compilations.
+The nine initial behavior tests were green on the baseline: this is performance
+work, not a fabricated correctness failure. The index-growth red-green test
+specifically guards a defect found in the new candidate.
+
 ## P2 allocation and representation boundaries
 
 Measured against pre-P2 production at `61fcfe5`, in the same .NET 10.0.13,

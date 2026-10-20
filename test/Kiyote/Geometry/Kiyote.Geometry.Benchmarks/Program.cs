@@ -31,6 +31,7 @@ Summary[] summaries = BenchmarkSwitcher
 		typeof( GridCompilerBenchmarks ),
 		typeof( CompiledGridAssemblyBenchmarks ),
 		typeof( CompiledGridAssemblyMutationBenchmarks ),
+		typeof( TopologyLocalityBenchmarks ),
 		typeof( ConnectivityBuilderBenchmarks ),
 		typeof( DirectionExtensionsBenchmarks )
 	] )

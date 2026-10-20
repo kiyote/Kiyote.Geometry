@@ -14,6 +14,9 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 	private readonly GridAssembly<TCell> _observed;
 	private readonly List<SourceRun> _runs;
 	private readonly List<ChunkSeamLink> _seamLinks;
+	private readonly ChunkEntryIndex _runsByChunk = new ChunkEntryIndex();
+	private readonly ChunkEntryIndex _seamsByChunk = new ChunkEntryIndex();
+	private readonly ChunkEntryIndex _seamsByNeighbourChunk = new ChunkEntryIndex();
 	private readonly List<IGridLayer> _layers;
 	private readonly IReadOnlyList<IGridLayer> _layerView;
 	private readonly List<IGridLayerStorage> _storage;
@@ -199,9 +202,17 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 		EnsureUsable();
 
 		foreach( IBoundGridLayer<TCell> layer in _bound ) {
-			foreach( SourceRun run in _runs ) {
-				if( layer.IsDirty( run.ChunkIndex ) ) {
+			if( layer.DirtyChunks.Length == _layout.ChunkCount ) {
+				// Preserve sequential source access for full commits.
+				foreach( SourceRun run in _runs ) {
 					layer.Store( _sources[run.Placement], run );
+				}
+			} else {
+				foreach( int chunk in layer.DirtyChunks ) {
+					for( int i = _runsByChunk.First( chunk ); i >= 0; i = _runsByChunk.Next( i ) ) {
+						SourceRun run = _runs[i];
+						layer.Store( _sources[run.Placement], run );
+					}
 				}
 			}
 			layer.ClearDirty();
@@ -280,10 +291,9 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 		}
 		_ = _layout.ClearPopulated( column, row );
 
-		for( int i = 0; i < _runs.Count; i++ ) {
+		for( int i = _runsByChunk.First( chunkIndex ); i >= 0; i = _runsByChunk.Next( i ) ) {
 			SourceRun run = _runs[i];
-			if( run.ChunkIndex != chunkIndex
-				|| localIndex < run.LocalIndex
+			if( localIndex < run.LocalIndex
 				|| localIndex >= run.LocalIndex + run.Length
 			) {
 				continue;
@@ -294,7 +304,7 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 			if( before > 0 ) {
 				_runs[i] = run with { Length = before };
 				if( after > 0 ) {
-					_runs.Add( run with {
+					AppendRun( run with {
 						SourceColumn = run.SourceColumn + before + 1,
 						LocalIndex = localIndex + 1,
 						Length = after
@@ -312,23 +322,8 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 			break;
 		}
 
-		Span<ChunkSeamLink> links = CollectionsMarshal.AsSpan( _seamLinks );
-		int kept = 0;
-		for( int i = 0; i < links.Length; i++ ) {
-			ref ChunkSeamLink link = ref links[i];
-			if( ( link.ChunkIndex == chunkIndex && link.LocalIndex == localIndex )
-				|| ( link.NeighbourChunkIndex == chunkIndex && link.NeighbourLocalIndex == localIndex )
-			) {
-				continue;
-			}
-			if( kept != i ) {
-				links[kept] = link;
-			}
-			kept++;
-		}
-		if( kept != links.Length ) {
-			_seamLinks.RemoveRange( kept, links.Length - kept );
-		}
+		RemoveSeamLinks( _seamsByChunk, chunkIndex, localIndex );
+		RemoveSeamLinks( _seamsByNeighbourChunk, chunkIndex, localIndex );
 	}
 
 	/// <summary>
@@ -343,10 +338,9 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 		int localRow = run.LocalIndex >> shift;
 		int previous = -1;
 		int next = -1;
-		for( int i = 0; i < _runs.Count; i++ ) {
+		for( int i = _runsByChunk.First( run.ChunkIndex ); i >= 0; i = _runsByChunk.Next( i ) ) {
 			SourceRun other = _runs[i];
-			if( other.ChunkIndex != run.ChunkIndex
-				|| other.Placement != run.Placement
+			if( other.Placement != run.Placement
 				|| other.SourceRow != run.SourceRow
 				|| ( other.LocalIndex >> shift ) != localRow
 			) {
@@ -377,14 +371,20 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 			SourceRun last = _runs[next];
 			_runs[next] = run with { Length = run.Length + last.Length };
 		} else {
-			_runs.Add( run );
+			AppendRun( run );
 		}
+	}
+
+	private void AppendRun( SourceRun run ) {
+		_runsByChunk.Add( run.ChunkIndex, _layout.ChunkCapacity );
+		_runs.Add( run );
 	}
 
 	private void RemoveRunAt(
 		int index
 	) {
 		int last = _runs.Count - 1;
+		_runsByChunk.RemoveAt( index, _runs[index].ChunkIndex, _runs[last].ChunkIndex );
 		_runs[index] = _runs[last];
 		_runs.RemoveAt( last );
 	}
@@ -411,7 +411,7 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 			int length = Math.Min( size - localColumn, remaining );
 			int chunkIndex = _layout.GetOrCreateChunk( column >> shift, row >> shift );
 			_ = _layout.SetPopulatedRun( column, row, length );
-			_runs.Add( new SourceRun( placement.Id, sourceColumn, sourceRun.Row, chunkIndex, localRowStart + localColumn, length ) );
+			AppendRun( new SourceRun( placement.Id, sourceColumn, sourceRun.Row, chunkIndex, localRowStart + localColumn, length ) );
 
 			sourceColumn += length;
 			remaining -= length;
@@ -427,7 +427,31 @@ internal sealed class CompiledGridAssembly<TCell> : ICompiledGridAssembly<TCell>
 		if( _layout.TryLocate( contact.Column, contact.Row, out int chunkIndex, out int localIndex )
 			&& _layout.TryLocate( contact.NeighbourColumn, contact.NeighbourRow, out int neighbourChunkIndex, out int neighbourLocalIndex )
 		) {
+			_seamsByChunk.Add( chunkIndex, _layout.ChunkCapacity );
+			_seamsByNeighbourChunk.Add( neighbourChunkIndex, _layout.ChunkCapacity );
 			_seamLinks.Add( new ChunkSeamLink( chunkIndex, localIndex, neighbourChunkIndex, neighbourLocalIndex, contact.Direction ) );
+		}
+	}
+
+	private void RemoveSeamLinks( ChunkEntryIndex index, int chunk, int local ) {
+		int entry = index.First( chunk );
+		while( entry >= 0 ) {
+			ChunkSeamLink link = _seamLinks[entry];
+			if( ( link.ChunkIndex == chunk && link.LocalIndex == local )
+				|| ( link.NeighbourChunkIndex == chunk && link.NeighbourLocalIndex == local )
+			) {
+				int last = _seamLinks.Count - 1;
+				ChunkSeamLink moved = _seamLinks[last];
+				_seamsByChunk.RemoveAt( entry, link.ChunkIndex, moved.ChunkIndex );
+				_seamsByNeighbourChunk.RemoveAt( entry, link.NeighbourChunkIndex, moved.NeighbourChunkIndex );
+				_seamLinks[entry] = moved;
+				_seamLinks.RemoveAt( last );
+				// A swap-removal can relocate the next entry. At most eight contacts
+				// touch this cell, so restarting remains bounded by the local chunk.
+				entry = index.First( chunk );
+			} else {
+				entry = index.Next( entry );
+			}
 		}
 	}
 }

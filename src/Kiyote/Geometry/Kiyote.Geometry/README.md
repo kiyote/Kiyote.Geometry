@@ -205,8 +205,22 @@ swapping. Mark bound chunks dirty after writing; use compiled `Swap` to exchange
 values and dirty flags together. Retained spans cannot be revoked and must not
 be used across storage swaps. None of these APIs is thread-safe.
 
-Implementation is staged: allocation and topology-locality follow-ups have remaining
-milestones in the repository's correctness plan.
+Compiled mappings and seam links are indexed by chunk. Local edits inspect the
+affected chunk's mappings instead of every compiled mapping. Dirty chunks are
+tracked once per layer: clean commits do not scan source runs, partial commits
+visit selected chunks, and fully dirty commits retain sequential source access.
+Only occupied cells are committed; callback and mapping order are unspecified.
+If a binding throws, that layer remains dirty for retry without rolling back
+earlier writes. Dirty state travels with storage when layers are swapped.
+
+These indexes retain extra flat integer arrays, not an object per chunk or
+contact. Compilation cost and memory increase in exchange for faster local
+operations. The uncompiled assembly's seam-pair scan is deliberately retained:
+the measured replacement slowed common small edits. The plan records this
+tradeoff rather than promising constant time for the entire mutation pipeline.
+
+Implementation packages are complete; final cross-library sign-off remains in
+the repository's correctness plan.
 
 ## Getting Started
 

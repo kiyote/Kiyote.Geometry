@@ -6,6 +6,8 @@ namespace Kiyote.Geometry.Topology;
 /// </summary>
 internal interface IBoundGridLayer<TCell> : IGridLayerStorage {
 
+	ReadOnlySpan<int> DirtyChunks { get; }
+
 	void Load(
 		IGridSource<TCell> source,
 		SourceRun run

@@ -21,7 +21,7 @@ public interface IGridLayer {
 
 	/// <summary>
 	/// Marks a chunk as changed so that <see cref="ICompiledGridAssembly{TCell}.Commit"/>
-	/// writes it back to the sources.
+	/// writes it back to the sources. Repeated marking does not duplicate work.
 	/// </summary>
 	/// <exception cref="ArgumentOutOfRangeException">
 	/// <paramref name="chunkIndex"/> is not allocated in <see cref="Layout"/>.
@@ -30,6 +30,7 @@ public interface IGridLayer {
 		int chunkIndex
 	);
 
+	/// <summary>Clears the marked chunks without scanning the entire layout capacity.</summary>
 	void ClearDirty();
 }
 

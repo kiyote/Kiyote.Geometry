@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Kiyote.Buffers.ChunkedGrids;
 
 namespace Kiyote.Geometry.Topology;
@@ -9,6 +10,7 @@ namespace Kiyote.Geometry.Topology;
 internal class GridLayer<T> : IGridLayer<T>, IGridLayerStorage where T : unmanaged {
 
 	private bool[] _dirty;
+	private List<int> _dirtyChunks;
 
 	public GridLayer(
 		GridLayout layout
@@ -16,11 +18,14 @@ internal class GridLayer<T> : IGridLayer<T>, IGridLayerStorage where T : unmanag
 		Layout = layout;
 		Values = new ChunkedGridLayer<T>( layout.Storage );
 		_dirty = [];
+		_dirtyChunks = [];
 	}
 
 	public GridLayout Layout { get; }
 
 	internal ChunkedGridLayer<T> Values { get; }
+
+	public ReadOnlySpan<int> DirtyChunks => CollectionsMarshal.AsSpan( _dirtyChunks );
 
 	public Span<T> GetValues( int chunkIndex ) => Values.GetValues( chunkIndex );
 
@@ -49,11 +54,17 @@ internal class GridLayer<T> : IGridLayer<T>, IGridLayerStorage where T : unmanag
 		if( chunkIndex >= _dirty.Length ) {
 			Array.Resize( ref _dirty, Layout.ChunkCapacity );
 		}
-		_dirty[chunkIndex] = true;
+		if( !_dirty[chunkIndex] ) {
+			_dirtyChunks.Add( chunkIndex );
+			_dirty[chunkIndex] = true;
+		}
 	}
 
 	public void ClearDirty() {
-		Array.Clear( _dirty );
+		foreach( int chunk in _dirtyChunks ) {
+			_dirty[chunk] = false;
+		}
+		_dirtyChunks.Clear();
 	}
 
 	public void Reset(
@@ -71,5 +82,6 @@ internal class GridLayer<T> : IGridLayer<T>, IGridLayerStorage where T : unmanag
 	) {
 		Values.SwapStorage( other.Values );
 		( _dirty, other._dirty ) = ( other._dirty, _dirty );
+		( _dirtyChunks, other._dirtyChunks ) = ( other._dirtyChunks, _dirtyChunks );
 	}
 }

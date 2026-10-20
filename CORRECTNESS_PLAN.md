@@ -21,38 +21,35 @@ after cleanup was 258 passing unit tests and 52 passing integration tests, with 
 successful Release benchmark build. Temporary review probes reproduced the issues
 below but were removed; their cases must become permanent regression tests.
 
-## Current status and next-session handoff (2026-10-19)
+## Current status and next-session handoff (2026-10-20)
 
-**Paused after P2.** P1, C1-C7, A1, and P2 are complete. The latest implementation
-package is commit `bcda979` (allocation and representation boundaries), following
+**Implementation complete through P3.** P1, C1-C7, A1, P2, and P3 are complete.
+P3 follows commit `bcda979` (allocation and representation boundaries) and
 `61fcfe5` (C7/A1 topology ownership). Package evidence below and
 [BENCHMARK.md](BENCHMARK.md) record the completed fixes and measured tradeoffs.
 
 Last verified state:
 
 - Full Release solution build: zero warnings/errors.
-- Release tests: **429 unit + 138 integration** passing.
-- Targeted Debug tests: **145** passing.
-- P2: five observed red-to-green regressions, 22 added test cases, 35 matched
-  benchmark cases, three additional visitor cases, and a 24-case triangle sweep.
-- P3 has not started; final plan-wide sign-off remains pending.
+- Release tests: **433 unit + 148 integration** passing.
+- Targeted Debug tests: **40 unit + 86 integration** passing.
+- P3: 14 added cases, 48 matched before/after benchmark cases, two intermediate
+  candidate measurements, and 16 longer confirmation cases.
+- Compiled mappings are indexed and commits track dirty chunks. The uncompiled
+  seam-removal rewrite was measured and rejected; its original scan remains.
+- Final plan-wide sign-off remains pending.
 
-**Resume with P3, not another correctness or P2 rewrite:**
+**Resume with the final documentation/validation milestone:**
 
-1. Establish the P3-specific scaling baseline before changing production code:
-   fixed local edits with independently increasing chunks, placements, seams,
-   and fragmentation, plus clean/one-dirty/all-dirty commits.
-2. Add the P3 edit-sequence reference tests and recording-binding assertions
-   described below. Observe the intended failing assertions before fixes where
-   behavior must change; keep timing/scaling evidence in benchmarks.
-3. Implement only locality/indexing changes justified by those measurements.
-   Include index construction, maintenance, and retained-memory costs. Preserve
-   exclusive source ownership, coordinated edits, stale-commit rejection,
-   disposal, and layer-swapping behavior.
-4. Validate, record before/after evidence, and commit P3 separately. Then perform
-   the final documentation/validation milestone and close the completion
-   checklist. If a proposed optimization is not justified, record the decision
-   to retain the simpler implementation instead.
+1. Cross-check the approved contracts, package evidence, public XML docs, both
+   READMEs, and the final completion checklist. Preserve the recorded limits and
+   deliberately rejected optimizations rather than expanding scope.
+2. Verify any remaining cross-component or documentation gaps. Add red-first
+   regressions before fixing any newly identified supported-domain defect.
+3. Perform final solution/test validation and close the checklist only after
+   its requirements are verified. Reuse the recorded benchmark evidence; rerun
+   affected measurements only if further implementation changes require it.
+4. Commit final sign-off separately from P3.
 
 Continue one package at a time with a separate green commit per package. No new
 product decision is currently blocking the next step.
@@ -899,19 +896,19 @@ Accept only measured benefits that justify complexity; pooling is not an end in 
 
 ### P3. Make topology mutation and commit scale with affected data
 
-**Status:** Next package; not started. Existing topology benchmarks provide
-fixtures, but the P3-specific scaling baseline and production changes are pending.
+**Status:** Complete, including measured rejection of the uncompiled seam-removal
+candidate. The original uncompiled seam-pair scan remains intentionally.
 
 Review finding 10. Primary implementations:
 [GridAssembly.cs](src/Kiyote/Geometry/Kiyote.Geometry/Topology/GridAssembly.cs) and
 [CompiledGridAssembly.cs](src/Kiyote/Geometry/Kiyote.Geometry/Topology/CompiledGridAssembly.cs).
 
-- [ ] Measure one-cell add/remove with fixed local geometry while independently
+- [x] Measure one-cell add/remove with fixed local geometry while independently
   increasing total chunks, placements, seams, and run fragmentation.
-- [ ] Measure commits with no dirty chunks, one dirty chunk, and all chunks dirty.
-- [ ] Where measurements justify it, index runs/seam links by chunk or placement
+- [x] Measure commits with no dirty chunks, one dirty chunk, and all chunks dirty.
+- [x] Where measurements justify it, index runs/seam links by chunk or placement
   and track dirty chunks rather than repeatedly scanning all mappings.
-- [ ] Include index memory, build cost, mutation maintenance, and retained capacity
+- [x] Include index memory, build cost, mutation maintenance, and retained capacity
   in the comparison. Avoid trading small scan costs for a large object graph.
 
 **Tests and acceptance:** Add edit-sequence tests comparing incremental state with a
@@ -920,6 +917,55 @@ merges, and seam changes. Test dirty-only commits with a recording binding that
 checks exactly which source cells are written. Preserve detach/staleness, disposal,
 layer swapping, and source commit contracts. Timing/scaling improvements belong in
 benchmarks; avoid adding production instrumentation solely to satisfy a unit test.
+
+**Implementation and evidence**
+
+- Eight fixtures vary remote chunks, placements, seam pairs, or fragmentation
+  while keeping the edited local geometry fixed. Each has uncompiled/compiled
+  edit, clean/one-dirty/all-dirty commit, and compile-and-bind measurements:
+  **48 matched cases** before and after. Setup validates occupancy totals and
+  round-trip commit behavior before timing.
+- Nine behavior cases passed before production changes and remain green:
+  recording bindings verify exact dirty-only writes, duplicate marks, cleared
+  and swapped dirty state, retry after a binding exception, seeded edit sequences
+  compared with independently cloned fresh compilations, and empty/repopulated
+  chunks. These are preservation tests, not falsely claimed red-green fixes;
+  the original problem was measured full-scan cost.
+- Compiled runs use a flat chunk-entry index; seam links use one for each
+  endpoint. Parallel previous/next integer arrays support constant-time
+  swap-removal without per-entry/per-chunk objects. Mappings remain available
+  as contiguous read-only spans; their order is unspecified.
+- Layers retain a duplicate-free dirty-chunk list alongside flags. Clean
+  commits do not scan runs; partial commits visit indexed runs for dirty chunks;
+  full commits retain sequential traversal. Clearing and swapping move the
+  entire dirty state consistently. Binding failures retain that layer's dirty
+  state, without promising rollback of already-written cells.
+- Three additional seeded index tests exercise append/swap-removal and detect
+  cycles, missing entries, or incorrect chunk chains. A warmed edit/commit case
+  enforces zero allocation. The package adds **14 cases** in total.
+- Benchmark investigation caught quadratic chunk-head growth in an intermediate
+  candidate: layout capacity grows one chunk at a time. A new allocation test
+  failed at **2,142,392 B** for 1,024 chunks against a **65,536 B** ceiling,
+  then passed after geometric growth. This red-green evidence concerns the
+  new index, not a claim that the baseline already contained that index.
+- The initial fully indexed all-dirty traversal lost source-memory locality
+  (16-remote-chunk case: 16.54 us baseline versus 63.40 us candidate).
+  Sequential full commits were restored; the accepted short run is 15.52 us
+  and the longer confirmation is 13.18 us. No arbitrary density threshold or
+  configurable strategy was added.
+- The neighbour-directed uncompiled seam-removal candidate roughly doubled
+  common small-edit cost for only a modest large-seam benefit. It was removed
+  before acceptance; `GridAssembly` is unchanged. The remaining seam-pair scan
+  means the entire edit pipeline is not claimed to be constant-time.
+- Accepted measurements reduce the 256-remote-chunk compiled edit from
+  13.34 us to 0.85 us, the clean commit from 22.29 us to 8.31 ns, and the
+  one-dirty commit from 23.41 us to 0.92 us. Steady-state edits/commits allocate
+  zero after warmup. Compilation allocation and retained index capacity
+  increase; their costs, timing uncertainty, and **16 longer confirmation
+  cases** are recorded in [BENCHMARK.md](BENCHMARK.md).
+- Validation: **433 unit + 148 integration Release tests**, **40 unit + 86
+  integration targeted Debug tests**, and the full Release solution build pass.
+  No warnings/errors, new dependencies, or external Kiyote.Buffers changes.
 
 ### A1. Make topology abstractions honest
 
@@ -1035,7 +1081,7 @@ and [ConnectivityBuilder.cs](src/Kiyote/Geometry/Kiyote.Geometry/Topology/Connec
 | 3 (C6 complete) | C6: rasterizer contract | Approved shape contract; C4; C3 for validated polygon overloads |
 | 4 (complete) | Grid-source portion of C7 and A1 | Approved ownership/extensibility contracts; C5 |
 | 5 (P2 complete) | P2: allocation/layout improvements | P1 and correctness fixes for each affected component |
-| 5 | P3: topology locality | P1, grid-source C7, and A1 |
+| 5 (P3 complete) | P3: topology locality | P1, grid-source C7, and A1 |
 | 6 | Documentation, full validation, updated measurements | All accepted packages |
 
 Independent regression tests can be written earlier. Keep changes grouped by
@@ -1045,8 +1091,8 @@ simpler implementation and record that decision.
 
 ## 5. Completion criteria
 
-These are final plan-wide sign-off gates, intentionally left open until P3 and
-the final validation milestone are finished. They do not negate the completed
+These are final plan-wide sign-off gates, intentionally left open until the
+final validation milestone is finished. They do not negate the completed
 package validations recorded above.
 
 - [ ] Every supported-domain defect has a permanent test observed failing before
