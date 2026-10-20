@@ -51,7 +51,7 @@ public sealed class DiagramRegressionTests {
 	}
 
 	[Test]
-	public void TriangleCapacity_RepresentableBoundary_IsCheckedWithoutAllocation() {
+	public void GetTriangleCapacity_RepresentableBoundary_IsCheckedWithoutAllocation() {
 		int maximumCount = (int)( ( Array.MaxLength + 15L ) / 6 );
 		Assert.That( MapboxDelaunatorFactory.GetTriangleCapacity( maximumCount ), Is.EqualTo( 6L * maximumCount - 15 ) );
 		Assert.That( () => MapboxDelaunatorFactory.GetTriangleCapacity( maximumCount + 1 ), Throws.TypeOf<ArgumentOutOfRangeException>() );

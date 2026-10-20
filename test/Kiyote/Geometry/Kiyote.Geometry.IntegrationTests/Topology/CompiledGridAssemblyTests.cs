@@ -63,7 +63,7 @@ internal sealed class CompiledGridAssemblyTests {
 	[TestCase( 31, TestName = "TryRemoveCell_TryAddCell_EndOfChunkRun_RunsUnchanged" )]
 	[TestCase( 32, TestName = "TryRemoveCell_TryAddCell_StartOfChunkRun_RunsUnchanged" )]
 	[TestCase( 63, TestName = "TryRemoveCell_TryAddCell_EndOfRun_RunsUnchanged" )]
-	public void TryRemoveCell_TryAddCell_Repeated_RunsUnchanged(
+	public void TryRemoveCellAndTryAddCell_RepeatedEdits_PreserveRuns(
 		int column
 	) {
 		GridAssembly<TestCell> assembly = CreateFilledAssembly( out PlacementId placement );
@@ -79,7 +79,7 @@ internal sealed class CompiledGridAssemblyTests {
 	}
 
 	[Test]
-	public void TryRemoveCell_TryAddCell_SingleCellRun_RunsUnchanged() {
+	public void TryRemoveCellAndTryAddCell_SingleCellRun_PreserveRuns() {
 		GridAssembly<TestCell> assembly = CreateFilledAssembly( out PlacementId placement );
 		using ICompiledGridAssembly<TestCell> compiledAssembly = _compiler.Compile( assembly, GridCompiler.DefaultChunkSize );
 		Assert.That( assembly.TryRemoveCell( placement, 10, 0 ), Is.True );
@@ -96,7 +96,7 @@ internal sealed class CompiledGridAssemblyTests {
 	}
 
 	[Test]
-	public void TryRemoveCell_TryAddCell_Scattered_MatchesFreshCompile() {
+	public void TryRemoveCellAndTryAddCell_ScatteredEdits_MatchFreshCompilation() {
 		GridAssembly<TestCell> assembly = CreateFilledAssembly( out PlacementId placement );
 		using ICompiledGridAssembly<TestCell> compiledAssembly = _compiler.Compile( assembly, GridCompiler.DefaultChunkSize );
 		int[] columns = [0, 5, 6, 7, 31, 32, 33, 50, 63];

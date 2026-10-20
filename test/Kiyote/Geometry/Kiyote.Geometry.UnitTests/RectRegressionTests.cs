@@ -7,7 +7,7 @@ namespace Kiyote.Geometry.UnitTests;
 public sealed class RectRegressionTests {
 
 	[Test]
-	public void AdjacentRectangles_OverlapUsesSharedCellSemantics() {
+	public void Overlaps_AdjacentRectangles_ReturnsFalseWithoutSharedCells() {
 		Rect a = new Rect( 0, 0, 10, 10 );
 		Rect b = new Rect( 10, 0, 10, 10 );
 		Assert.That( a.Overlaps( b ), Is.False );
@@ -19,7 +19,7 @@ public sealed class RectRegressionTests {
 	[TestCase( 0, 0 )]
 	[TestCase( 0, 20 )]
 	[TestCase( 20, 0 )]
-	public void ZeroDimension_NormalizesAllFieldsAndSizeOverload( int width, int height ) {
+	public void Ctor_ZeroDimension_NormalizesAllFieldsThroughBothSizeOverloads( int width, int height ) {
 		Rect rect = new Rect( int.MaxValue, int.MinValue, width, height );
 		Assert.That( rect.Width, Is.Zero );
 		Assert.That( rect.Height, Is.Zero );
@@ -37,13 +37,13 @@ public sealed class RectRegressionTests {
 	[TestCase( 0, -1 )]
 	[TestCase( 10, -1 )]
 	[TestCase( -1, 10 )]
-	public void NegativeDimensions_ThrowEvenWithOtherDimensionZero( int width, int height ) {
+	public void Ctor_NegativeDimension_ThrowsEvenWhenOtherDimensionIsZero( int width, int height ) {
 		Assert.Throws<ArgumentOutOfRangeException>( () => new Rect( 0, 0, width, height ) );
 		Assert.Throws<ArgumentOutOfRangeException>( () => new Rect( 0, 0, new Point( width, height ) ) );
 	}
 
 	[Test]
-	public void Empty_ContainsNoPointsOrRectangles_ThroughAllOverloads() {
+	public void Contains_EmptyRectangle_ReturnsFalseThroughAllOverloads() {
 		Rect empty = default;
 		Rect occupied = new Rect( 0, 0, 1, 1 );
 		IRect emptyInterface = empty;
@@ -61,7 +61,7 @@ public sealed class RectRegressionTests {
 	}
 
 	[Test]
-	public void Empty_NeverOverlapsOrTouches_AndIntersectionIsCanonicalEmpty() {
+	public void OverlapsAndTouchesAndTryIntersect_EmptyRectangle_ReturnFalseAndCanonicalEmptyIntersection() {
 		Rect empty = default;
 		foreach( Rect other in new[] { empty, new Rect( 0, 0, 1, 1 ), new Rect( -1, -1, 3, 3 ) } ) {
 			Assert.That( empty.Overlaps( other ), Is.False );
@@ -81,7 +81,7 @@ public sealed class RectRegressionTests {
 	}
 
 	[Test]
-	public void Empty_UnionIsIdentity_AndDistinctFromTheOriginCell() {
+	public void UnionAndEquals_EmptyRectangle_TreatAsIdentityAndDistinguishFromOriginCell() {
 		Rect empty = default;
 		Rect occupied = new Rect( 100, 200, 2, 3 );
 		Rect origin = new Rect( 0, 0, 1, 1 );
@@ -107,7 +107,7 @@ public sealed class RectRegressionTests {
 
 	[TestCase( int.MaxValue, int.MaxValue )]
 	[TestCase( int.MinValue, int.MinValue )]
-	public void FullRangeSingleCells_PreserveBoundsAndTouchThemselves( int x, int y ) {
+	public void Ctor_FullIntDomainSingleCells_PreservesBoundsAndSelfIntersection( int x, int y ) {
 		Rect cell = new Rect( x, y, 1, 1 );
 		Assert.That( cell.X2, Is.EqualTo( x ) );
 		Assert.That( cell.Y2, Is.EqualTo( y ) );
@@ -120,7 +120,7 @@ public sealed class RectRegressionTests {
 	}
 
 	[Test]
-	public void Touches_ExtremesDoNotWrap_AndCornerAdjacencyIsIncluded() {
+	public void Touches_IntDomainExtremes_RejectsWraparoundAndIncludesCornerAdjacency() {
 		Rect high = new Rect( int.MaxValue, int.MaxValue, 1, 1 );
 		Rect low = new Rect( int.MinValue, int.MinValue, 1, 1 );
 		Rect nearHigh = new Rect( int.MaxValue - 1, int.MaxValue - 1, 1, 1 );
@@ -138,12 +138,12 @@ public sealed class RectRegressionTests {
 	[TestCase( int.MaxValue, 0, 2, 1 )]
 	[TestCase( 0, int.MaxValue, 1, 2 )]
 	[TestCase( 2, 0, int.MaxValue, 1 )]
-	public void Constructor_UnrepresentableEndpoints_Throws( int x, int y, int width, int height ) {
+	public void Ctor_UnrepresentableEndpoints_ThrowsArgumentOutOfRangeException( int x, int y, int width, int height ) {
 		Assert.Throws<ArgumentOutOfRangeException>( () => new Rect( x, y, width, height ) );
 	}
 
 	[Test]
-	public void ConstructorAndUnion_UnrepresentableDimensions_Throw() {
+	public void CtorAndUnion_UnrepresentableDimensions_ThrowArgumentOutOfRangeException() {
 		Point low = new Point( int.MinValue, int.MinValue );
 		Point high = new Point( int.MaxValue, int.MaxValue );
 		Assert.Throws<ArgumentOutOfRangeException>( () => new Rect( low, high ) );
@@ -152,7 +152,7 @@ public sealed class RectRegressionTests {
 	}
 
 	[Test]
-	public void LargestRepresentableDimensions_DoNotOverflowIntermediateArithmetic() {
+	public void Ctor_LargestRepresentableDimensions_DoesNotOverflowIntermediateArithmetic() {
 		Rect rect = new Rect( 1, 1, int.MaxValue, int.MaxValue );
 		Assert.That( rect.X2, Is.EqualTo( int.MaxValue ) );
 		Assert.That( rect.Y2, Is.EqualTo( int.MaxValue ) );
@@ -160,7 +160,7 @@ public sealed class RectRegressionTests {
 	}
 
 	[Test]
-	public void SeededSmallRectangles_MatchOccupiedCellReference() {
+	public void ContainsAndOverlapsAndTouchesAndTryIntersect_SeededSmallRectangles_MatchOccupiedCellReference() {
 		Random random = new Random( 7291 );
 		for( int i = 0; i < 300; i++ ) {
 			Rect a = NextRect();

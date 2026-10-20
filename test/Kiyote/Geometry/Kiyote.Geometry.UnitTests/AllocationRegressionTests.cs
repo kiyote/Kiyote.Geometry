@@ -10,7 +10,7 @@ namespace Kiyote.Geometry.UnitTests;
 public sealed class AllocationRegressionTests {
 
 	[Test]
-	public void ConstructTriangles_ThousandItems_DoesNotAllocateOneObjectPerItem() {
+	public void Ctor_ThousandTriangles_DoesNotAllocateOneObjectPerItem() {
 		GC.KeepAlive( CreateTriangles( 1000 ) );
 		long before = GC.GetAllocatedBytesForCurrentThread();
 		Triangle[] triangles = CreateTriangles( 1000 );
@@ -102,7 +102,7 @@ public sealed class AllocationRegressionTests {
 	}
 
 	[Test]
-	public void Triangle_ValueRepresentation_PreservesOrderedEqualityAndHashing() {
+	public void EqualsAndGetHashCode_ValueTriangles_PreserveOrderedEqualityAndHashing() {
 		Triangle a = new Triangle( new Point( 0, 0 ), new Point( 2, 0 ), new Point( 0, 2 ) );
 		Triangle b = new Triangle( a.P1, a.P2, a.P3 );
 		Assert.That( a == b, Is.True );

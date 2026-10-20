@@ -48,7 +48,7 @@ internal sealed class RectTests {
 	}
 
 	[Test]
-	public void IsEquivalentTo_IRect_SamePointsDifferentOrder_ReturnsTrue() {
+	public void IsEquivalentTo_IRectWithSamePointsInDifferentOrder_ReturnsTrue() {
 		Point p1 = new Point( 100, 200 );
 		Point p2 = new Point( 200, 300 );
 		Rect r1 = new Rect( p1, p2 );
@@ -60,7 +60,7 @@ internal sealed class RectTests {
 	}
 
 	[Test]
-	public void IsEquivalentTo_PointPoint_SamePointsDifferentOrder_ReturnsTrue() {
+	public void IsEquivalentTo_PointArgumentsInDifferentOrder_ReturnsTrue() {
 		Point p1 = new Point( 100, 200 );
 		Point p2 = new Point( 200, 300 );
 		Rect r1 = new Rect( p1, p2 );
@@ -69,7 +69,7 @@ internal sealed class RectTests {
 	}
 
 	[Test]
-	public void IsEquivalentTo_IntIntIntInt_SamePointsDifferentOrder_ReturnsTrue() {
+	public void IsEquivalentTo_CoordinateArgumentsInDifferentOrder_ReturnsTrue() {
 		Point p1 = new Point( 100, 200 );
 		Point p2 = new Point( 200, 300 );
 		Rect r1 = new Rect( p1, p2 );
@@ -78,7 +78,7 @@ internal sealed class RectTests {
 	}
 
 	[Test]
-	public void IsEquivalentTo_IntIntIntInt_DifferentPoints_ReturnsFalse() {
+	public void IsEquivalentTo_CoordinateArgumentsWithDifferentPoints_ReturnsFalse() {
 		Point p1 = new Point( 100, 200 );
 		Point p2 = new Point( 200, 300 );
 		Rect r1 = new Rect( p1, p2 );
@@ -106,7 +106,7 @@ internal sealed class RectTests {
 	[TestCase( 60, 59, false )]
 	[TestCase( 59, 60, false )]
 	[TestCase( 59, 59, true )]
-	public void Contains_IntInt_TestCases_ReturnsExpectedResult(
+	public void Contains_IntCoordinateTestCases_ReturnsExpectedResult(
 		int x,
 		int y,
 		bool expected
@@ -117,7 +117,7 @@ internal sealed class RectTests {
 	}
 
 	[Test]
-	public void Contains_Point_PointInside_ReturnsTrue() {
+	public void Contains_PointInside_ReturnsTrue() {
 		Rect r = CreateRect();
 		Point p = new Point( 20, 20 );
 
@@ -125,7 +125,7 @@ internal sealed class RectTests {
 	}
 
 	[Test]
-	public void Contains_Point_PointOutside_ReturnsFalse() {
+	public void Contains_PointOutside_ReturnsFalse() {
 		Rect r = CreateRect();
 		Point p = new Point( 0, 0 );
 
@@ -137,7 +137,7 @@ internal sealed class RectTests {
 	[TestCase( 10, 10, 60, 60, false )]
 	[TestCase( 5, 5, 50, 50, false )]
 	[TestCase( 15, 15, 50, 50, false )]
-	public void Contains_IRect_TestCases_ExpectedResult(
+	public void Contains_IRectTestCases_ReturnsExpectedResult(
 		int x,
 		int y,
 		int w,
@@ -171,7 +171,7 @@ internal sealed class RectTests {
 	}
 
 	[Test]
-	public void IsEquivalentTo_IRectInterface_SameBounds_ReturnsTrue() {
+	public void IsEquivalentTo_IRectInterfaceWithSameBounds_ReturnsTrue() {
 		Rect r1 = CreateRect();
 		IRect r2 = new Rect( 10, 10, 50, 50 );
 
@@ -179,7 +179,7 @@ internal sealed class RectTests {
 	}
 
 	[Test]
-	public void IsEquivalentTo_IRectInterface_DifferentBounds_ReturnsFalse() {
+	public void IsEquivalentTo_IRectInterfaceWithDifferentBounds_ReturnsFalse() {
 		Rect r1 = CreateRect();
 		IRect r2 = new Rect( 0, 0, 5, 5 );
 
@@ -254,7 +254,7 @@ internal sealed class RectTests {
 	[TestCase( 10, 10, 50, 50, true )]
 	[TestCase( 100, 100, 10, 10, false )]
 	[TestCase( 55, 55, 20, 20, true )]
-	public void Overlaps_IRect_TestCases_ExpectedResult(
+	public void Overlaps_IRectTestCases_ReturnsExpectedResult(
 		int x,
 		int y,
 		int w,
@@ -320,7 +320,7 @@ internal sealed class RectTests {
 	}
 
 	[Test]
-	public void TryIntersect_Instance_OverlappingRects_ReturnsSharedCells() {
+	public void TryIntersect_OverlappingRectsThroughInstance_ReturnsSharedCells() {
 		Rect r1 = CreateRect();
 		Rect r2 = new Rect( 50, 40, 20, 30 );
 
@@ -331,7 +331,7 @@ internal sealed class RectTests {
 	}
 
 	[Test]
-	public void TryIntersect_Instance_AdjacentRects_ReturnsFalse() {
+	public void TryIntersect_AdjacentRectsThroughInstance_ReturnsFalse() {
 		Rect r1 = CreateRect();
 		Rect r2 = new Rect( 60, 10, 5, 5 );
 
@@ -351,7 +351,7 @@ internal sealed class RectTests {
 	}
 
 	[Test]
-	public void Union_Instance_DisjointRects_ReturnsEnclosingRect() {
+	public void Union_DisjointRectsThroughInstance_ReturnsEnclosingRect() {
 		Rect r1 = CreateRect();
 		Rect r2 = new Rect( 100, 0, 10, 5 );
 
@@ -375,7 +375,7 @@ internal sealed class RectTests {
 	}
 
 	[Test]
-	public void Contains_RectStruct_ContainedRect_ReturnsTrue() {
+	public void Contains_ContainedRectStruct_ReturnsTrue() {
 		Rect r1 = CreateRect();
 		Rect r2 = new Rect( 11, 11, 10, 10 );
 
@@ -383,7 +383,7 @@ internal sealed class RectTests {
 	}
 
 	[Test]
-	public void Contains_IRectInterface_ContainedRect_ReturnsTrue() {
+	public void Contains_ContainedIRectInterface_ReturnsTrue() {
 		Rect r1 = CreateRect();
 		IRect r2 = new Rect( 11, 11, 10, 10 );
 

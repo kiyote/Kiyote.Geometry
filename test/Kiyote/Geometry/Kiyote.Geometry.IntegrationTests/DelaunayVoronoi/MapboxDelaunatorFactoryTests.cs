@@ -7,7 +7,7 @@ namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
 public sealed class MapboxDelaunatorFactoryTests {
 
 	[Test]
-	public void Test_InsufficientPoints_ThrowsException() {
+	public void Create_InsufficientPoints_ThrowsException() {
 		Point topLeft = new Point( 0, 0 );
 		Point topRight = new Point( 10, 0 );
 		List<Point> points = [
@@ -19,7 +19,7 @@ public sealed class MapboxDelaunatorFactoryTests {
 	}
 
 	[Test]
-	public void Test_DuplicatePointsAreInsufficient_ThrowsException() {
+	public void Create_InsufficientDistinctPoints_ThrowsException() {
 		Point topLeft = new Point( 0, 0 );
 		Point topRight = new Point( 10, 0 );
 		List<Point> points = [

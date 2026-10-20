@@ -7,7 +7,7 @@ internal sealed class TopologyRegressionTests {
 
 	[TestCase( false )]
 	[TestCase( true )]
-	public void Attach_SourceAlreadyOwned_RejectsWithoutChangingEitherAssembly( bool acrossAssemblies ) {
+	public void TryAttach_SourceAlreadyOwned_RejectsWithoutChangingEitherAssembly( bool acrossAssemblies ) {
 		CustomSource source = new CustomSource();
 		GridAssembly<int> first = new GridAssembly<int>();
 		PlacementId id = first.TryAttach( source, 0, 0 ).Placement;
@@ -24,7 +24,7 @@ internal sealed class TopologyRegressionTests {
 
 	[TestCase( false )]
 	[TestCase( true )]
-	public void AttachedSource_DirectShapeChangeRejectedButValuesAndCoordinatedEditsWork( bool clear ) {
+	public void TrySetCellAndTryClearCell_AttachedSource_RejectDirectShapeChangesButAllowValuesAndCoordinatedEdits( bool clear ) {
 		DenseGridSource<int> source = Source( 2, 1 );
 		GridAssembly<int> assembly = new GridAssembly<int>();
 		PlacementId id = assembly.TryAttach( source, 0, 0 ).Placement;
@@ -52,7 +52,7 @@ internal sealed class TopologyRegressionTests {
 	}
 
 	[Test]
-	public void FailedOverlap_DoesNotAcquireOwnership() {
+	public void TryAttach_OverlappingPlacement_RejectsWithoutAcquiringOwnership() {
 		GridAssembly<int> assembly = new GridAssembly<int>();
 		_ = assembly.TryAttach( Source( 1, 1 ), 0, 0 );
 		DenseGridSource<int> rejected = Source( 1, 1 );
@@ -63,7 +63,7 @@ internal sealed class TopologyRegressionTests {
 	}
 
 	[Test]
-	public void CustomSource_ThrowingEditDoesNotLeaveShapeUnlocked() {
+	public void TryAddCell_CustomSourceThrows_PreservesShapeLockAndAllowsSubsequentEdits() {
 		CustomSource source = new CustomSource();
 		GridAssembly<int> assembly = new GridAssembly<int>();
 		PlacementId id = assembly.TryAttach( source, 0, 0 ).Placement;
@@ -85,12 +85,12 @@ internal sealed class TopologyRegressionTests {
 
 	[TestCase( 65536, 65536 )]
 	[TestCase( 50000, 50000 )]
-	public void DenseAllocationProduct_RejectsBeforeAllocation( int width, int height ) {
+	public void Ctor_DenseSourceDimensionsExceedArrayCapacity_RejectsBeforeAllocation( int width, int height ) {
 		Assert.That( () => new DenseGridSource<int>( width, height ), Throws.TypeOf<ArgumentOutOfRangeException>() );
 	}
 
 	[Test]
-	public void OverflowingPlacement_RejectsBeforeOverlapScanAndLeavesSourceAvailable() {
+	public void TryAttach_OverflowingPlacement_RejectsBeforeOverlapScanAndLeavesSourceAvailable() {
 		GridAssembly<int> assembly = new GridAssembly<int>();
 		_ = assembly.TryAttach( Source( 1, 1 ), int.MinValue, 0 );
 		DenseGridSource<int> source = Source( 2, 1 );
@@ -102,7 +102,7 @@ internal sealed class TopologyRegressionTests {
 	}
 
 	[Test]
-	public void InvalidCustomRuns_RejectBeforeMutatingAssembly() {
+	public void TryAttach_InvalidCustomRuns_RejectsBeforeMutatingAssembly() {
 		GridAssembly<int> assembly = new GridAssembly<int>();
 		CustomSource source = new CustomSource { InvalidRuns = true };
 		Assert.That( () => assembly.TryAttach( source, 0, 0 ), Throws.ArgumentException );
@@ -115,7 +115,7 @@ internal sealed class TopologyRegressionTests {
 
 	[TestCase( false )]
 	[TestCase( true )]
-	public void IntExtremeNeighbours_DoNotWrapIntoSeams( bool vertical ) {
+	public void TryAttach_IntExtremeNeighbours_DoesNotCreateWraparoundSeams( bool vertical ) {
 		GridAssembly<int> assembly = new GridAssembly<int>();
 		_ = assembly.TryAttach( Source( 1, 1 ), vertical ? 0 : int.MinValue, vertical ? int.MinValue : 0 );
 		_ = assembly.TryAttach( Source( 1, 1 ), vertical ? 0 : int.MaxValue, vertical ? int.MaxValue : 0 );
@@ -133,7 +133,7 @@ internal sealed class TopologyRegressionTests {
 	[TestCase( int.MaxValue - 1, int.MaxValue - 1 )]
 	[TestCase( int.MinValue, 10 )]
 	[TestCase( 10, int.MaxValue - 1 )]
-	public void ConnectivityUpdate_AtDomainEdges_RecalculatesWithoutOverflow( int x, int y ) {
+	public void Update_ConnectivityAtDomainEdges_RecalculatesWithoutOverflow( int x, int y ) {
 		DenseGridSource<int> source = Source( 2, 2 );
 		source.TrySetCell( 1, 0, 1 );
 		source.TrySetCell( 0, 1, 1 );
@@ -151,7 +151,7 @@ internal sealed class TopologyRegressionTests {
 	}
 
 	[Test]
-	public void ConnectivityUpdate_EmptyAreaDoesNothing() {
+	public void Update_EmptyConnectivityArea_LeavesLayerUnchanged() {
 		GridAssembly<int> assembly = new GridAssembly<int>();
 		_ = assembly.TryAttach( Source( 1, 1 ), 0, 0 );
 		using ICompiledGridAssembly<int> compiled = Compile( assembly );
@@ -163,7 +163,7 @@ internal sealed class TopologyRegressionTests {
 	}
 
 	[Test]
-	public void ConnectivityUpdate_OverflowingScratchRejectedBeforeChangingValues() {
+	public void Update_OverflowingConnectivityScratch_RejectsBeforeChangingValues() {
 		GridAssembly<int> assembly = new GridAssembly<int>();
 		_ = assembly.TryAttach( Source( 1, 1 ), 0, 0 );
 		using ICompiledGridAssembly<int> compiled = Compile( assembly );
@@ -176,7 +176,7 @@ internal sealed class TopologyRegressionTests {
 	}
 
 	[Test]
-	public void Compile_AlternateAssemblyIsRejectedBeforeCreatingSpace() {
+	public void Compile_AlternateAssembly_RejectsBeforeCreatingSpace() {
 		GridAssembly<int> assembly = new GridAssembly<int>();
 		_ = assembly.TryAttach( Source( 2, 1 ), 0, 0 );
 		Assert.That( () => Compile( new AssemblyProxy( assembly ) ), Throws.ArgumentException );
@@ -198,7 +198,7 @@ internal sealed class TopologyRegressionTests {
 	[TestCase( "vacuum", true )]
 	[TestCase( "build", true )]
 	[TestCase( "update", true )]
-	public void InvalidCompiledLifetime_RejectsOperationsWithoutWritingReusedSource( string operation, bool disposed ) {
+	public void CompiledOperations_InvalidLifetime_RejectWithoutWritingReusedSource( string operation, bool disposed ) {
 		GridAssembly<int> assembly = new GridAssembly<int>();
 		DenseGridSource<int> source = Source( 1, 1 );
 		PlacementId id = assembly.TryAttach( source, 0, 0 ).Placement;
@@ -232,7 +232,7 @@ internal sealed class TopologyRegressionTests {
 	}
 
 	[Test]
-	public void AttachAfterCompile_CommitRejectedBeforeAnyWrite() {
+	public void Commit_PlacementAttachedAfterCompilation_RejectsBeforeAnyWrite() {
 		GridAssembly<int> assembly = new GridAssembly<int>();
 		DenseGridSource<int> source = Source( 1, 1 );
 		_ = assembly.TryAttach( source, 0, 0 );
@@ -246,7 +246,7 @@ internal sealed class TopologyRegressionTests {
 	}
 
 	[Test]
-	public void PublicCollections_CannotBypassAssemblyAndLayerMaintenance() {
+	public void PlacementsAndSeamsAndLayers_PublicAccess_ExposesReadOnlyCollections() {
 		GridAssembly<int> assembly = new GridAssembly<int>();
 		_ = assembly.TryAttach( Source( 1, 1 ), 0, 0 );
 		_ = assembly.TryAttach( Source( 1, 1 ), 1, 0 );
@@ -261,7 +261,7 @@ internal sealed class TopologyRegressionTests {
 	}
 
 	[Test]
-	public void PublicLayout_CannotDesynchronizeSourceAndLayerOccupancy() {
+	public void ChunkLayout_PublicAccess_PreventsSourceAndLayerOccupancyDesynchronization() {
 		GridAssembly<int> assembly = new GridAssembly<int>();
 		_ = assembly.TryAttach( Source( 1, 1 ), 0, 0 );
 		using ICompiledGridAssembly<int> compiled = Compile( assembly );
@@ -273,7 +273,7 @@ internal sealed class TopologyRegressionTests {
 	}
 
 	[Test]
-	public void ReadOnlyLayout_PreservesWritableSpansAndPaddedChunkAccess() {
+	public void GetValuesAndCopyPadded_ReadOnlyLayout_PreserveWritableSpansAndPaddedChunkAccess() {
 		DenseGridSource<int> source = Source( 2, 1 );
 		source.TrySetCell( 1, 0, 2 );
 		GridAssembly<int> assembly = new GridAssembly<int>();
@@ -301,7 +301,7 @@ internal sealed class TopologyRegressionTests {
 	}
 
 	[Test]
-	public void CapacityAndRunBoundaries_AreCheckedWithoutAllocatingHugeBuffers() {
+	public void GetLengthAndLastColumn_CapacityAndRunBoundaries_RejectOverflowWithoutLargeAllocations() {
 		Assert.That( GridCapacity.GetLength( Array.MaxLength, "length" ), Is.EqualTo( Array.MaxLength ) );
 		Assert.That( GridCapacity.GetLength( 0, "length" ), Is.Zero );
 		Assert.That( () => GridCapacity.GetLength( (long)Array.MaxLength + 1, "length" ), Throws.TypeOf<ArgumentOutOfRangeException>() );
@@ -311,7 +311,7 @@ internal sealed class TopologyRegressionTests {
 	}
 
 	[Test]
-	public void EmptySource_StillExclusivelyOwned_AndStaleCompilationStopsObserving() {
+	public void TryAttach_EmptySource_PreservesExclusiveOwnershipAndInvalidatesPriorCompilation() {
 		GridAssembly<int> assembly = new GridAssembly<int>();
 		DenseGridSource<int> source = new DenseGridSource<int>( 2, 1 );
 		PlacementId id = assembly.TryAttach( source, 0, 0 ).Placement;
@@ -329,7 +329,7 @@ internal sealed class TopologyRegressionTests {
 	}
 
 	[Test]
-	public void ThrowingStrategy_DoesNotRegisterLayer_AndPooledCallsRemainCorrect() {
+	public void BuildAndUpdate_ThrowingStrategy_AvoidRegisteringFailedLayersAndPreserveSubsequentPooledCalls() {
 		GridAssembly<int> assembly = new GridAssembly<int>();
 		DenseGridSource<int> source = Source( 2, 1 );
 		source.TrySetCell( 1, 0, 1 );

@@ -21,7 +21,7 @@ public sealed class ChunkEntryIndexTests {
 	[TestCase( 17 )]
 	[TestCase( 44 )]
 	[TestCase( 110 )]
-	public void Update_SeededAppendAndSwapRemoval_PreservesEveryChunkChain( int seed ) {
+	public void AddAndRemoveAt_SeededAppendAndSwapRemoval_PreserveEveryChunkChain( int seed ) {
 		ChunkEntryIndex index = new ChunkEntryIndex();
 		List<int> chunks = [];
 		Random random = new Random( seed );

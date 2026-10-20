@@ -19,7 +19,7 @@ public sealed class RasterizerRegressionTests {
 	[TestCase( "immutable" )]
 	[TestCase( "opaque" )]
 	[TestCase( "delegate" )]
-	public void FilledConcaveInput_RejectsBeforeAnyEmission( string source ) {
+	public void Rasterize_FilledConcaveInput_RejectsBeforeAnyEmission( string source ) {
 		Recording output = new Recording();
 		using( Assert.EnterMultipleScope() ) {
 			Assert.That( () => Rasterize( Notch, output, source, true ), Throws.ArgumentException );
@@ -29,7 +29,7 @@ public sealed class RasterizerRegressionTests {
 	}
 
 	[TestCaseSource( nameof( InvalidBoundaries ) )]
-	public void FilledInvalidBoundary_RejectsBeforeAnyEmission( Point[] points ) {
+	public void Rasterize_FilledInvalidBoundary_RejectsBeforeAnyEmission( Point[] points ) {
 		Recording output = new Recording();
 		using( Assert.EnterMultipleScope() ) {
 			Assert.That( () => _rasterizer.Rasterize( points.AsSpan(), new Recorder( output ) ), Throws.ArgumentException );
@@ -57,7 +57,7 @@ public sealed class RasterizerRegressionTests {
 
 	[TestCase( false )]
 	[TestCase( true )]
-	public void EmptyInputs_EmitNothing( bool filled ) {
+	public void Rasterize_EmptyInputs_EmitsNothing( bool filled ) {
 		Recording output = new Recording();
 		foreach( string source in new[] { "span", "array", "list", "immutable", "opaque", "delegate" } ) {
 			Rasterize( [], output, source, filled );
@@ -70,7 +70,7 @@ public sealed class RasterizerRegressionTests {
 
 	[TestCase( false )]
 	[TestCase( true )]
-	public void RawCoordinates_ValidateEveryVertexBeforeEmission( bool filled ) {
+	public void Rasterize_OutOfDomainRawVertex_RejectsBeforeAnyEmission( bool filled ) {
 		Point[] points = [new Point( 0, 0 ), new Point( 4, 0 ), new Point( 4, 4 ), new Point( -32769, 4 )];
 		foreach( string source in new[] { "span", "array", "list", "immutable", "opaque", "delegate" } ) {
 			Recording output = new Recording();
@@ -86,7 +86,7 @@ public sealed class RasterizerRegressionTests {
 	[TestCase( 32768, 0 )]
 	[TestCase( 0, -32769 )]
 	[TestCase( 0, 32768 )]
-	public void LineCoordinates_RejectBeforeFirstPixel( int x, int y ) {
+	public void Rasterize_OutOfDomainLineEndpoint_RejectsBeforeFirstPixel( int x, int y ) {
 		foreach( bool reverse in new[] { false, true } ) {
 			int emissions = 0;
 			Point a = new Point( 0, 0 ), b = new Point( x, y );
@@ -99,7 +99,7 @@ public sealed class RasterizerRegressionTests {
 	}
 
 	[Test]
-	public void DegenerateFilledTriangle_RejectsBeforeEmission() {
+	public void Rasterize_DegenerateFilledTriangle_RejectsBeforeEmission() {
 		Recording output = new Recording();
 		Triangle triangle = new Triangle( new Point( 0, 0 ), new Point( 2, 2 ), new Point( 4, 4 ) );
 		using( Assert.EnterMultipleScope() ) {
@@ -110,7 +110,7 @@ public sealed class RasterizerRegressionTests {
 	}
 
 	[Test]
-	public void ConcaveOutline_RemainsSupportedWithoutFillingNotch() {
+	public void Rasterize_ConcaveOutline_EmitsBoundaryWithoutFillingNotch() {
 		Recording output = new Recording();
 		_rasterizer.Rasterize( Notch.AsSpan(), new Recorder( output ), false );
 		HashSet<Point> expected = [];
@@ -129,7 +129,7 @@ public sealed class RasterizerRegressionTests {
 
 	[TestCase( false )]
 	[TestCase( true )]
-	public void FilledRedundantBoundary_EmitsExactRunsInEitherWinding( bool reverse ) {
+	public void Rasterize_FilledRedundantBoundary_EmitsExactRunsInEitherWinding( bool reverse ) {
 		Point[] points = [.. Enumerable.Range( 0, 1001 ).Select( x => new Point( x, 0 ) ),
 			new Point( 1000, 2 ), new Point( 0, 2 ), new Point( 0, 0 ), new Point( 0, 0 )];
 		if( reverse ) {
@@ -146,7 +146,7 @@ public sealed class RasterizerRegressionTests {
 
 	[TestCase( Polygon.MaximumVertices )]
 	[TestCase( Polygon.MaximumVertices + 1 )]
-	public void FilledBoundary_EnforcesNormalizedVertexLimit( int count ) {
+	public void Rasterize_FilledBoundary_EnforcesNormalizedVertexLimit( int count ) {
 		Point[] points = new Point[count];
 		for( int i = 0; i < count; i++ ) {
 			double angle = 2 * Math.PI * i / count;
@@ -166,7 +166,7 @@ public sealed class RasterizerRegressionTests {
 
 	[TestCase( false )]
 	[TestCase( true )]
-	public void FullDomainFilledPolygon_Emits65536RunsWithoutPerPixelFallback( bool validated ) {
+	public void Rasterize_FullDomainFilledPolygon_Emits65536RunsWithoutPerPixelFallback( bool validated ) {
 		Span<long> counts = stackalloc long[4];
 		counts.Clear();
 		Point[] points = [new Point( -32768, -32768 ), new Point( 32767, -32768 ),
@@ -184,7 +184,7 @@ public sealed class RasterizerRegressionTests {
 
 	[TestCase( false )]
 	[TestCase( true )]
-	public void FullDomainLine_EmitsEveryDiagonalPixelWithRefStructSink( bool reverse ) {
+	public void Rasterize_FullDomainLine_EmitsEveryDiagonalPixelWithRefStructSink( bool reverse ) {
 		Span<long> counts = stackalloc long[4];
 		counts.Clear();
 		Point a = new Point( -32768, -32768 ), b = new Point( 32767, 32767 );
@@ -195,7 +195,7 @@ public sealed class RasterizerRegressionTests {
 	}
 
 	[Test]
-	public void SinkException_PropagatesAndSubsequentPooledCallsRemainCorrect() {
+	public void Rasterize_SinkThrows_PropagatesExceptionAndPreservesSubsequentPooledCalls() {
 		Point[] points = [new Point( 1, 1 ), new Point( 8, 1 ), new Point( 8, 8 ), new Point( 1, 8 )];
 		for( int i = 0; i < 5; i++ ) {
 			Assert.That( () => _rasterizer.Rasterize( new OpaquePoints( points ),

@@ -1,4 +1,13 @@
-# D3DelaunayFactoryBenchmarks
+# Benchmarks
+
+```
+BenchmarkDotNet v0.15.8, Windows 11 (10.0.26100.8893/24H2/2024Update/HudsonValley)
+Intel Core i7-9700K CPU 3.60GHz (Coffee Lake), 1 CPU, 8 logical and 8 physical cores
+.NET SDK 10.0.400-preview.0.26322.102
+  [Host] : .NET 10.0.10 (10.0.10, 10.0.1026.32716), X64 RyuJIT x86-64-v3
+```
+
+## D3DelaunayFactoryBenchmarks
 
 | Method           | Mean         | Error      | StdDev     | Allocated  |
 |----------------- |-------------:|-----------:|-----------:|-----------:|
@@ -6,7 +15,7 @@
 | Create_500x500   |  3,630.19 μs | 151.704 μs |  90.277 μs | 1167.74 KB |
 | Create_1000x1000 | 16,986.10 μs | 723.838 μs | 478.774 μs | 4679.08 KB |
 
-# D3VoronoiFactoryBenchmarks
+## D3VoronoiFactoryBenchmarks
 
 | Method           | Mean        | Error       | StdDev      | Allocated   |
 |----------------- |------------:|------------:|------------:|------------:|
@@ -14,7 +23,7 @@
 | Create_500x500   | 15,670.5 μs |   892.56 μs |   590.38 μs | 10035.29 KB |
 | Create_1000x1000 | 77,850.1 μs | 5,578.07 μs | 3,689.55 μs | 41427.86 KB |
 
-# MapboxDelaunatorFactoryBenchmarks
+## MapboxDelaunatorFactoryBenchmarks
 
 | Method           | RejectDuplicates | Mean         | Error      | StdDev     | Allocated  |
 |----------------- |----------------- |-------------:|-----------:|-----------:|-----------:|
@@ -25,7 +34,7 @@
 | Create_500x500   | True             |  3,149.22 μs | 217.698 μs | 143.994 μs |   470.4 KB |
 | Create_1000x1000 | True             | 14,952.44 μs | 703.016 μs | 465.002 μs | 1878.34 KB |
 
-# EdgeBenchmarks
+## EdgeBenchmarks
 
 | Method              | Mean       | Error     | StdDev    | Allocated |
 |-------------------- |-----------:|----------:|----------:|----------:|
@@ -36,14 +45,14 @@
 | Ctor_PointPoint     |  0.0162 ns | 0.0056 ns | 0.0037 ns |         - |
 | Ctor_IntIntIntInt   |  0.2642 ns | 0.0121 ns | 0.0080 ns |         - |
 
-# IntersectBenchmarks
+## IntersectBenchmarks
 
 | Method              | Mean     | Error    | StdDev   | Allocated |
 |-------------------- |---------:|---------:|---------:|----------:|
 | HasIntersection     | 10.83 ns | 0.097 ns | 0.064 ns |         - |
 | TryFindIntersection | 18.25 ns | 0.075 ns | 0.045 ns |         - |
 
-# GeometryWorkloadBenchmarks
+## GeometryWorkloadBenchmarks
 
 | Method              | Workload  | Mean      | Error     | StdDev    | Allocated |
 |-------------------- |---------- |----------:|----------:|----------:|----------:|
@@ -56,7 +65,7 @@
 | **HasIntersection**     | **Irregular** |  **9.475 ns** | **0.0546 ns** | **0.0286 ns** |         **-** |
 | TryFindIntersection | Irregular | 18.109 ns | 0.3414 ns | 0.2031 ns |         - |
 
-# VoronoiWorkloadBenchmarks
+## VoronoiWorkloadBenchmarks
 
 | Method | Workload     | Mean      | Error    | StdDev   | Allocated |
 |------- |------------- |----------:|---------:|---------:|----------:|
@@ -64,7 +73,7 @@
 | **Create** | **JitteredGrid** | **588.25 μs** | **7.783 μs** | **4.070 μs** | **485.67 KB** |
 | **Create** | **HighDegree**   |  **34.23 μs** | **1.846 μs** | **1.221 μs** |  **52.59 KB** |
 
-# PolygonBenchmarks
+## PolygonBenchmarks
 
 | Method                                                    | Mean      | Error     | StdDev    | Allocated |
 |---------------------------------------------------------- |----------:|----------:|----------:|----------:|
@@ -82,7 +91,7 @@
 | HasIntersection_Polygon                                   |  10.41 ns |  0.361 ns |  0.239 ns |         - |
 | HasIntersection_EdgeArray                                 |  21.02 ns |  1.003 ns |  0.663 ns |         - |
 
-# RectangleBenchmarks
+## RectangleBenchmarks
 
 | Method                      | Mean      | Error     | StdDev    | Allocated |
 |---------------------------- |----------:|----------:|----------:|----------:|
@@ -95,7 +104,7 @@
 | IsEquivalentTo_PointPoint   | 0.8603 ns | 0.0500 ns | 0.0331 ns |         - |
 | IsEquivalentTo_IntIntIntInt | 0.8164 ns | 0.0636 ns | 0.0421 ns |         - |
 
-# SimpleQuadTreeNodeBenchmarks
+## SimpleQuadTreeNodeBenchmarks
 
 | Method             | Job        | InvocationCount | UnrollFactor | Mean            | Error          | StdDev         | Allocated |
 |------------------- |----------- |---------------- |------------- |----------------:|---------------:|---------------:|----------:|
@@ -105,7 +114,7 @@
 | Query              | Job-AKPLXZ | Default         | 16           |   2,246.1712 ns |     62.0565 ns |     41.0465 ns |     776 B |
 | QueryVisitor       | Job-AKPLXZ | Default         | 16           |   1,482.1865 ns |     23.6556 ns |     14.0771 ns |         - |
 
-# IntegerRasterizerBenchmarks
+## IntegerRasterizerBenchmarks
 
 | Method                     | Mean         | Error        | StdDev       | Ratio | RatioSD | Allocated | Alloc Ratio |
 |--------------------------- |-------------:|-------------:|-------------:|------:|--------:|----------:|------------:|
@@ -118,7 +127,7 @@
 | Outline_PerPixel           |   6,647.0 ns |    327.10 ns |    216.36 ns | 0.020 |    0.00 |         - |          NA |
 | Outline_PerSpan            |   6,148.5 ns |    185.75 ns |    110.53 ns | 0.019 |    0.00 |         - |          NA |
 
-# TriangleRepresentationBenchmarks
+## TriangleRepresentationBenchmarks
 
 | Method             | Count | Mean           | Error           | StdDev         | Allocated |
 |------------------- |------ |---------------:|----------------:|---------------:|----------:|
@@ -147,7 +156,7 @@
 | CopyReference      | 16384 |   4,173.644 ns |     260.1456 ns |    172.0702 ns |         - |
 | CopyValue          | 16384 |  12,474.066 ns |     787.7602 ns |    521.0546 ns |         - |
 
-# SearchableVoronoiBenchmarks
+## SearchableVoronoiBenchmarks
 
 | Method        | QuerySize | Mean       | Error     | StdDev    | Allocated |
 |-------------- |---------- |-----------:|----------:|----------:|----------:|
@@ -156,7 +165,7 @@
 | **Search**        | **200**       | **7,920.5 ns** | **665.87 ns** | **440.43 ns** |    **8384 B** |
 | SearchVisitor | 200       | 2,742.7 ns | 163.49 ns | 108.14 ns |         - |
 
-# PointBenchmarks
+## PointBenchmarks
 
 | Method                  | Mean       | Error     | StdDev    | Median     | Allocated |
 |------------------------ |-----------:|----------:|----------:|-----------:|----------:|
@@ -189,7 +198,7 @@
 | Min                     |  0.1805 ns | 0.0713 ns | 0.0472 ns |  0.1542 ns |         - |
 | Max                     |  0.2541 ns | 0.0586 ns | 0.0349 ns |  0.2449 ns |         - |
 
-# DenseGridSourceBenchmarks
+## DenseGridSourceBenchmarks
 
 | Method                              | Size | Mean         | Error       | StdDev      | Allocated |
 |------------------------------------ |----- |-------------:|------------:|------------:|----------:|
@@ -204,7 +213,7 @@
 | GetCell_Scan                        | 256  |  65,188.4 ns | 1,777.62 ns | 1,175.79 ns |         - |
 | TryGetRow_Scan                      | 256  |  63,142.5 ns | 1,954.48 ns | 1,292.77 ns |         - |
 
-# GridAssemblyBenchmarks
+## GridAssemblyBenchmarks
 
 | Method                            | Size | Mean           | Error         | StdDev       | Allocated |
 |---------------------------------- |----- |---------------:|--------------:|-------------:|----------:|
@@ -217,7 +226,7 @@
 | TryRemoveCell_TryAddCell_Interior | 256  |     1,899.1 ns |      72.96 ns |     48.26 ns |         - |
 | TryRemoveCell_TryAddCell_Seam     | 256  |     2,310.7 ns |     116.52 ns |     77.07 ns |         - |
 
-# GridCompilerBenchmarks
+## GridCompilerBenchmarks
 
 | Method  | Size | ChunkSize | Mean      | Error     | StdDev    | Allocated |
 |-------- |----- |---------- |----------:|----------:|----------:|----------:|
@@ -226,7 +235,7 @@
 | **Compile** | **256**  | **32**        | **510.79 μs** | **19.282 μs** | **10.085 μs** | **937.03 KB** |
 | **Compile** | **256**  | **64**        | **306.80 μs** | **23.948 μs** | **15.840 μs** | **595.37 KB** |
 
-# CompiledGridAssemblyBenchmarks
+## CompiledGridAssemblyBenchmarks
 
 | Method                              | Size | Fragmented | Mean             | Error          | StdDev         | Allocated |
 |------------------------------------ |----- |----------- |-----------------:|---------------:|---------------:|----------:|
@@ -247,7 +256,7 @@
 | Commit_NothingDirty                 | 256  | True       |         9.619 ns |      1.1278 ns |      0.7459 ns |         - |
 | TryRemoveCell_TryAddCell_Propagated | 256  | True       |     2,353.191 ns |     25.2697 ns |     13.2165 ns |         - |
 
-# CompiledGridAssemblyMutationBenchmarks
+## CompiledGridAssemblyMutationBenchmarks
 
 | Method                    | Size | Mean        | Error       | StdDev      | Allocated  |
 |-------------------------- |----- |------------:|------------:|------------:|-----------:|
@@ -258,7 +267,7 @@
 | ConnectivityBuilder_Build | 256  | 17,113.0 μs |   320.70 μs |   190.84 μs |   265.2 KB |
 | CreateVacuumLayer         | 256  |  2,545.9 μs |   260.44 μs |   172.27 μs |   265.2 KB |
 
-# TopologyLocalityBenchmarks
+## TopologyLocalityBenchmarks
 
 | Method         | Scale | Workload      | Mean             | Error           | StdDev          | Allocated |
 |--------------- |------ |-------------- |-----------------:|----------------:|----------------:|----------:|
@@ -311,7 +320,7 @@
 | CommitAllDirty | 256   | Seams         |   109,254.610 ns |   5,111.5005 ns |   3,380.9411 ns |         - |
 | CompileAndBind | 256   | Seams         | 2,886,456.429 ns | 270,227.5840 ns | 178,738.8155 ns | 3522478 B |
 
-# ConnectivityBuilderBenchmarks
+## ConnectivityBuilderBenchmarks
 
 | Method            | Size | Mean       | Error     | StdDev    | Allocated |
 |------------------ |----- |-----------:|----------:|----------:|----------:|
@@ -322,7 +331,7 @@
 | Update_SeamCell   | 256  |   1.485 μs | 0.0720 μs | 0.0428 μs |         - |
 | Update_32x32      | 256  | 105.604 μs | 6.0142 μs | 3.9780 μs |         - |
 
-# DirectionExtensionsBenchmarks
+## DirectionExtensionsBenchmarks
 
 | Method            | Mean     | Error     | StdDev    | Allocated |
 |------------------ |---------:|----------:|----------:|----------:|

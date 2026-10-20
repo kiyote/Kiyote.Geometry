@@ -10,7 +10,7 @@ public sealed class EdgeTests {
 	[TestCase( 0, 9, 5, 9, 5, 9, 0, 9, true )]
 	[TestCase( 5, 9, 0, 9, 0, 9, 5, 9, true )]
 	[TestCase( 0, 5, 9, 9, 0, 9, 5, 5, false )]
-	public void IsEquivalentTo(
+	public void IsEquivalentTo_EndpointTestCases_ReturnsExpectedResult(
 		int ax1,
 		int ay1,
 		int ax2,
@@ -28,7 +28,7 @@ public sealed class EdgeTests {
 	}
 
 	[Test]
-	public void BoundingBox_EdgeNotTopLeftBottomRight_CorrectBoundingBox() {
+	public void GetBoundingBox_EdgeNotTopLeftBottomRight_ReturnsCorrectBounds() {
 		Point p1 = new Point( 100, 0 );
 		Point p2 = new Point( 0, 100 );
 		Edge edge = new Edge( p1, p2 );

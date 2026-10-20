@@ -99,7 +99,7 @@ public sealed class PolygonTests {
 	}
 
 	[Test]
-	public void TryFindBoundaryIntersections_PointList_Overlapping_ReturnsPoints() {
+	public void TryFindBoundaryIntersections_OverlappingPolygon_ReturnsPoints() {
 		Polygon polygon = new Polygon( [
 			new Point( 0, 0 ),
 			new Point( 20, 0 ),
@@ -124,7 +124,7 @@ public sealed class PolygonTests {
 	}
 
 	[Test]
-	public void HasIntersection_Polygon_NoIntersection_ReturnsFalse() {
+	public void HasIntersection_DisjointPolygon_ReturnsFalse() {
 		Polygon other = new Polygon(
 			[
 				new Point( 30, 0 ),
@@ -139,7 +139,7 @@ public sealed class PolygonTests {
 	}
 
 	[Test]
-	public void HasIntersection_Polygon_Intersection_ReturnsTrue() {
+	public void HasIntersection_IntersectingPolygon_ReturnsTrue() {
 		Polygon other = new Polygon(
 			[
 				new Point( -5, 10 ),
@@ -154,7 +154,7 @@ public sealed class PolygonTests {
 	}
 
 	[Test]
-	public void HasIntersection_EdgeList_NoIntersection_ReturnsFalse() {
+	public void HasIntersection_DisjointEdgeList_ReturnsFalse() {
 		Polygon other = new Polygon(
 			[
 				new Point( 30, 0 ),
@@ -169,7 +169,7 @@ public sealed class PolygonTests {
 	}
 
 	[Test]
-	public void HasIntersection_EdgeList_Intersection_ReturnsTrue() {
+	public void HasIntersection_IntersectingEdgeList_ReturnsTrue() {
 		Polygon other = new Polygon(
 			[
 				new Point( -5, 10 ),
@@ -184,7 +184,7 @@ public sealed class PolygonTests {
 	}
 
 	[Test]
-	public void HasIntersection_Edge_NoIntersection_ReturnsFalse() {
+	public void HasIntersection_DisjointEdge_ReturnsFalse() {
 		Polygon other = new Polygon(
 			[
 				new Point( 30, 0 ),
@@ -199,7 +199,7 @@ public sealed class PolygonTests {
 	}
 
 	[Test]
-	public void HasIntersection_Edge_Intersection_ReturnsTrue() {
+	public void HasIntersection_IntersectingEdge_ReturnsTrue() {
 		Polygon other = new Polygon(
 			[
 				new Point( -5, 10 ),
@@ -263,7 +263,7 @@ public sealed class PolygonTests {
 	[TestCase( -1, 21, false )]
 	[TestCase( 0, 20, true )]
 	[TestCase( 1, 19, true )]
-	public void Contains_IntInt_PointInside_ReturnsTrue(
+	public void Contains_IntCoordinatesInside_ReturnsTrue(
 		int x,
 		int y,
 		bool expected
@@ -272,7 +272,7 @@ public sealed class PolygonTests {
 	}
 
 	[Test]
-	public void Contains_Polygon_PolygonInside_ReturnsTrue() {
+	public void Contains_PolygonInside_ReturnsTrue() {
 		Polygon other = new Polygon(
 			[
 				new Point( 5, 10 ),
@@ -287,7 +287,7 @@ public sealed class PolygonTests {
 	}
 
 	[Test]
-	public void Contains_Polygon_PolygonOutside_ReturnsFalse() {
+	public void Contains_PolygonOutside_ReturnsFalse() {
 		Polygon other = new Polygon(
 			[
 				new Point( -5, 10 ),

@@ -149,7 +149,7 @@ public sealed class QuadTreeRegressionTests {
 	}
 
 	[Test]
-	public void NullInputs_ThrowArgumentNullException() {
+	public void CtorAndInsertAndQuery_NullInputs_ThrowArgumentNullException() {
 		Assert.That( () => new SimpleQuadTreeNode<IRect>( null! ), Throws.ArgumentNullException );
 		IQuadTree<IRect> tree = new SimpleQuadTree<IRect>( new Rect( 0, 0, 10, 10 ) );
 		Assert.That( () => tree.Insert( null! ), Throws.ArgumentNullException );
@@ -179,7 +179,7 @@ public sealed class QuadTreeRegressionTests {
 	}
 
 	[Test]
-	public void Construction_MutableBounds_OwnsStableSnapshot() {
+	public void Ctor_MutableBounds_OwnsStableSnapshot() {
 		Rect current = new Rect( 0, 0, 100, 100 );
 		Mock<IRect> bounds = new Mock<IRect>( MockBehavior.Strict );
 		bounds.SetupGet( b => b.X1 ).Returns( () => current.X1 );

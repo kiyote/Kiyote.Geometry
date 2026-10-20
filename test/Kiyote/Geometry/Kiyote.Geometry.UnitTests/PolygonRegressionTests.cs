@@ -7,7 +7,7 @@ namespace Kiyote.Geometry.UnitTests;
 public sealed class PolygonRegressionTests {
 
 	[Test]
-	public void Contains_RequiresTheWholeNonemptyTarget() {
+	public void Contains_PartialContainedAndEmptyTargets_ReturnsTrueOnlyForWholeNonemptyTargets() {
 		Polygon outer = Box( 0, 0, 10, 10 );
 		Assert.That( outer.Contains( Box( 5, 5, 15, 15 ) ), Is.False );
 		Assert.That( outer.Contains( Box( 2, 2, 4, 4 ) ), Is.True );
@@ -19,7 +19,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	[Test]
-	public void Intersection_FullContainment_DoesNotRequireBoundaryCrossings() {
+	public void TryIntersect_FullContainment_ReturnsInnerPolygonWithoutBoundaryCrossings() {
 		Polygon outer = Box( 0, 0, 10, 10 );
 		Polygon inner = Box( 2, 2, 4, 4 );
 		Assert.That( outer.HasIntersection( inner ), Is.True );
@@ -34,7 +34,7 @@ public sealed class PolygonRegressionTests {
 
 	[TestCase( 10, 0 )]
 	[TestCase( 10, 10 )]
-	public void Intersection_ContactWithoutArea_ReturnsFalseAndNone( int x, int y ) {
+	public void TryIntersect_ContactWithoutArea_ReturnsFalseAndNone( int x, int y ) {
 		Polygon a = Box( 0, 0, 10, 10 );
 		Polygon b = Box( x, y, x + 10, y + 10 );
 		Assert.That( a.HasIntersection( b ), Is.True );
@@ -47,7 +47,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	[Test]
-	public void Intersection_IdenticalAndEmptyPolygons() {
+	public void TryIntersect_IdenticalAndEmptyPolygons_ReturnsOriginalOrNoneRespectively() {
 		Polygon box = Box( 0, 0, 10, 10 );
 		Assert.That( box.TryIntersect( box, out Polygon result ), Is.True );
 		AssertVertices( result, [new( 0, 0 ), new( 10, 0 ), new( 10, 10 ), new( 0, 10 )], 200 );
@@ -60,7 +60,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	[Test]
-	public void Equivalent_CoordinateKeyCollisions_DoNotMatchDifferentTriangles() {
+	public void IsEquivalentTo_CoordinateKeyCollisions_ReturnsFalseForDifferentTriangles() {
 		Polygon a = new Polygon( [new( 0, 0 ), new( 1, 0 ), new( 0, 2 )] );
 		Polygon b = new Polygon( [new( 0, 0 ), new( 0, 1 ), new( 2, 0 )] );
 		Assert.That( a.IsEquivalentTo( b ), Is.False );
@@ -68,7 +68,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	[Test]
-	public void Construction_NormalizesRedundancy_WithoutDependingOnStartOrWinding() {
+	public void Ctor_RedundantBoundary_NormalizesWithoutDependingOnStartOrWinding() {
 		Point[] input = [
 			new( 5, 0 ), new( 10, 0 ), new( 10, 0 ), new( 10, 10 ),
 			new( 0, 10 ), new( 0, 0 ), new( 3, 0 ), new( 5, 0 ), new( 5, 0 )
@@ -89,7 +89,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	[TestCaseSource( nameof( InvalidBoundaries ) )]
-	public void Construction_RejectsInvalidNonemptyBoundaries( Point[] points ) {
+	public void Ctor_InvalidNonemptyBoundary_ThrowsArgumentException( Point[] points ) {
 		Assert.Throws<ArgumentException>( () => new Polygon( points ) );
 	}
 
@@ -110,7 +110,7 @@ public sealed class PolygonRegressionTests {
 
 	[TestCase( false )]
 	[TestCase( true )]
-	public void Construction_OwnsInputAndExposesReadOnlyStorage( bool useList ) {
+	public void Ctor_MutableInput_OwnsSnapshotAndExposesReadOnlyStorage( bool useList ) {
 		Point[] input = [new( 0, 0 ), new( 10, 0 ), new( 10, 10 ), new( 0, 10 )];
 		IList<Point> source = useList ? input.ToList() : input;
 		Polygon polygon = new Polygon( (IReadOnlyList<Point>)source );
@@ -127,7 +127,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	[Test]
-	public void Construction_VertexLimitAppliesAfterNormalization() {
+	public void Ctor_RedundantAndOverLimitBoundaries_AppliesVertexLimitAfterNormalization() {
 		Assert.That( Polygon.MaximumVertices, Is.EqualTo( 128 ) );
 		Assert.That( new Polygon( Regular( 128 ) ).Points, Has.Count.EqualTo( 128 ) );
 		Assert.Throws<ArgumentException>( () => new Polygon( Regular( 129 ) ) );
@@ -141,7 +141,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	[Test]
-	public void Construction_MaximumBoundary_NormalizesBothSidesOfClosingSeam() {
+	public void Ctor_MaximumBoundary_NormalizesBothSidesOfClosingSeam() {
 		Point[] corners = Regular( Polygon.MaximumVertices );
 		Assert.That( corners[0], Is.EqualTo( new Point( 20000, 0 ) ) );
 		Assert.That( corners[1], Is.EqualTo( new Point( 19976, 981 ) ) );
@@ -155,7 +155,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	[Test]
-	public void EdgeCollections_ValidateAllCoordinatesBeforeEarlySuccess() {
+	public void HasIntersectionAndTryFindBoundaryIntersections_InvalidEdges_ValidateBeforeEarlyReturn() {
 		Polygon box = Box( 0, 0, 10, 10 );
 		Edge inside = new Edge( 2, 2, 4, 4 );
 		Edge invalid = new Edge( 32768, 0, 32768, 1 );
@@ -166,7 +166,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	[Test]
-	public void Intersection_OverLimitResult_ThrowsWithoutChangingInputs() {
+	public void TryIntersect_OverLimitResult_ThrowsWithoutChangingInputs() {
 		Polygon a = new Polygon( Regular( 128 ) );
 		Polygon b = new Polygon( Regular( 128, Math.PI / 128 ) );
 		Assert.Throws<InvalidOperationException>( () => a.TryIntersect( b, out _ ) );
@@ -175,7 +175,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	[Test]
-	public void Intersection_ExactlyAtOutputLimit_IsSupported() {
+	public void TryIntersect_ResultExactlyAtVertexLimit_ReturnsPolygonAtLimit() {
 		Polygon a = new Polygon( Regular( 64 ) );
 		Polygon b = new Polygon( Regular( 64, Math.PI / 64 ) );
 		Assert.That( a.TryIntersect( b, out Polygon result ), Is.True );
@@ -183,7 +183,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	[Test]
-	public void Intersection_FractionalCoordinates_AreRoundedOnlyForOutput() {
+	public void TryIntersect_FractionalCoordinates_RoundsOnlyForOutput() {
 		Polygon box = Box( 0, 0, 4, 4 );
 		Polygon triangle = new Polygon( [new( -1, 1 ), new( 5, 1 ), new( 2, 5 )] );
 		Assert.That( box.TryIntersect( triangle, out Polygon result ), Is.True );
@@ -192,7 +192,7 @@ public sealed class PolygonRegressionTests {
 
 	[TestCase( 1 )]
 	[TestCase( -1 )]
-	public void Intersection_HalfTies_RoundToEven( int sign ) {
+	public void TryIntersect_HalfTies_RoundsToEven( int sign ) {
 		Polygon box = new Polygon( new Point[] { new( 0, 0 ), new( 4, 0 ), new( 4, 4 ), new( 0, 4 ) }
 			.Select( p => new Point( sign * p.X, sign * p.Y ) ).ToArray() );
 		Polygon triangle = new Polygon( new Point[] { new( -1, -1 ), new( 5, 3 ), new( -1, 7 ) }
@@ -204,7 +204,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	[Test]
-	public void Intersection_QuantizationCollapse_ReturnsNone() {
+	public void TryIntersect_QuantizationCollapse_ReturnsNone() {
 		Polygon a = new Polygon( [new( 0, 0 ), new( 10, 0 ), new( 0, 1 )] );
 		Polygon b = new Polygon( [new( 0, 1 ), new( 9, 1 ), new( 9, 0 )] );
 		Assert.That( a.HasIntersection( b ), Is.True );
@@ -213,7 +213,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	[Test]
-	public void Intersection_SnappingCannotIntroduceConcavity() {
+	public void TryIntersect_SnappingWouldIntroduceConcavity_ReturnsConvexHull() {
 		Polygon a = new Polygon( [new( -8, -3 ), new( 6, -7 ), new( 5, 6 ), new( 3, 7 )] );
 		Polygon b = new Polygon( [new( -2, 6 ), new( 2, 0 ), new( 8, -8 ), new( 5, 5 ), new( -2, 7 )] );
 		Assert.That( a.TryIntersect( b, out Polygon result ), Is.True );
@@ -221,7 +221,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	[Test]
-	public void EdgePredicates_IncludeContainedSegments_BoundaryQueriesDoNot() {
+	public void HasIntersectionAndTryFindBoundaryIntersections_ContainedEdges_DistinguishInteriorFromBoundaryContacts() {
 		Polygon box = Box( 0, 0, 10, 10 );
 		Edge inside = new Edge( 2, 2, 4, 4 );
 		Assert.That( box.HasIntersection( inside ), Is.True );
@@ -238,7 +238,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	[Test]
-	public void SeededBoxes_MatchIndependentIntegerBoundsAndArea() {
+	public void ContainsAndTryIntersect_SeededBoxes_MatchIndependentIntegerBoundsAndArea() {
 		Random random = new Random( 7291 );
 		for( int i = 0; i < 250; i++ ) {
 			int ax = random.Next( -20, 20 ), ay = random.Next( -20, 20 );
@@ -265,7 +265,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	[Test]
-	public void SeededTriangles_MatchSeparatingAxisReference_AndSnappingBounds() {
+	public void HasIntersectionAndTryIntersect_SeededTriangles_MatchSeparatingAxisReferenceAndSnappingBounds() {
 		Random random = new Random( 8734 );
 		for( int i = 0; i < 500; i++ ) {
 			Point[] first = NextTriangle(), second = NextTriangle();

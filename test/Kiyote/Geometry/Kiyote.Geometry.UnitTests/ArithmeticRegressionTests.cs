@@ -21,7 +21,7 @@ public sealed class ArithmeticRegressionTests {
 	[TestCase( 1, 1, 2, 2, 1, 2, 2, 1, true, true, 2, 2 )]
 	[TestCase( -2, -2, -1, -1, -2, -1, -1, -2, true, true, -2, -2 )]
 	[TestCase( 0, 0, 1, 0, 1, 1, 2, -2, false, false, 0, 0 )]
-	public void Intersection_ContactsAndRounding_AreSymmetric(
+	public void HasIntersectionAndTryFindIntersection_ContactsAndRounding_AreSymmetric(
 		int ax, int ay, int bx, int by,
 		int cx, int cy, int dx, int dy,
 		bool intersects, bool unique, int x, int y
@@ -35,7 +35,7 @@ public sealed class ArithmeticRegressionTests {
 	}
 
 	[Test]
-	public void Magnitude_AndDistances_SupportBothAxisExtremes() {
+	public void MagnitudeAndDistances_BothAxisExtremes_ReturnExpectedValuesWithoutOverflow() {
 		Point low = new Point( -32768, -32768 );
 		Point high = new Point( 32767, 32767 );
 		Edge horizontal = new Edge( -25000, 0, 25000, 0 );
@@ -54,7 +54,7 @@ public sealed class ArithmeticRegressionTests {
 	[TestCase( 0.5f, 5, 5 )]
 	[TestCase( 0.75f, 8, 2 )]
 	[TestCase( 1f, 10, 0 )]
-	public void Interpolation_PreservesDirectionAndRoundsToEven( float amount, int x, int y ) {
+	public void Interpolate_DescendingEdge_PreservesDirectionAndRoundsToEven( float amount, int x, int y ) {
 		Edge edge = new Edge( 0, 10, 10, 0 );
 		Point expected = new Point( x, y );
 		Assert.That( edge.Interpolate( amount ), Is.EqualTo( expected ) );
@@ -67,13 +67,13 @@ public sealed class ArithmeticRegressionTests {
 	[TestCase( float.NaN )]
 	[TestCase( float.PositiveInfinity )]
 	[TestCase( float.NegativeInfinity )]
-	public void Interpolation_InvalidAmount_Throws( float amount ) {
+	public void Interpolate_InvalidAmount_ThrowsArgumentOutOfRangeException( float amount ) {
 		Assert.Throws<ArgumentOutOfRangeException>( () => new Edge( 0, 0, 10, 10 ).Interpolate( amount ) );
 		Assert.Throws<ArgumentOutOfRangeException>( () => Edge.Interpolate( default, new Point( 10, 10 ), amount ) );
 	}
 
 	[Test]
-	public void Interpolation_NegativeHalfTies_AndEndpoints() {
+	public void Interpolate_NegativeHalfTiesAndDomainEndpoints_RoundsToEvenAndPreservesEndpoints() {
 		Assert.That( new Edge( -2, -1, -1, 0 ).Interpolate( 0.5f ), Is.EqualTo( new Point( -2, 0 ) ) );
 		Edge edge = new Edge( -32768, 32767, 32767, -32768 );
 		Assert.That( edge.Interpolate( 0f ), Is.EqualTo( edge.A ) );
@@ -86,7 +86,7 @@ public sealed class ArithmeticRegressionTests {
 	[TestCase( 0, -32769 )]
 	[TestCase( 0, 32768 )]
 	[TestCase( int.MinValue, int.MaxValue )]
-	public void GeometryAlgorithms_RejectOutsideCoordinates( int x, int y ) {
+	public void GeometryOperations_OutOfDomainCoordinates_ThrowArgumentOutOfRangeException( int x, int y ) {
 		Point outside = new Point( x, y );
 		Point origin = default;
 		Edge invalid = new Edge( outside, origin );
@@ -115,7 +115,7 @@ public sealed class ArithmeticRegressionTests {
 	}
 
 	[Test]
-	public void SharedCoordinateArithmetic_UsesFullIntDomainWithoutWraparound() {
+	public void CoordinateArithmetic_FullIntDomain_PreservesRepresentableResultsAndRejectsOverflow() {
 		Point high = new Point( int.MaxValue, int.MaxValue );
 		Point low = new Point( int.MinValue, int.MinValue );
 		Assert.That( high.Add( -1, -1 ), Is.EqualTo( new Point( int.MaxValue - 1, int.MaxValue - 1 ) ) );
@@ -133,7 +133,7 @@ public sealed class ArithmeticRegressionTests {
 	}
 
 	[Test]
-	public void PolygonOrientation_SupportedLargeTriangle_DoesNotOverflow() {
+	public void Contains_FullDomainTriangle_ClassifiesPointsWithoutOverflow() {
 		Polygon triangle = new Polygon( [
 			new Point( -32768, -32768 ),
 			new Point( 32767, -32768 ),
@@ -145,7 +145,7 @@ public sealed class ArithmeticRegressionTests {
 	}
 
 	[Test]
-	public void PolygonOrientation_SupportedLargeSquare_ContainsNearLeftEdge() {
+	public void Contains_FullDomainSquare_ReturnsTrueNearLeftEdge() {
 		Polygon square = new Polygon( [
 			new Point( -32768, -32768 ), new Point( 32767, -32768 ),
 			new Point( 32767, 32767 ), new Point( -32768, 32767 )
@@ -154,7 +154,7 @@ public sealed class ArithmeticRegressionTests {
 	}
 
 	[Test]
-	public void BoundedSeededSegments_MatchDecimalReferenceAndTranslation() {
+	public void HasIntersectionAndTryFindIntersection_SeededBoundedSegments_MatchDecimalReferenceAndTranslation() {
 		Random random = new Random( 7291 );
 		for( int i = 0; i < 500; i++ ) {
 			Edge a = new Edge( NextPoint(), NextPoint() );

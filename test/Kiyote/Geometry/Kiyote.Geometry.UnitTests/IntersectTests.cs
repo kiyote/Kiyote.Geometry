@@ -75,7 +75,7 @@ public sealed class IntersectTests {
 	}
 
 	[Test]
-	public void TryeFindIntersection_LinesIntersect_ReturnsTrue() {
+	public void TryFindIntersection_LinesIntersect_ReturnsTrue() {
 		bool result = Intersect.TryFindIntersection( 0, 5, 10, 5, 5, 0, 5, 10, out int ix, out int iy );
 		Assert.That( result, Is.True );
 		Assert.That( ix, Is.EqualTo( 5 ) );
