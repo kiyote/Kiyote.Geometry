@@ -222,9 +222,6 @@ operations. The uncompiled assembly's seam-pair scan is deliberately retained:
 the measured replacement slowed common small edits. The plan records this
 tradeoff rather than promising constant time for the entire mutation pipeline.
 
-Implementation packages are complete; final cross-library sign-off remains in
-[CORRECTNESS_PLAN.md](CORRECTNESS_PLAN.md).
-
 ## Getting Started
 
 The code in Kiyote.Geometry.Visualizer provides a starting point for utilizing each of the operations available.

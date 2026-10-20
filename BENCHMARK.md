@@ -1,872 +1,331 @@
-# Performance measurements
-
-## P3 topology locality
-
-Measured on 2026-10-20 against production at `53c4dff`, with the same machine,
-.NET 10.0.13 runtime, SDK 11 preview, and BenchmarkDotNet 0.15.8 as P2.
-All **48 matched cases** completed before and after. Two intermediate candidates
-were also measured and revised rather than accepting their regressions.
-
-```powershell
-dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj -c Release --no-build --no-restore -- --filter '*TopologyLocalityBenchmarks*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\performance-p3-accepted
-```
-
-### Fixtures and interpretation
-
-Every case edits the same seam cell in two adjacent 32x32 local sources.
-Remote geometry varies independently:
-
-- **Chunks:** one remote dense source grows from 16 to 256 chunks.
-- **Placements:** the same 256 isolated remote cells/chunks are partitioned
-  among 16 or 256 sources, without adding remote seams.
-- **Seams:** the same 512 remote placements, 256 chunks, and 16,384 cells
-  contain 16 or 256 touching pairs; moving the other pairs two cells apart
-  changes seams without changing mapping/occupancy totals.
-- **Fragmentation:** the same 4,096 occupied cells in 16 remote chunks are
-  split into 16 or 256 runs per source row.
-
-Each setup checks total occupied mapping length, remove/add preservation,
-and a dirty-layer round trip. Compile-and-bind uses a separate unobserved
-assembly and disposes each new compilation. Diagnostics print chunk capacity,
-run count, and seam-link count outside timed regions.
-
-### Local compiled operations
-
-All times are **nanoseconds**. Error is half the 99.9% confidence interval.
-Every edit/commit case reports **zero managed allocation after warmup**.
-
-| Operation | Workload | Scale | Before mean | Accepted mean | Error | StdDev |
-|---|---|---:|---:|---:|---:|---:|
-| Edit | Chunks | 16 | 1374.1 | 781.18 | 58.66 | 9.08 |
-| Edit | Chunks | 256 | 13343.3 | 852.99 | 148.78 | 38.64 |
-| Edit | Fragmentation | 16 | 1018.9 | 799.60 | 103.03 | 26.76 |
-| Edit | Fragmentation | 256 | 7164.7 | 893.33 | 222.49 | 57.78 |
-| Edit | Placements | 16 | 1023.9 | 860.39 | 161.28 | 41.88 |
-| Edit | Placements | 256 | 1080.9 | 882.04 | 110.27 | 28.64 |
-| Edit | Seams | 16 | 14282.3 | 890.42 | 272.42 | 70.75 |
-| Edit | Seams | 256 | 24488.7 | 1279.97 | 196.92 | 30.47 |
-| Clean commit | Chunks | 16 | 1520.8 | 8.79 | 0.42 | 0.11 |
-| Clean commit | Chunks | 256 | 22286.2 | 8.31 | 0.57 | 0.09 |
-| Clean commit | Fragmentation | 16 | 759.6 | 8.89 | 1.29 | 0.33 |
-| Clean commit | Fragmentation | 256 | 11741.3 | 9.53 | 1.16 | 0.18 |
-| Clean commit | Placements | 16 | 834.4 | 10.71 | 2.96 | 0.77 |
-| Clean commit | Placements | 256 | 823.1 | 8.54 | 1.51 | 0.39 |
-| Clean commit | Seams | 16 | 23969.1 | 15.48 | 3.73 | 0.97 |
-| Clean commit | Seams | 256 | 22479.8 | 9.29 | 1.21 | 0.32 |
-| One dirty chunk | Chunks | 16 | 9470.6 | 787.46 | 107.63 | 27.95 |
-| One dirty chunk | Chunks | 256 | 23405.4 | 924.09 | 104.77 | 27.21 |
-| One dirty chunk | Fragmentation | 16 | 1556.9 | 766.01 | 49.06 | 12.74 |
-| One dirty chunk | Fragmentation | 256 | 12549.2 | 827.07 | 153.97 | 39.99 |
-| One dirty chunk | Placements | 16 | 1891.8 | 859.67 | 336.58 | 87.41 |
-| One dirty chunk | Placements | 256 | 1665.3 | 872.36 | 145.42 | 37.77 |
-| One dirty chunk | Seams | 16 | 22958.1 | 856.47 | 79.77 | 20.72 |
-| One dirty chunk | Seams | 256 | 24261.0 | 820.85 | 145.22 | 22.47 |
-
-The baseline 16-chunk one-dirty case was particularly noisy: error 18,544 ns
-exceeds its 9,471 ns mean. Do not derive a precise speedup from that row.
-The scaling benefit is removing whole-mapping scans, not a promise about a
-specific nanosecond ratio. Dirty tracking remains per chunk, not per cell.
-
-### Full commits and compilation
-
-The initial indexed full commit lost source-memory locality: the 16-chunk
-case rose from 16.54 us to 63.40 us. Fully dirty layers now retain sequential
-run traversal; partial commits use chunk indexes. This exact full-coverage
-check needs no arbitrary crossover threshold.
-
-The accepted short run still contained noisy results: 256-chunk full commit
-mean 475.41 us, error 530.46 us, StdDev 137.76 us; 16-fragment compilation
-mean 191.37 us, error 214.79 us, StdDev 55.78 us. A separate **16-case** run
-used filters `*TopologyLocalityBenchmarks.CommitAllDirty*` and
-`*TopologyLocalityBenchmarks.CompileAndBind*`, with 10 iterations, 5 warmups,
-500 ms iteration time, one launch, and artifacts `performance-p3-confirm`.
-This is confirmation of the accepted code, not a second matched baseline.
-
-Times below are **microseconds**. The longer run is identified separately
-rather than silently replacing the noisy short measurements.
-
-| Workload | Scale | Full commit before | Accepted short | Longer mean | Longer error | Longer StdDev |
-|---|---:|---:|---:|---:|---:|---:|
-| Chunks | 16 | 16.536 | 15.520 | 13.177 | 0.526 | 0.348 |
-| Chunks | 256 | 231.158 | 475.405 | 226.788 | 12.655 | 8.371 |
-| Fragmentation | 16 | 6.211 | 6.518 | 6.063 | 0.282 | 0.186 |
-| Fragmentation | 256 | 53.536 | 52.111 | 49.126 | 1.636 | 1.082 |
-| Placements | 16 | 5.942 | 6.348 | 6.047 | 0.317 | 0.209 |
-| Placements | 256 | 6.315 | 7.433 | 6.364 | 0.313 | 0.207 |
-| Seams | 16 | 113.204 | 109.823 | 110.305 | 8.348 | 4.968 |
-| Seams | 256 | 124.844 | 115.340 | 108.784 | 8.282 | 5.478 |
-
-| Workload | Scale | Compile/bind before | Accepted short | Longer mean | Longer error | Before allocation | Accepted allocation |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| Chunks | 16 | 44.266 | 44.831 | 47.152 | 2.843 | 141576 B | 163248 B |
-| Chunks | 256 | 1279.476 | 1171.533 | 1144.294 | 169.319 | 2021899 B | 2295474 B |
-| Fragmentation | 16 | 42.211 | 191.366 | 32.233 | 2.669 | 117000 B | 130456 B |
-| Fragmentation | 256 | 564.105 | 551.261 | 280.416 | 20.062 | 485766 B | 622198 B |
-| Placements | 16 | 241.714 | 315.355 | 162.476 | 26.770 | 1261720 B | 1281008 B |
-| Placements | 256 | 326.942 | 238.351 | 207.216 | 45.395 | 1281928 B | 1301264 B |
-| Seams | 16 | 1595.927 | 1960.447 | 1873.009 | 253.974 | 2106275 B | 2408486 B |
-| Seams | 256 | 2373.796 | 2915.183 | 2802.565 | 259.573 | 2728480 B | 3522503 B |
-
-Allocation columns are the matched short runs. Long-run allocation differs by
-small amortized diagnostic/GC amounts in some rows. No general compilation
-speedup is claimed: seam-heavy compilation costs more, and all fixtures allocate
-more to build the indexes. These costs buy repeated local-edit/partial-commit
-improvements; applications compiling once for one operation may not benefit.
-
-### Retained capacity and rejected changes
-
-The index uses flat previous/next integer links, with one head per chunk:
-one index for runs and two for seam endpoints. It adds no object per mapping,
-contact, or chunk. For run capacity `R`, seam-link capacity `L`, and the three
-head-array lengths `Hr`, `Hs`, `Hn`, additional index payload is
-`8*R + 16*L + 4*(Hr + Hs + Hn)` bytes.
-
-| Workload | Scale | Runs | Seam links | Chunks | Added retained index payload |
-|---|---:|---:|---:|---:|---:|
-| Chunks | 16 | 576 | 94 | 18 | 10512 B |
-| Chunks | 256 | 8256 | 94 | 258 | 137232 B |
-| Fragmentation | 16 | 320 | 94 | 18 | 6416 B |
-| Fragmentation | 256 | 4160 | 94 | 18 | 67856 B |
-| Placements | 16 | 320 | 94 | 258 | 10256 B |
-| Placements | 256 | 320 | 94 | 258 | 10256 B |
-| Seams | 16 | 8256 | 830 | 258 | 151568 B |
-| Seams | 256 | 8256 | 11870 | 258 | 397328 B |
-
-These are capacity calculations for the current .NET list growth and printed
-fixture metadata, not process-working-set measurements. They exclude object/
-array headers and the dirty list. After all chunks have been marked, the latter
-retains another 128 B (18-chunk fixtures) or 2,048 B (258-chunk fixtures) of
-integer payload per layer, plus headers. Capacities retain their high-water mark
-after removals; they are not repeatedly trimmed and reallocated.
-
-An intermediate index resized its heads to the layout's exact capacity, which
-grows one chunk at a time. The allocation regression observed **2,142,392 B**
-for 1,024 incremental chunks against a **65,536 B** budget. Geometric head growth
-passes that budget and avoids quadratic construction allocation.
-
-A neighbour-directed uncompiled seam-removal candidate was rejected. At 16
-remote seam pairs it measured 520.8 ns versus the baseline 262.9 ns; at 256 pairs
-it improved only from 677.1 ns to 541.1 ns. The original assembly code was
-restored. Its accepted measurements are 255.2 ns and 786.3 ns respectively.
-Consequently, uncompiled seam-pair scanning remains, and the entire mutation
-pipeline is not claimed to be independent of the global seam count.
-
-The acceptance tests preserve exact dirty-cell writes, exception retry, swapping,
-empty/repopulated chunks, and seeded mappings/seams against fresh compilations.
-The nine initial behavior tests were green on the baseline: this is performance
-work, not a fabricated correctness failure. The index-growth red-green test
-specifically guards a defect found in the new candidate.
-
-## P2 allocation and representation boundaries
-
-Measured against pre-P2 production at `61fcfe5`, in the same .NET 10.0.13,
-SDK 11 preview, BenchmarkDotNet 0.15.8, i7-9700K environment as the preceding
-measurements. The before run completed 35 cases; the after run completed those
-35 plus three visitor cases. Setup checks and seeded fixtures remain enabled.
-Times are short-run measurements, not guaranteed speedups.
-
-```powershell
-dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*TriangleRepresentationBenchmarks*' '*SearchableVoronoiBenchmarks*' '*MapboxDelaunatorFactoryBenchmarks*' '*D3DelaunayFactoryBenchmarks*' '*VoronoiWorkloadBenchmarks*' '*SimpleQuadTreeNodeBenchmarks.Query*' '*IntegerRasterizerBenchmarks*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\performance-p2-after
-```
-
-The matched run used triangle counts 16 and 4,096. The committed fixture also
-includes 2,048 and 16,384, added for the subsequent size sweep; running the full
-command now includes those extra 12 cases.
-
-### Queries
-
-Times are nanoseconds; allocation is per operation after warmup. Error is half
-the 99.9% confidence interval. Visitor cases are new APIs, not before/after
-comparisons with equivalent materialization.
-
-| Operation | Before mean | After mean | After error | After StdDev | Before allocation | After allocation |
-|---|---:|---:|---:|---:|---:|---:|
-| Seeded 10,000-item tree query | 4869 | 1582 | 134.4 | 34.9 | 23.34 KB | 776 B |
-| Tree counting visitor | - | 1406 | 342.0 | 88.8 | - | 0 B |
-| Voronoi search, 20x20 | 777.1 | 273.0 | 65.76 | 17.08 | 3.45 KB | 88 B |
-| Voronoi counting visitor, 20x20 | - | 215.6 | 21.84 | 5.67 | - | 0 B |
-| Voronoi search, 200x200 | 11090.8 | 7719.9 | 628.31 | 163.17 | 29.02 KB | 8384 B |
-| Voronoi counting visitor, 200x200 | - | 2731.1 | 138.59 | 35.99 | - | 0 B |
-
-There is one growing result list per materialized query, with no recursive
-lists or per-candidate boxing. Search directly projects indexed cell references;
-it no longer materializes rectangles or uses a bounds-to-cell dictionary.
-This also fixes distinct cells with equal bounds being returned as duplicates
-of the last cell. Generic/ref-struct visitors can write into caller-owned spans.
-
-### Rasterizers
-
-Times are microseconds. Every after case reports zero managed allocation.
-
-| Operation | Before mean | After mean | After error | After StdDev | Before allocation |
-|---|---:|---:|---:|---:|---:|
-| Small raw fill, span sink | 0.1944 | 0.2349 | 0.05099 | 0.01324 | 0 B |
-| Small validated fill, span sink | 0.1425 | 0.1468 | 0.02466 | 0.00640 | 0 B |
-| Polygon fill, scalar sink | 702.8405 | 348.5144 | 13.81973 | 3.58894 | 29792 B |
-| Polygon fill, span sink | 94.3312 | 86.7085 | 2.02079 | 0.52479 | 0 B |
-| Triangle fill, scalar sink | 327.0646 | 200.7778 | 6.45518 | 1.67639 | 30752 B |
-| Triangle fill, span sink | 56.5977 | 56.6419 | 7.81448 | 1.20930 | 0 B |
-| Outline, scalar sink | 5.2581 | 5.2771 | 0.58262 | 0.15130 | 0 B |
-| Outline, span sink | 5.3787 | 5.4333 | 0.62853 | 0.16323 | 0 B |
-
-The required explicit span callback removes default-interface boxing. Scalar
-sinks use the shared generic emitter, while optimized whole-span sinks retain
-their implementations. The small raw-fill increase is recorded rather than
-claimed as an improvement. Unit tests separately verify zero warm allocation
-for the delegate adapter.
-
-### Triangulation and public diagrams
-
-Times are microseconds. Both duplicate-validation settings are measured for the
-raw kernel. Allocation uses 1 KB = 1,024 B.
-
-| Operation | Before mean | After mean | After error | After StdDev | Before allocation | After allocation |
-|---|---:|---:|---:|---:|---:|---:|
-| Kernel 100x100, no duplicate check | 61.91 | 64.69 | 2.614 | 0.679 | 47.63 KB | 19.05 KB |
-| Kernel 500x500, no duplicate check | 3050.68 | 2955.29 | 142.971 | 37.129 | 1168.43 KB | 470.30 KB |
-| Kernel 1000x1000, no duplicate check | 15929.09 | 13779.61 | 458.268 | 119.011 | 4677.41 KB | 1878.12 KB |
-| Kernel 100x100, duplicate check | 64.96 | 74.03 | 9.320 | 1.442 | 47.63 KB | 19.05 KB |
-| Kernel 500x500, duplicate check | 3183.40 | 3038.69 | 216.443 | 33.495 | 1168.43 KB | 470.30 KB |
-| Kernel 1000x1000, duplicate check | 16188.88 | 14186.10 | 809.693 | 210.275 | 4674.97 KB | 1878.12 KB |
-| Delaunay 100x100 | 74.60 | 78.35 | 4.681 | 1.216 | 91.71 KB | 46.21 KB |
-| Delaunay 500x500 | 4288.72 | 3855.38 | 1775.962 | 274.832 | 2324.57 KB | 1167.76 KB |
-| Delaunay 1000x1000 | 21293.89 | 16097.14 | 1464.339 | 226.608 | 9333.48 KB | 4678.88 KB |
-| Voronoi grid | 458.38 | 376.53 | 27.103 | 4.194 | 374.69 KB | 346.11 KB |
-| Voronoi jittered grid | 565.77 | 571.98 | 87.888 | 22.824 | 515.68 KB | 485.67 KB |
-| Voronoi high degree | 33.16 | 31.54 | 1.455 | 0.378 | 56.73 KB | 52.59 KB |
-
-Small triangulations measured slower; pooling and span-based scratch are not
-claimed to be free. The substantial allocation reduction, simpler result
-ownership, and favorable large-workload results justify the change, but the
-wide Delaunay 500x500 interval does not establish a precise speedup.
-
-Seven temporary arrays become a 512-int stack buffer plus one partitioned
-integer rental and one double rental. Only exact logical spans are used.
-Results own both capacity-sized mesh arrays and the exact hull array; no pool
-lease escapes. Logical mesh spans avoid two trimming allocations and copies.
-For an all-hull 32-site mesh, each capacity array has 177 entries versus 90
-logical entries: nearly twice the retained mesh payload, although construction
-allocates less. Public Delaunay/Voronoi factories discard this temporary mesh
-after building their public results. Shared pool caches also retain memory, so
-these allocation figures are not measurements of process working set.
-
-### Triangle representation and size sensitivity
-
-The after run compares production `Triangle` with a benchmark-local immutable
-reference record. A follow-up completed 24 cases using the same short-job
-settings and `--filter '*TriangleRepresentationBenchmarks*'`, with artifacts
-under `performance-p2-triangle-sizes`. The following table is from that single
-follow-up, not a mixture of runs. Times are microseconds; copying is into
-preallocated arrays and neither traversal nor copying allocates.
-
-| Count | Reference construction | Value construction | Reference traversal | Value traversal | Reference copy | Value copy | Reference allocation | Value allocation |
-|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 16 | 0.0956 | 0.0421 | 0.0104 | 0.0089 | 0.0104 | 0.0095 | 792 B | 408 B |
-| 2048 | 15.2173 | 5.1667 | 1.6274 | 1.3168 | 0.4069 | 1.0205 | 98328 B | 49176 B |
-| 4096 | 35.4728 | 51.7054 | 3.8344 | 2.7947 | 1.0527 | 2.5751 | 196632 B | 98338 B |
-| 16384 | 921.5807 | 62.4428 | 17.3105 | 12.1450 | 3.9092 | 12.0764 | 786467 B | 393249 B |
-
-Value triangles halve per-element storage and improve traversal, but full-array
-copies move 24-byte payloads instead of 8-byte references. At 4,096 entries the
-value array's 98,304-byte payload exceeds the default 85,000-byte large-object
-threshold, while the reference-slot array does not. At 2,048 both arrays are
-below it; at 16,384 both are above it. These size effects are consistent with
-the construction crossover, not proof that GC placement alone explains every
-timing difference.
-
-The 16,384-reference construction result is especially noisy: mean 921.581 us,
-99.9% error 629.835 us, StdDev 163.566 us, versus value mean 62.443 us, error
-5.810 us, StdDev 1.509 us. Do not extrapolate a universal 15x advantage.
-The earlier matched after run also showed the 4,096 construction penalty
-(27.577 us reference versus 43.314 us value) and roughly doubled copy cost.
-The value representation is accepted for owned compact immutable geometry and
-lower per-triangle allocation, not as a claim that every operation is faster.
-
-Topology compilation storage is unchanged in P2; locality/index maintenance and
-their memory/build costs remain P3 work.
-
-## C7/A1 topology ownership and lifetime
-
-Measured on 2026-10-19 against pre-C7 production at `0c850b7`, using the same
-environment and short-run settings as P1. All 28 matched cases completed before
-and after. Existing seeded fixtures and workloads are unchanged.
-
-```powershell
-dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*GridAssemblyBenchmarks.TryAttach_TryDetach*' '*GridAssemblyBenchmarks.TryRemoveCell_TryAddCell_Interior*' '*CompiledGridAssemblyBenchmarks.TryRemoveCell_TryAddCell_Propagated*' '*ConnectivityBuilderBenchmarks*' '*GridCompilerBenchmarks*' '*DenseGridSourceBenchmarks*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\correctness-c7-after
-```
-
-### Attachment, edits, and connectivity
-
-All times below are microseconds. Allocation remains zero for the edit/update
-rows after warmup. Attachment/detachment rises by 32 B per pair in both fixtures:
-32,176 -> 32,208 B at size 64, and 330,424 -> 330,456 B at size 256.
-Ownership is one stable object per source, not a per-edit allocation or global
-registry. Read-only views are created per owner/snapshot, not per cell.
-
-| Method | Size | Fragmented | Before mean (us) | C7 mean (us) | C7 error (us) | C7 StdDev (us) |
-|---|---:|---|---:|---:|---:|---:|
-| Attach/detach | 64 | - | 262.4169 | 589.7755 | 1943.15566 | 300.70549 |
-| Attach/detach | 256 | - | 5409.0250 | 5026.1850 | 751.62662 | 195.19505 |
-| Interior remove/add | 64 | - | 0.4567 | 0.4910 | 0.02036 | 0.00315 |
-| Interior remove/add | 256 | - | 1.6969 | 1.8625 | 0.35868 | 0.09315 |
-| Propagated remove/add | 64 | false | 2.404 | 2.502 | 0.5095 | 0.1323 |
-| Propagated remove/add | 64 | true | 27.348 | 26.551 | 5.6009 | 1.4545 |
-| Propagated remove/add | 256 | false | 17.672 | 18.418 | 3.9880 | 1.0357 |
-| Propagated remove/add | 256 | true | 474.377 | 413.671 | 79.9610 | 20.7656 |
-| Update single cell | 64 | - | 0.8872 | 1.118 | 0.2999 | 0.0779 |
-| Update seam cell | 64 | - | 1.0051 | 1.282 | 0.2100 | 0.0545 |
-| Update 32x32 | 64 | - | 86.5445 | 140.319 | 200.4756 | 52.0629 |
-| Update single cell | 256 | - | 1.3495 | 1.423 | 0.0564 | 0.0147 |
-| Update seam cell | 256 | - | 1.5752 | 1.411 | 0.0804 | 0.0124 |
-| Update 32x32 | 256 | - | 258.4342 | 134.933 | 122.9671 | 31.9342 |
-
-These short runs are visibly noisy: post-change size-64 attachment has a
-456.291 us median and a confidence interval much wider than its mean; pre-change
-size-256 32x32 update has a 99.873 us median versus its 258.434 us mean. Do not
-interpret those means as reliable regression/speedup ratios. Some small edits
-and updates do have higher measured costs; ownership and full-int neighbour/
-padding validation are not claimed to be free. Existing full run/seam scans
-remain, and the fragmented propagation results still justify P3 locality work.
-
-### Compilation
-
-The read-only layout and layer-list views add small fixed allocations rather
-than per-cell wrappers. Most rows show about 64 B more per compilation; the
-largest row's rounded measurement does not show that difference.
-
-| Source size | Chunk size | Before mean (us) | C7 mean (us) | C7 error (us) | C7 StdDev (us) | Before allocation | C7 allocation |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| 64 | 32 | 35.33 | 39.89 | 4.453 | 1.156 | 73.14 KB | 73.20 KB |
-| 64 | 64 | 25.82 | 41.91 | 6.749 | 1.753 | 56.35 KB | 56.41 KB |
-| 256 | 32 | 387.22 | 401.34 | 30.317 | 7.873 | 675.86 KB | 675.86 KB |
-| 256 | 64 | 199.31 | 207.85 | 11.991 | 1.856 | 401.29 KB | 401.35 KB |
-
-No throughput improvement is claimed. The small-assembly/chunk-64 timing increase
-is retained here rather than attributed entirely to validation or dismissed.
-Compiler representation/allocation work remains P2.
-
-### Dense sources and other layer paths
-
-All ten dense-source cases still report zero steady-state managed allocation.
-Cached-run means change from 121.4 -> 122.5 ns (size 64) and 463.4 -> 473.1 ns
-(size 256). Clear/set with run rebuilding changes from 115.3 -> 114.5 ns and
-653.5 -> 663.1 ns respectively. Existing-cell access does not acquire ownership
-or add per-cell objects.
-
-An additional run under `correctness-c7-layers`, with filters
-`*CompiledGridAssemblyMutationBenchmarks*` and
-`*CompiledGridAssemblyBenchmarks.Commit*`, completed all 18 cases covering bind,
-connectivity build, vacuum generation, and clean/one-dirty/all-dirty commits.
-These are coverage measurements, not a new matched before/after comparison.
-Public chunk-value access remains span-based; padding copies use caller-owned
-scratch. Correctness tests separately verify these APIs after removal of mutable
-layout and raw layer-storage exposure.
-
-## C6 rasterizer follow-up
-
-Measured on 2026-10-19 against pre-C6 production at `b5a4cfc`, using the same
-environment and short-run settings as P1. Two new small-square cases isolate raw
-validation from the already-validated polygon path. Polygon construction is
-outside measurement; untimed setup checks every buffer pixel against an
-independent inclusive-square reference.
-
-```powershell
-dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*IntegerRasterizerBenchmarks*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\correctness-c6-final
-```
-
-All eight cases complete. Raw fills now share the allocation-free bounded
-polygon normalizer; validated polygons bypass it. Coordinates are checked at
-raw/line entry points, not within the Bresenham pixel loop. The larger short-run
-timing changes warranted a second run, under `correctness-c6-steady`, with
-`--iterationCount 8 --warmupCount 5 --iterationTime 500`. No code changed between
-these two C6 runs.
-
-| Method | Before mean (ns) | C6 short mean (ns) | C6 longer mean (ns) | Longer error (ns) | Longer StdDev (ns) | Allocation before / after |
-|---|---:|---:|---:|---:|---:|---:|
-| FillSmallRaw_PerSpan | 124.9 | 218.3 | 225.4 | 16.53 | 8.64 | 0 / 0 B |
-| FillSmallValidated_PerSpan | 143.1 | 135.3 | 151.8 | 9.00 | 4.70 | 0 / 0 B |
-| FillPolygon_PerPixel | 482565.4 | 738948.3 | 476885.0 | 20129.20 | 10527.96 | 29792 / 29792 B |
-| FillPolygon_PerSpan | 86084.6 | 107102.2 | 97537.2 | 8872.24 | 4640.35 | 0 / 0 B |
-| FillTriangle_PerPixel | 323036.0 | 296817.1 | 276643.9 | 16533.26 | 7340.87 | 30752 / 30752 B |
-| FillTriangle_PerSpan | 53811.5 | 61132.5 | 60726.6 | 5559.17 | 2907.55 | 0 / 0 B |
-| Outline_PerPixel | 4214.6 | 5496.1 | 5553.6 | 212.57 | 111.18 | 0 / 0 B |
-| Outline_PerSpan | 5231.0 | 5530.9 | 4840.9 | 271.14 | 141.81 | 0 / 0 B |
-
-The longer run did not reproduce the initial polygon per-pixel increase, so the
-short measurement cannot establish a 53% kernel regression. It is not a paired
-long-run baseline, however: several C6 cases remain slower than the original
-short baseline, especially per-pixel outlines. Do not attribute all differences
-to validation or claim a general speedup. The small-square comparison consistently
-shows roughly 75-85 ns extra for raw validation versus an already-owned polygon.
-Callers repeatedly rendering a shape should construct its polygon once.
-
-Span-aware sinks and outlines report no managed allocation after pool warmup;
-the validator adds no owned arrays or boxed helper. The per-pixel fill cases
-retain their pre-existing default-interface allocation (32 B per emitted row for
-these fixtures). A struct sink alone is therefore not an allocation-free promise.
-That measured boundary cost is recorded for P2 rather than changing the sink
-contract as part of C6.
-
-## C2 quadtree follow-up
-
-Measured on 2026-10-19 against the pre-C2 production implementation at `e9cdf35`,
-with the same environment and short-run settings as P1 below. All four cases
-complete. The seeded 10,000-entry input and query are unchanged; new untimed setup
-checks entry multiplicity, total contents, and query results against an independent
-inclusive-bounds reference.
-
-```powershell
-dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*SimpleQuadTreeNodeBenchmarks*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\correctness-c2-final
-```
-
-Subtree occupancy is now cached rather than recursively counted. This both fixes
-the populated-leaf emptiness error and avoids adding recursive scans to queries.
-Knowing the complete count also permits one exact-sized result allocation for
-`GetSubTreeContents`, rather than repeatedly growing its list.
-
-| Method | Before mean (us) | C2 mean (us) | C2 error (us) | C2 StdDev (us) | Before allocation | C2 allocation |
-|---|---:|---:|---:|---:|---:|---:|
-| Insert | 5.620 | 8.6500 | 24.2102 | 3.7466 | 200 B | 200 B |
-| Count | 86.138 | below resolution | - | - | - | - |
-| GetSubTreeContents | 764.524 | 275.0210 | 40.7958 | 6.3132 | 786746 B | 240104 B |
-| Query | 4.986 | 4.3014 | 0.4222 | 0.0653 | 22808 B | 23904 B |
-
-Insertion still resets its seeded tree outside timing and runs one invocation per
-iteration. Its very short iteration and wide confidence interval cannot establish
-a small regression or improvement. Query now traverses corrected disjoint child
-bounds; the old query implementation was known to miss entries. Do not treat its
-timing/allocation as an equivalent correct-work baseline or preserve its incorrect
-pruning to save allocations. Recursive result lists and interface-based item
-access still warrant the separate P2 query-path work.
-
-The first C2 measurement exposed 40 B of extra insertion boxing from a generic
-null check, and additional query boxing of value-type node bounds. A non-boxing
-null test and a concrete internal query rectangle removed those introduced costs
-without changing the public generic query interface. The final numbers above
-retain the remaining costs rather than claiming allocation-free queries.
-
-Count was also measured with `--disasm` and filter
-`*SimpleQuadTreeNodeBenchmarks.Count`, under
-`BenchmarkDotNet.Artifacts\correctness-c2-count`. Its generated code is eight
-bytes: two field loads and a return. The benchmark reported `ZeroMeasurement`;
-this establishes retained work and constant-time access, not a literal zero-cost
-operation or a meaningful numeric speedup ratio.
-
-## C1 diagram follow-up
-
-Measured on 2026-10-19 with the same environment and short-run job settings as
-P1 below. All 12 selected cases complete, including the previously failing
-HighDegree Voronoi workload. These measurements include validated sites,
-read-only result ownership, bounded cell scratch, and unrounded circumcentres.
-
-```powershell
-dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*VoronoiWorkloadBenchmarks*' '*D3DelaunayFactoryBenchmarks*' '*MapboxDelaunatorFactoryBenchmarks*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\correctness-c1
-```
-
-### Voronoi workloads
-
-The before column is the C3 run with identical sites and job settings. HighDegree
-has no valid pre-fix timing. New validation has a cost, and short-run intervals
-overlap; these results do not establish a precise throughput regression.
-Per-diagram bounded quantization scratch replaces per-cell temporary lists,
-reducing allocation even with the new owned site snapshot and read-only wrappers.
-Deferring intermediate rounding intentionally changes some output vertices, so
-these are correctness-cost comparisons, not interchangeable-algorithm speedups.
-
-| Workload | C3 mean (us) | C1 mean (us) | C1 error (us) | C1 StdDev (us) | C3 allocation | C1 allocation |
-|---|---:|---:|---:|---:|---:|---:|
-| Grid | 337.8 | 365.26 | 46.854 | 7.251 | 402.42 KB | 374.69 KB |
-| JitteredGrid | 587.4 | 646.12 | 138.313 | 35.919 | 575.05 KB | 515.68 KB |
-| HighDegree | failed | 33.81 | 4.452 | 0.689 | unavailable | 56.73 KB |
-
-### Isolated duplicate-validation cost
-
-The internal triangulation benchmark now runs with and without duplicate
-rejection on the same already-valid coordinates. Untimed setup verifies identical
-triangle, half-edge, and hull sequences. This isolates the duplicate check, not
-all public-boundary validation or snapshot costs. Its sorted exact coordinate
-keys reuse the existing distance array; no additional per-site buffer/hash set
-is introduced on the default factory path.
-
-Short-run means add about 5 us, 0.30 ms, and 1.62 ms at 400, 10,000, and 40,000
-sites respectively (roughly 9-11%); larger-case uncertainty is substantial.
-Managed allocation is similar, but an exact zero-delta claim is not supported.
-A trial whole-kernel thread-allocation assertion gave deltas of +6,080 and -2,080
-bytes at 40,000 sites in successive runs. No stable exact budget was established,
-so that assertion was not retained; the benchmark measurements below are used
-instead, as required by the plan.
-
-| Sites | Reject duplicates | Mean (us) | Error (us) | StdDev (us) | Allocated |
-|---|---|---:|---:|---:|---:|
-| 400 | false | 58.70 | 2.196 | 0.340 | 47.63 KB |
-| 400 | true | 63.82 | 3.388 | 0.880 | 47.63 KB |
-| 10000 | false | 3087.41 | 163.110 | 42.359 | 1167.95 KB |
-| 10000 | true | 3386.04 | 993.691 | 153.775 | 1168.43 KB |
-| 40000 | false | 14909.03 | 2611.298 | 404.101 | 4674.95 KB |
-| 40000 | true | 16528.53 | 1366.625 | 354.908 | 4674.97 KB |
-
-### Complete Delaunay factory
-
-Current validated/owned-result snapshots; no new matched pre-C1 factory run was
-made. Grid dimensions 100, 500, and 1000 correspond to the site counts below at
-spacing five.
-
-| Sites | Mean (us) | Error (us) | StdDev (us) | Allocated |
-|---|---:|---:|---:|---:|
-| 400 | 80.54 | 7.252 | 1.883 | 91.71 KB |
-| 10000 | 4128.98 | 1629.495 | 252.166 | 2324.63 KB |
-| 40000 | 20757.48 | 3157.062 | 488.559 | 9333.48 KB |
-
-## C3 polygon follow-up
-
-Measured on 2026-10-19 with the same environment and job settings as P1 below.
-The matched polygon baseline uses production at `a70d952` (after C4/C5); the
-final run completes all 13 polygon cases and both selected Voronoi workloads.
-Setup independently checks known polygon vertices/predicates and diagram site
-containment outside the timed operation. HighDegree remains a C1 defect and is
-not included in this selection.
-
-```powershell
-dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*PolygonBenchmarks*' '*VoronoiWorkloadBenchmarks*Grid*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\correctness-c3-final
-```
-
-Construction now validates convexity and owns a stable vertex snapshot: about
-137 ns versus 45 ns, and 216 B versus 208 B. This once-per-construction cost buys
-the invariant reused by subsequent operations. Clipping builds owned edges once
-and uses bounded stack scratch: 1,136 B falls to 264 B for the six-corner result;
-disjoint clipping drops from 32 B to no measured allocation. The initial C3 hull
-sort allocated 88 B per call through a struct comparer; the final static
-comparison delegate removes that per-call overhead.
-
-These are not equivalent algorithms: containment now checks the entire target,
-intersection includes containment/contact, and boundary queries deduplicate
-rounded points. Do not interpret the timing differences as interchangeable-work
-speedups. Short iterations and wide confidence intervals still limit conclusions
-about small timing differences.
-
-### Polygon comparison
-
-Times are ns; error and standard deviation describe C3. Boundary-query rows use
-the new `TryFindBoundaryIntersections` name; the baseline used
-`TryFindIntersections` with the same inputs.
-
-| Method | Before mean | C3 mean | Error | StdDev | Before allocation | C3 allocation |
-|---|---:|---:|---:|---:|---:|---:|
-| Ctor | 44.97 | 136.919 | 10.4299 | 1.6140 | 208 B | 216 B |
-| Contains_Polygon | 30.08 | 23.297 | 1.8635 | 0.4839 | - | - |
-| HasOverlap | 28.57 | 9.854 | 0.5423 | 0.1408 | - | - |
-| IsEquivalentTo | 29.57 | 13.854 | 1.7874 | 0.4642 | - | - |
-| TryIntersect_WithIntersection | 791.61 | 427.734 | 63.4212 | 16.4703 | 1136 B | 264 B |
-| TryIntersect_WithoutIntersection | 202.07 | 159.034 | 13.0970 | 3.4012 | 32 B | - |
-| TryFindBoundaryIntersections_Edge_WithIntersections | 86.47 | 73.418 | 2.7673 | 0.4282 | 88 B | 64 B |
-| TryFindBoundaryIntersections_Edge_WithoutIntersections | 47.80 | 23.699 | 1.0361 | 0.2691 | - | - |
-| TryFindBoundaryIntersections_Polygon_WithIntersections | 253.92 | 156.570 | 20.0674 | 5.2114 | 88 B | 80 B |
-| TryFindBoundaryIntersections_Polygon_WithoutIntersections | 189.65 | 98.086 | 3.5179 | 0.5444 | - | - |
-| HasIntersection_Edge | 12.06 | 10.558 | 0.7853 | 0.2040 | - | - |
-| HasIntersection_Polygon | 77.78 | 9.882 | 0.7576 | 0.1967 | - | - |
-| HasIntersection_EdgeArray | 76.87 | 20.663 | 2.5960 | 0.6742 | - | - |
-
-### Voronoi integration measurements
-
-The first C3 run rejected a jittered cell whose existing floor quantization
-introduced concavity. A permanent red-green integration regression now checks
-all 400 cells. The producer takes the convex hull of its floored vertices without
-weakening public polygon validation. Both workloads complete after that repair.
-These measurements are current snapshots, not matched factory speedup claims;
-C1 site/capacity validation and diagram ownership are still pending.
-
-| Workload | Mean (us) | Error (us) | StdDev (us) | Allocated |
-|---|---:|---:|---:|---:|
-| Grid | 337.8 | 35.73 | 9.28 | 402.42 KB |
-| JitteredGrid | 587.4 | 59.71 | 15.51 | 575.05 KB |
-
-## C5 rectangle follow-up
-
-Measured on 2026-10-19 with the same environment and job settings as P1 below.
-All eight cases completed with no measured managed allocation. Empty-state
-checks and canonical equality are included; the benchmark fixtures remain
-nonempty. Short-run and subnanosecond measurement caveats still apply, so this
-does not establish small speedups or empty-workload throughput.
-
-```powershell
-dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*RectangleBenchmarks*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\correctness-c5
-```
-
-| Method | Mean (ns) | Error (ns) | StdDev (ns) | Allocated |
-|---|---:|---:|---:|---:|
-| Contains_Rect | 1.5841 | 0.3814 | 0.0590 | - |
-| Contains_IRect | 2.2548 | 0.8615 | 0.1333 | - |
-| Contains_Point | 1.0234 | 0.1014 | 0.0263 | - |
-| Contains_IntInt | 0.2579 | 0.0552 | 0.0143 | - |
-| IsEquivalentTo_Rect | 2.2112 | 0.2083 | 0.0541 | - |
-| IsEquivalentTo_IRect | 3.1152 | 0.6399 | 0.1662 | - |
-| IsEquivalentTo_PointPoint | 0.7882 | 0.3809 | 0.0590 | - |
-| IsEquivalentTo_IntIntIntInt | 0.7046 | 0.0769 | 0.0119 | - |
-
-## C4 arithmetic follow-up
-
-Measured on 2026-10-19 with the same machine, SDK/runtime, isolated toolchain,
-job settings, and fixtures as P1 below. All 21 cases completed with no measured
-managed allocation. The interpolation benchmark was renamed with the API.
-
-```powershell
-dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*EdgeBenchmarks*' '*IntersectBenchmarks*' '*GeometryWorkloadBenchmarks*' '*PointBenchmarks.*Distance*' '*PointBenchmarks.IsAdjacentTo*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\correctness-c4-final
-```
-
-Public range validation and correct contact/arithmetic handling add approximately
-3-4 ns per predicate and 6-8 ns per unique-point query in the batched fixtures.
-This is an explicit correctness cost relative to P1, not a performance improvement.
-An initial integer quotient/remainder rounding implementation measured
-28.6-30.1 ns per unique-point query. Exact integer numerators followed by bounded
-double division reduced that to 17.1-18.0 ns without changing regression assertions.
-The nearest-even proof is recorded in [CORRECTNESS_PLAN.md](CORRECTNESS_PLAN.md).
-
-Short-run uncertainty and constructor near-zero warnings still apply. Point
-distances were not remeasured in P1, so their historical timings are not a matched
-before/after comparison. Polygon/factory results below remain P1 snapshots, not
-post-C4 measurements; those components have further correctness work pending.
-
-### Batched geometry comparison
-
-All times are ns per edge pair; `Error` and `StdDev` describe C4.
-
-| Method | Workload | P1 mean | C4 mean | Error | StdDev | Allocated |
-|---|---|---:|---:|---:|---:|---:|
-| HasIntersection | Small | 5.546 | 9.253 | 1.6746 | 0.4349 | - |
-| TryFindIntersection | Small | 10.759 | 17.284 | 0.9227 | 0.1428 | - |
-| HasIntersection | Screen | 5.569 | 9.161 | 0.8911 | 0.1379 | - |
-| TryFindIntersection | Screen | 10.218 | 17.428 | 1.4844 | 0.3855 | - |
-| HasIntersection | Boundary | 5.398 | 8.747 | 0.3742 | 0.0579 | - |
-| TryFindIntersection | Boundary | 10.562 | 18.048 | 4.4917 | 1.1665 | - |
-| HasIntersection | Irregular | 5.538 | 8.938 | 0.3610 | 0.0938 | - |
-| TryFindIntersection | Irregular | 10.024 | 17.060 | 1.1787 | 0.1824 | - |
-
-### C4 individual primitives
-
-| Benchmark | Mean (ns) | Error (ns) | StdDev (ns) | Allocated |
-|---|---:|---:|---:|---:|
-| Edge.HasIntersection | 7.9260 | 0.3887 | 0.0602 | - |
-| Edge.TryFindIntersection | 15.6570 | 0.8849 | 0.2298 | - |
-| Edge.GetBoundingBox | 2.7102 | 0.2034 | 0.0528 | - |
-| Edge.Interpolate | 5.2409 | 0.2472 | 0.0383 | - |
-| Edge.Ctor_PointPoint | 0.1999 | 0.0271 | 0.0070 | - |
-| Edge.Ctor_IntIntIntInt | 0.0116 | 0.0470 | 0.0122 | - |
-| Intersect.HasIntersection | 9.306 | 0.3911 | 0.1016 | - |
-| Intersect.TryFindIntersection | 16.691 | 0.5107 | 0.0790 | - |
-| Point.IsAdjacentTo_Orthogonal | 3.457 | 0.5115 | 0.1328 | - |
-| Point.IsAdjacentTo_Diagonal | 3.438 | 1.0729 | 0.2786 | - |
-| Point.ManhattanDistance | 3.244 | 0.5678 | 0.0879 | - |
-| Point.ChebyshevDistance | 3.148 | 0.0707 | 0.0109 | - |
-| Point.DistanceSquared | 3.323 | 1.9018 | 0.4939 | - |
-
-## P1 baseline
-
-Measured on 2026-10-19 against production code at `eb28f3b`, with the P1
-benchmark repairs. These are exploratory measurements, not performance targets.
-`Error` is half the 99.9% confidence interval; `Allocated` is managed allocation
-per operation (`KB` = 1024 bytes). A dash means no measured allocation.
-
-```text
-BenchmarkDotNet v0.15.8, Windows 11 (10.0.26100.9448/24H2/2024Update/HudsonValley)
-Intel Core i7-9700K CPU 3.60GHz (Coffee Lake), 1 CPU, 8 logical and 8 physical cores
-.NET SDK 11.0.100-rc.2.26504.105
-Host and child processes: .NET 10.0.13, X64 RyuJIT x86-64-v3
-Default isolated-process toolchain
-IterationCount=5  IterationTime=100ms  LaunchCount=1  WarmupCount=3
-```
-
-Reproduction command (after a Release build):
-
-```powershell
-dotnet run --project test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj --configuration Release --no-build --no-restore -- --filter '*EdgeBenchmarks*' '*IntersectBenchmarks*' '*RectangleBenchmarks*' '*GeometryWorkloadBenchmarks*' '*VoronoiWorkloadBenchmarks*' '*CompiledGridAssemblyBenchmarks*' '*PolygonBenchmarks*' '*SimpleQuadTreeNodeBenchmarks*' '*D3DelaunayFactoryBenchmarks*' '*D3VoronoiFactoryBenchmarks*' '*MapboxDelaunatorFactoryBenchmarks*' '*PointBenchmarks.Ctor*' --job short --iterationCount 5 --warmupCount 3 --iterationTime 100 --launchCount 1 --artifacts .\BenchmarkDotNet.Artifacts\correctness-p1
-```
-
-The run attempted 70 cases: 69 produced measurements; the high-degree Voronoi
-fixture failed setup with the known C1 buffer defect. The runner correctly exited
-with code 1. That fixture has **no valid performance result** until C1 is fixed.
-Setup checks in the new workloads validate known intersections, site containment,
-and topology run counts outside the timed operation.
-
-The old discarded-output measurements are withdrawn, including the old Edge,
-Intersect, and Rect near-zero results. Old continuously growing tree insertion
-results are also withdrawn. Do not calculate speedups against those measurements
-or across the changed runtime/toolchain. Use matched before/after runs instead.
-
-Short iterations produced minimum-iteration-time warnings, and several results
-have wide confidence intervals. Repeat longer runs before deciding marginal
-performance changes. Existing polygon/tree scenarios measure current behavior,
-not proof that the pending correctness defects have been repaired.
-
-Four suspicious primitive cases were also run with the same job settings and
-`--disasm`, filtered to `*EdgeBenchmarks.Ctor*`, `*PointBenchmarks.Ctor*`, and
-`*RectangleBenchmarks.Contains_IntInt*`. Generated code retains field loads and
-returned values for the constructors (31 bytes per Edge overload, 14 for Point),
-and all four bounds comparisons for Rect containment (39 bytes). Nevertheless,
-their overhead-subtracted near-zero durations cannot resolve useful differences;
-they are not evidence of free work. Prefer the batched geometry workloads for
-predicate comparisons. Raw reports and disassembly are under the ignored
-`BenchmarkDotNet.Artifacts\correctness-p1*` directories.
-
-The previous report remains in commit `eb28f3b` (`git show eb28f3b:BENCHMARK.md`).
-Poisson-disc generation, random generation, noisy edges, remaining Point methods,
-and other topology classes were not remeasured by this focused P1 run. Their
-historical tables are not current baselines. The old environment was Windows build
-26100.8893, SDK 10.0.400-preview.0.26322.102, .NET 10.0.10,
-MediumRun/InProcessNoEmit, 15 measurement iterations, 10 warmups, and one launch.
-
-## D3DelaunayFactory
-
-| Method | Mean (us) | Error (us) | StdDev (us) | Allocated |
-|---|---:|---:|---:|---:|
-| Create_100x100 | 70.76 | 12.19 | 3.166 | 89.98 KB |
-| Create_500x500 | 3,880.33 | 891.42 | 137.948 | 2251.7 KB |
-| Create_1000x1000 | 20,250.93 | 5,494.61 | 850.296 | 9029.05 KB |
-
-## D3VoronoiFactory
-
-| Method | Mean (us) | Error (us) | StdDev (us) | Allocated |
-|---|---:|---:|---:|---:|
-| Create_100x100 | 332.7 | 41.96 | 10.90 | 399.3 KB |
-| Create_500x500 | 16,351.8 | 5,068.61 | 1,316.30 | 11429.51 KB |
-| Create_1000x1000 | 74,729.2 | 11,630.56 | 3,020.42 | 47033.84 KB |
-
-## MapboxDelaunatorFactory
-
-| Method | Mean (us) | Error (us) | StdDev (us) | Allocated |
-|---|---:|---:|---:|---:|
-| Create_100x100 | 60.37 | 1.860 | 0.288 | 47.63 KB |
-| Create_500x500 | 2,928.71 | 125.407 | 32.568 | 1168.28 KB |
-| Create_1000x1000 | 15,843.81 | 2,274.603 | 590.707 | 4674.97 KB |
-
-## Voronoi workloads
-
-Grid and jittered-grid fixtures each contain 400 sites. Jitter uses seed 7291.
-HighDegree uses the origin and 40 integer-rounded sites on a radius-10,000 ring;
-it currently throws `IndexOutOfRangeException` during cell traversal.
-
-| Method | Workload | Mean (us) | Error (us) | StdDev (us) | Allocated |
-|---|---|---:|---:|---:|---:|
-| Create | Grid | 394.4 | 169.10 | 26.17 | 399.3 KB |
-| Create | JitteredGrid | 498.7 | 42.48 | 11.03 | 578.29 KB |
-| Create | HighDegree | blocked by C1 | - | - | - |
-
-## Edge
-
-| Method | Mean (ns) | Error (ns) | StdDev (ns) | Allocated |
-|---|---:|---:|---:|---:|
-| HasIntersection | 4.7857 | 0.4266 | 0.1108 | - |
-| TryFindIntersection | 8.5679 | 0.8906 | 0.2313 | - |
-| GetBoundingBox | 1.4390 | 0.1788 | 0.0464 | - |
-| GetMidpoint | 3.7416 | 0.8640 | 0.2244 | - |
-| Ctor_PointPoint | 0.0853 | 0.3048 | 0.0792 | - |
-| Ctor_IntIntIntInt | 0.2970 | 0.3040 | 0.0790 | - |
-
-## Intersect
-
-| Method | Mean (ns) | Error (ns) | StdDev (ns) | Allocated |
-|---|---:|---:|---:|---:|
-| HasIntersection | 5.909 | 1.0779 | 0.2799 | - |
-| TryFindIntersection | 9.638 | 0.9537 | 0.2477 | - |
-
-## Batched geometry workloads
-
-Each invocation processes 256 edge pairs; times and allocations are per pair
-using `OperationsPerInvoke = 256`, including loop and input-access overhead.
-The returned totals consume both intersection existence and coordinates.
-Small spans four units, Screen spans 0..1919, Boundary spans -32768..32767,
-and Irregular varies position and span using seed 7291. All pairs intersect.
-These fixtures deliberately use slender crossings with independently known
-integer intersections; Boundary is not an arithmetic-overflow stress test.
-C4 adds the large-determinant correctness regressions before widening arithmetic.
-
-| Method | Workload | Mean (ns) | Error (ns) | StdDev (ns) | Allocated |
-|---|---|---:|---:|---:|---:|
-| HasIntersection | Small | 5.546 | 0.4746 | 0.1233 | - |
-| TryFindIntersection | Small | 10.759 | 0.7221 | 0.1875 | - |
-| HasIntersection | Screen | 5.569 | 0.6858 | 0.1781 | - |
-| TryFindIntersection | Screen | 10.218 | 1.1312 | 0.2938 | - |
-| HasIntersection | Boundary | 5.398 | 0.1521 | 0.0235 | - |
-| TryFindIntersection | Boundary | 10.562 | 0.4948 | 0.0766 | - |
-| HasIntersection | Irregular | 5.538 | 0.2042 | 0.0530 | - |
-| TryFindIntersection | Irregular | 10.024 | 0.7059 | 0.1833 | - |
-
-## Polygon
-
-| Method | Mean (ns) | Error (ns) | StdDev (ns) | Allocated |
-|---|---:|---:|---:|---:|
-| Ctor | 42.66 | 7.623 | 1.980 | 208 B |
-| Contains_Polygon | 27.97 | 3.944 | 1.024 | - |
-| HasOverlap | 27.34 | 2.599 | 0.675 | - |
-| IsEquivalentTo | 30.57 | 2.807 | 0.729 | - |
-| TryIntersect_WithIntersection | 711.54 | 48.534 | 7.511 | 1128 B |
-| TryIntersect_WithoutIntersection | 80.92 | 7.600 | 1.974 | 24 B |
-| TryFindIntersections_Edge_WithIntersections | 52.26 | 4.028 | 0.623 | 88 B |
-| TryFindIntersections_Edge_WithoutIntersections | 16.60 | 5.631 | 0.871 | - |
-| TryFindIntersections_Polygon_WithIntersections | 131.35 | 38.905 | 10.103 | 88 B |
-| TryFindIntersections_Polygon_WithoutIntersections | 70.36 | 3.513 | 0.912 | - |
-| HasIntersection_Edge | 11.09 | 0.357 | 0.093 | - |
-| HasIntersection_Polygon | 58.12 | 12.085 | 3.138 | - |
-| HasIntersection_EdgeArray | 51.28 | 0.563 | 0.146 | - |
-
-## Rect
-
-| Method | Mean (ns) | Error (ns) | StdDev (ns) | Allocated |
-|---|---:|---:|---:|---:|
-| Contains_Rect | 0.8689 | 0.1610 | 0.0418 | - |
-| Contains_IRect | 2.8042 | 0.4863 | 0.1263 | - |
-| Contains_Point | 0.7875 | 0.0654 | 0.0101 | - |
-| Contains_IntInt | 0.0875 | 0.2893 | 0.0751 | - |
-| IsEquivalentTo_Rect | 3.4651 | 0.8594 | 0.2232 | - |
-| IsEquivalentTo_IRect | 4.3529 | 0.2848 | 0.0740 | - |
-| IsEquivalentTo_PointPoint | 1.4631 | 0.1268 | 0.0196 | - |
-| IsEquivalentTo_IntIntIntInt | 1.5335 | 0.2699 | 0.0701 | - |
-
-## SimpleQuadTreeNode
-
-Insertion reconstructs the same seeded 10,000-item tree outside each measured
-iteration. BenchmarkDotNet confirmed `InvocationCount=1` and `UnrollFactor=1`;
-insertion no longer accumulates state. Single-operation iterations are too short
-for reliable small timing comparisons and include cold-state effects. Other
-methods use the default invocation count and unroll factor 16.
-
-| Method | Mean (us) | Error (us) | StdDev (us) | Allocated |
-|---|---:|---:|---:|---:|
-| Insert | 8.550 | 3.5394 | 0.5477 | 200 B |
-| Count | 111.718 | 59.6410 | 15.4886 | - |
-| GetSubTreeContents | 663.606 | 218.2108 | 56.6686 | 786746 B |
-| Query | 3.962 | 0.9143 | 0.2375 | 22928 B |
-
-## Point constructor
-
-| Method | Mean (ns) | Error (ns) | StdDev (ns) | Allocated |
-|---|---:|---:|---:|---:|
-| Ctor | 0.0569 | 0.2234 | 0.0580 | - |
-
-This measurement is indistinguishable from harness overhead; see the
-disassembly qualification above.
-
-## CompiledGridAssembly
-
-Four placements with either dense occupancy or checkerboard holes. The fragmented
-case deliberately increases run count, not just grid area. All cases measured no
-managed allocation. Locality changes still need P3's independent scaling of
-unrelated placements/runs; this table alone does not establish asymptotic cost.
-
-| Method | Size | Fragmented | Mean (ns) | Error (ns) | StdDev (ns) | Allocated |
-|---|---:|---|---:|---:|---:|---:|
-| Commit_AllChunksDirty | 64 | False | 12,432.0 | 1,119.5 | 173.24 | - |
-| Commit_OneChunkDirty | 64 | False | 2,264.6 | 189.8 | 29.37 | - |
-| Commit_NothingDirty | 64 | False | 924.6 | 270.2 | 70.18 | - |
-| TryRemoveCell_TryAddCell_Propagated | 64 | False | 2,379.4 | 434.8 | 112.92 | - |
-| Commit_AllChunksDirty | 64 | True | 100,532.5 | 9,422.7 | 1,458.18 | - |
-| Commit_OneChunkDirty | 64 | True | 29,620.0 | 6,673.9 | 1,733.19 | - |
-| Commit_NothingDirty | 64 | True | 17,829.9 | 3,377.8 | 877.21 | - |
-| TryRemoveCell_TryAddCell_Propagated | 64 | True | 29,441.5 | 6,015.1 | 1,562.11 | - |
-| Commit_AllChunksDirty | 256 | False | 220,999.8 | 50,427.2 | 7,803.66 | - |
-| Commit_OneChunkDirty | 256 | False | 24,593.5 | 1,310.2 | 202.75 | - |
-| Commit_NothingDirty | 256 | False | 17,218.8 | 1,244.0 | 323.07 | - |
-| TryRemoveCell_TryAddCell_Propagated | 256 | False | 18,953.7 | 4,357.9 | 674.39 | - |
-| Commit_AllChunksDirty | 256 | True | 1,988,864.6 | 31,714.6 | 4,907.87 | - |
-| Commit_OneChunkDirty | 256 | True | 427,008.0 | 34,529.5 | 8,967.20 | - |
-| Commit_NothingDirty | 256 | True | 302,327.2 | 45,826.1 | 11,900.89 | - |
-| TryRemoveCell_TryAddCell_Propagated | 256 | True | 541,991.5 | 241,090.3 | 62,610.37 | - |
+# D3DelaunayFactoryBenchmarks
+
+| Method           | Mean         | Error      | StdDev     | Allocated  |
+|----------------- |-------------:|-----------:|-----------:|-----------:|
+| Create_100x100   |     88.36 μs |   2.785 μs |   1.842 μs |   46.21 KB |
+| Create_500x500   |  3,630.19 μs | 151.704 μs |  90.277 μs | 1167.74 KB |
+| Create_1000x1000 | 16,986.10 μs | 723.838 μs | 478.774 μs | 4679.08 KB |
+
+# D3VoronoiFactoryBenchmarks
+
+| Method           | Mean        | Error       | StdDev      | Allocated   |
+|----------------- |------------:|------------:|------------:|------------:|
+| Create_100x100   |    371.2 μs |    10.59 μs |     7.01 μs |   346.11 KB |
+| Create_500x500   | 15,670.5 μs |   892.56 μs |   590.38 μs | 10035.29 KB |
+| Create_1000x1000 | 77,850.1 μs | 5,578.07 μs | 3,689.55 μs | 41427.86 KB |
+
+# MapboxDelaunatorFactoryBenchmarks
+
+| Method           | RejectDuplicates | Mean         | Error      | StdDev     | Allocated  |
+|----------------- |----------------- |-------------:|-----------:|-----------:|-----------:|
+| **Create_100x100**   | **False**            |     **67.03 μs** |   **3.202 μs** |   **2.118 μs** |   **19.05 KB** |
+| Create_500x500   | False            |  3,070.85 μs | 183.497 μs | 121.372 μs |   470.4 KB |
+| Create_1000x1000 | False            | 14,490.84 μs | 895.182 μs | 592.108 μs | 1878.35 KB |
+| **Create_100x100**   | **True**             |     **67.92 μs** |   **5.185 μs** |   **3.430 μs** |   **19.05 KB** |
+| Create_500x500   | True             |  3,149.22 μs | 217.698 μs | 143.994 μs |   470.4 KB |
+| Create_1000x1000 | True             | 14,952.44 μs | 703.016 μs | 465.002 μs | 1878.34 KB |
+
+# EdgeBenchmarks
+
+| Method              | Mean       | Error     | StdDev    | Allocated |
+|-------------------- |-----------:|----------:|----------:|----------:|
+| HasIntersection     |  8.5958 ns | 0.4683 ns | 0.3098 ns |         - |
+| TryFindIntersection | 16.0876 ns | 1.0070 ns | 0.6661 ns |         - |
+| GetBoundingBox      |  4.3223 ns | 0.3039 ns | 0.2010 ns |         - |
+| Interpolate         |  5.5754 ns | 0.2306 ns | 0.1525 ns |         - |
+| Ctor_PointPoint     |  0.0162 ns | 0.0056 ns | 0.0037 ns |         - |
+| Ctor_IntIntIntInt   |  0.2642 ns | 0.0121 ns | 0.0080 ns |         - |
+
+# IntersectBenchmarks
+
+| Method              | Mean     | Error    | StdDev   | Allocated |
+|-------------------- |---------:|---------:|---------:|----------:|
+| HasIntersection     | 10.83 ns | 0.097 ns | 0.064 ns |         - |
+| TryFindIntersection | 18.25 ns | 0.075 ns | 0.045 ns |         - |
+
+# GeometryWorkloadBenchmarks
+
+| Method              | Workload  | Mean      | Error     | StdDev    | Allocated |
+|-------------------- |---------- |----------:|----------:|----------:|----------:|
+| **HasIntersection**     | **Small**     |  **9.517 ns** | **0.0349 ns** | **0.0231 ns** |         **-** |
+| TryFindIntersection | Small     | 18.326 ns | 0.0642 ns | 0.0336 ns |         - |
+| **HasIntersection**     | **Screen**    |  **9.534 ns** | **0.0885 ns** | **0.0585 ns** |         **-** |
+| TryFindIntersection | Screen    | 18.263 ns | 0.1076 ns | 0.0640 ns |         - |
+| **HasIntersection**     | **Boundary**  |  **9.472 ns** | **0.0915 ns** | **0.0545 ns** |         **-** |
+| TryFindIntersection | Boundary  | 18.301 ns | 0.1013 ns | 0.0603 ns |         - |
+| **HasIntersection**     | **Irregular** |  **9.475 ns** | **0.0546 ns** | **0.0286 ns** |         **-** |
+| TryFindIntersection | Irregular | 18.109 ns | 0.3414 ns | 0.2031 ns |         - |
+
+# VoronoiWorkloadBenchmarks
+
+| Method | Workload     | Mean      | Error    | StdDev   | Allocated |
+|------- |------------- |----------:|---------:|---------:|----------:|
+| **Create** | **Grid**         | **388.17 μs** | **6.794 μs** | **4.494 μs** | **346.11 KB** |
+| **Create** | **JitteredGrid** | **588.25 μs** | **7.783 μs** | **4.070 μs** | **485.67 KB** |
+| **Create** | **HighDegree**   |  **34.23 μs** | **1.846 μs** | **1.221 μs** |  **52.59 KB** |
+
+# PolygonBenchmarks
+
+| Method                                                    | Mean      | Error     | StdDev    | Allocated |
+|---------------------------------------------------------- |----------:|----------:|----------:|----------:|
+| Ctor                                                      | 153.03 ns |  4.849 ns |  3.208 ns |     216 B |
+| Contains_Polygon                                          |  23.61 ns |  0.692 ns |  0.458 ns |         - |
+| HasOverlap                                                |  10.67 ns |  0.428 ns |  0.283 ns |         - |
+| IsEquivalentTo                                            |  14.70 ns |  0.781 ns |  0.517 ns |         - |
+| TryIntersect_WithIntersection                             | 446.70 ns | 23.179 ns | 15.331 ns |     264 B |
+| TryIntersect_WithoutIntersection                          | 159.32 ns |  7.352 ns |  4.863 ns |         - |
+| TryFindBoundaryIntersections_Edge_WithIntersections       |  72.59 ns |  4.623 ns |  3.058 ns |      64 B |
+| TryFindBoundaryIntersections_Edge_WithoutIntersections    |  27.46 ns |  1.824 ns |  1.207 ns |         - |
+| TryFindBoundaryIntersections_Polygon_WithIntersections    | 161.78 ns |  4.563 ns |  2.715 ns |      80 B |
+| TryFindBoundaryIntersections_Polygon_WithoutIntersections |  98.82 ns |  4.982 ns |  3.295 ns |         - |
+| HasIntersection_Edge                                      |  10.67 ns |  0.678 ns |  0.448 ns |         - |
+| HasIntersection_Polygon                                   |  10.41 ns |  0.361 ns |  0.239 ns |         - |
+| HasIntersection_EdgeArray                                 |  21.02 ns |  1.003 ns |  0.663 ns |         - |
+
+# RectangleBenchmarks
+
+| Method                      | Mean      | Error     | StdDev    | Allocated |
+|---------------------------- |----------:|----------:|----------:|----------:|
+| Contains_Rect               | 1.7004 ns | 0.1190 ns | 0.0787 ns |         - |
+| Contains_IRect              | 2.5669 ns | 0.1576 ns | 0.0824 ns |         - |
+| Contains_Point              | 1.1404 ns | 0.0846 ns | 0.0503 ns |         - |
+| Contains_IntInt             | 0.4184 ns | 0.1132 ns | 0.0749 ns |         - |
+| IsEquivalentTo_Rect         | 2.4333 ns | 0.2554 ns | 0.1689 ns |         - |
+| IsEquivalentTo_IRect        | 2.7006 ns | 0.0793 ns | 0.0524 ns |         - |
+| IsEquivalentTo_PointPoint   | 0.8603 ns | 0.0500 ns | 0.0331 ns |         - |
+| IsEquivalentTo_IntIntIntInt | 0.8164 ns | 0.0636 ns | 0.0421 ns |         - |
+
+# SimpleQuadTreeNodeBenchmarks
+
+| Method             | Job        | InvocationCount | UnrollFactor | Mean            | Error          | StdDev         | Allocated |
+|------------------- |----------- |---------------- |------------- |----------------:|---------------:|---------------:|----------:|
+| Insert             | Job-NXGAMU | 1               | 1            |   2,320.0000 ns |    750.1955 ns |    496.2078 ns |         - |
+| Count              | Job-AKPLXZ | Default         | 16           |       0.0807 ns |      0.1080 ns |      0.0714 ns |         - |
+| GetSubTreeContents | Job-AKPLXZ | Default         | 16           | 355,693.4239 ns | 28,252.3682 ns | 18,687.1923 ns |  240103 B |
+| Query              | Job-AKPLXZ | Default         | 16           |   2,246.1712 ns |     62.0565 ns |     41.0465 ns |     776 B |
+| QueryVisitor       | Job-AKPLXZ | Default         | 16           |   1,482.1865 ns |     23.6556 ns |     14.0771 ns |         - |
+
+# IntegerRasterizerBenchmarks
+
+| Method                     | Mean         | Error        | StdDev       | Ratio | RatioSD | Allocated | Alloc Ratio |
+|--------------------------- |-------------:|-------------:|-------------:|------:|--------:|----------:|------------:|
+| FillSmallRaw_PerSpan       |     235.1 ns |      8.46 ns |      5.60 ns | 0.001 |    0.00 |         - |          NA |
+| FillSmallValidated_PerSpan |     157.6 ns |      6.34 ns |      4.19 ns | 0.000 |    0.00 |         - |          NA |
+| FillPolygon_PerPixel       | 324,961.6 ns | 16,878.52 ns | 11,164.09 ns | 1.001 |    0.05 |         - |          NA |
+| FillPolygon_PerSpan        | 103,005.4 ns |  6,230.86 ns |  4,121.33 ns | 0.317 |    0.02 |         - |          NA |
+| FillTriangle_PerPixel      | 195,515.6 ns | 31,703.35 ns | 20,969.80 ns | 0.602 |    0.06 |         - |          NA |
+| FillTriangle_PerSpan       |  63,514.6 ns |  3,982.96 ns |  2,634.48 ns | 0.196 |    0.01 |         - |          NA |
+| Outline_PerPixel           |   6,647.0 ns |    327.10 ns |    216.36 ns | 0.020 |    0.00 |         - |          NA |
+| Outline_PerSpan            |   6,148.5 ns |    185.75 ns |    110.53 ns | 0.019 |    0.00 |         - |          NA |
+
+# TriangleRepresentationBenchmarks
+
+| Method             | Count | Mean           | Error           | StdDev         | Allocated |
+|------------------- |------ |---------------:|----------------:|---------------:|----------:|
+| **ConstructReference** | **16**    |     **123.313 ns** |       **4.7437 ns** |      **2.8229 ns** |     **792 B** |
+| ConstructValue     | 16    |      56.520 ns |       4.6741 ns |      2.7815 ns |     408 B |
+| TraverseReference  | 16    |      10.236 ns |       0.2998 ns |      0.1784 ns |         - |
+| TraverseValue      | 16    |       8.847 ns |       0.2791 ns |      0.1661 ns |         - |
+| CopyReference      | 16    |      11.498 ns |       0.7556 ns |      0.4496 ns |         - |
+| CopyValue          | 16    |       9.863 ns |       0.5182 ns |      0.3428 ns |         - |
+| **ConstructReference** | **2048**  |  **15,399.714 ns** |   **1,648.9538 ns** |  **1,090.6808 ns** |   **98328 B** |
+| ConstructValue     | 2048  |   5,656.917 ns |     467.9060 ns |    309.4909 ns |   49176 B |
+| TraverseReference  | 2048  |   1,591.787 ns |      37.9386 ns |     19.8426 ns |         - |
+| TraverseValue      | 2048  |   1,324.015 ns |      48.1020 ns |     28.6247 ns |         - |
+| CopyReference      | 2048  |     399.048 ns |      11.6250 ns |      6.9178 ns |         - |
+| CopyValue          | 2048  |   1,050.252 ns |      34.1314 ns |     20.3111 ns |         - |
+| **ConstructReference** | **4096**  |  **29,116.643 ns** |   **2,272.6129 ns** |  **1,503.1927 ns** |  **196632 B** |
+| ConstructValue     | 4096  |  45,114.322 ns |   4,334.1033 ns |  2,866.7410 ns |   98338 B |
+| TraverseReference  | 4096  |   3,467.532 ns |     217.7374 ns |    144.0198 ns |         - |
+| TraverseValue      | 4096  |   2,793.185 ns |     272.2243 ns |    180.0595 ns |         - |
+| CopyReference      | 4096  |   1,071.790 ns |      47.2039 ns |     31.2225 ns |         - |
+| CopyValue          | 4096  |   2,614.137 ns |      44.3099 ns |     26.3681 ns |         - |
+| **ConstructReference** | **16384** | **933,290.023 ns** | **114,847.3101 ns** | **68,343.7921 ns** |  **786467 B** |
+| ConstructValue     | 16384 |  61,222.409 ns |   2,868.0194 ns |  1,897.0173 ns |  393249 B |
+| TraverseReference  | 16384 |  18,010.208 ns |   1,032.4372 ns |    682.8933 ns |         - |
+| TraverseValue      | 16384 |  12,997.640 ns |     448.0413 ns |    266.6222 ns |         - |
+| CopyReference      | 16384 |   4,173.644 ns |     260.1456 ns |    172.0702 ns |         - |
+| CopyValue          | 16384 |  12,474.066 ns |     787.7602 ns |    521.0546 ns |         - |
+
+# SearchableVoronoiBenchmarks
+
+| Method        | QuerySize | Mean       | Error     | StdDev    | Allocated |
+|-------------- |---------- |-----------:|----------:|----------:|----------:|
+| **Search**        | **20**        |   **289.8 ns** |  **21.52 ns** |  **14.23 ns** |      **88 B** |
+| SearchVisitor | 20        |   210.2 ns |  13.10 ns |   8.67 ns |         - |
+| **Search**        | **200**       | **7,920.5 ns** | **665.87 ns** | **440.43 ns** |    **8384 B** |
+| SearchVisitor | 200       | 2,742.7 ns | 163.49 ns | 108.14 ns |         - |
+
+# PointBenchmarks
+
+| Method                  | Mean       | Error     | StdDev    | Median     | Allocated |
+|------------------------ |-----------:|----------:|----------:|-----------:|----------:|
+| Deconstruct             |  0.0000 ns | 0.0000 ns | 0.0000 ns |  0.0000 ns |         - |
+| ToStringBenchmark       | 43.6398 ns | 3.3793 ns | 2.2352 ns | 43.3599 ns |      48 B |
+| IsAdjacentTo_Orthogonal |  3.4669 ns | 0.1904 ns | 0.1260 ns |  3.4567 ns |         - |
+| IsAdjacentTo_Diagonal   |  3.3978 ns | 0.2022 ns | 0.1338 ns |  3.3965 ns |         - |
+| Add_Point               |  0.2284 ns | 0.0542 ns | 0.0323 ns |  0.2167 ns |         - |
+| Add_IntInt              |  0.2482 ns | 0.0760 ns | 0.0503 ns |  0.2314 ns |         - |
+| Subtract_Point          |  0.1470 ns | 0.0437 ns | 0.0228 ns |  0.1445 ns |         - |
+| Subtract_IntInt         |  0.2945 ns | 0.1764 ns | 0.1049 ns |  0.2884 ns |         - |
+| Negate                  |  0.2402 ns | 0.0740 ns | 0.0490 ns |  0.2235 ns |         - |
+| Operator_Add            |  0.1882 ns | 0.0281 ns | 0.0147 ns |  0.1850 ns |         - |
+| Operator_Subtract       |  0.2169 ns | 0.0381 ns | 0.0199 ns |  0.2110 ns |         - |
+| Operator_Negate         |  0.3131 ns | 0.0871 ns | 0.0576 ns |  0.3183 ns |         - |
+| ShiftRight              |  0.2138 ns | 0.0718 ns | 0.0475 ns |  0.1890 ns |         - |
+| And                     |  0.2022 ns | 0.0571 ns | 0.0340 ns |  0.1919 ns |         - |
+| Ctor                    |  0.0193 ns | 0.0405 ns | 0.0268 ns |  0.0064 ns |         - |
+| ManhattanDistance       |  3.4305 ns | 0.2316 ns | 0.1532 ns |  3.3571 ns |         - |
+| ChebyshevDistance       |  3.3396 ns | 0.2547 ns | 0.1685 ns |  3.2554 ns |         - |
+| DistanceSquared         |  3.0078 ns | 0.1460 ns | 0.0869 ns |  2.9831 ns |         - |
+| Operator_Equals         |  0.1926 ns | 0.0442 ns | 0.0263 ns |  0.1873 ns |         - |
+| Operator_NotEquals      |  0.0214 ns | 0.0391 ns | 0.0259 ns |  0.0073 ns |         - |
+| Equals_Object           |  0.2002 ns | 0.0343 ns | 0.0204 ns |  0.1945 ns |         - |
+| Equals_IEquatable       |  0.2260 ns | 0.0286 ns | 0.0149 ns |  0.2229 ns |         - |
+| GetHashCode_Single      |  0.7552 ns | 0.0369 ns | 0.0193 ns |  0.7502 ns |         - |
+| HashSet_Contains        |  5.6320 ns | 0.2535 ns | 0.1677 ns |  5.6136 ns |         - |
+| Dictionary_TryGetValue  |  5.8721 ns | 0.2532 ns | 0.1507 ns |  5.8312 ns |         - |
+| HashSet_Build           |  7.1023 ns | 0.1668 ns | 0.0872 ns |  7.0853 ns |      22 B |
+| Min                     |  0.1805 ns | 0.0713 ns | 0.0472 ns |  0.1542 ns |         - |
+| Max                     |  0.2541 ns | 0.0586 ns | 0.0349 ns |  0.2449 ns |         - |
+
+# DenseGridSourceBenchmarks
+
+| Method                              | Size | Mean         | Error       | StdDev      | Allocated |
+|------------------------------------ |----- |-------------:|------------:|------------:|----------:|
+| **GetOccupiedRuns_Cached**              | **64**   |     **118.7 ns** |     **0.96 ns** |     **0.50 ns** |         **-** |
+| TryClearCell_TrySetCell_RebuildRuns | 64   |     115.6 ns |     4.07 ns |     2.70 ns |         - |
+| IsOccupied_Scan                     | 64   |   4,209.7 ns |   186.56 ns |   111.02 ns |         - |
+| GetCell_Scan                        | 64   |   4,033.9 ns |   228.59 ns |   151.20 ns |         - |
+| TryGetRow_Scan                      | 64   |   3,974.3 ns |   126.58 ns |    83.73 ns |         - |
+| **GetOccupiedRuns_Cached**              | **256**  |     **494.2 ns** |     **7.41 ns** |     **4.90 ns** |         **-** |
+| TryClearCell_TrySetCell_RebuildRuns | 256  |     656.1 ns |    19.30 ns |    11.49 ns |         - |
+| IsOccupied_Scan                     | 256  | 124,137.4 ns | 1,280.68 ns |   669.82 ns |         - |
+| GetCell_Scan                        | 256  |  65,188.4 ns | 1,777.62 ns | 1,175.79 ns |         - |
+| TryGetRow_Scan                      | 256  |  63,142.5 ns | 1,954.48 ns | 1,292.77 ns |         - |
+
+# GridAssemblyBenchmarks
+
+| Method                            | Size | Mean           | Error         | StdDev       | Allocated |
+|---------------------------------- |----- |---------------:|--------------:|-------------:|----------:|
+| **TryAttach_TryDetach**               | **64**   |   **319,190.4 ns** |   **7,359.74 ns** |  **4,868.01 ns** |   **32208 B** |
+| TryGetPlacementAt_Scan            | 64   |   100,632.8 ns |   5,622.71 ns |  3,719.08 ns |         - |
+| TryRemoveCell_TryAddCell_Interior | 64   |       500.5 ns |      12.78 ns |      8.46 ns |         - |
+| TryRemoveCell_TryAddCell_Seam     | 64   |       699.9 ns |       8.79 ns |      5.81 ns |         - |
+| **TryAttach_TryDetach**               | **256**  | **5,383,918.1 ns** | **125,850.17 ns** | **74,891.42 ns** |  **330456 B** |
+| TryGetPlacementAt_Scan            | 256  | 1,815,641.0 ns |  78,979.68 ns | 52,240.17 ns |         - |
+| TryRemoveCell_TryAddCell_Interior | 256  |     1,899.1 ns |      72.96 ns |     48.26 ns |         - |
+| TryRemoveCell_TryAddCell_Seam     | 256  |     2,310.7 ns |     116.52 ns |     77.07 ns |         - |
+
+# GridCompilerBenchmarks
+
+| Method  | Size | ChunkSize | Mean      | Error     | StdDev    | Allocated |
+|-------- |----- |---------- |----------:|----------:|----------:|----------:|
+| **Compile** | **64**   | **32**        |  **55.19 μs** |  **3.266 μs** |  **2.160 μs** | **114.28 KB** |
+| **Compile** | **64**   | **64**        |  **42.24 μs** |  **2.930 μs** |  **1.938 μs** |  **93.23 KB** |
+| **Compile** | **256**  | **32**        | **510.79 μs** | **19.282 μs** | **10.085 μs** | **937.03 KB** |
+| **Compile** | **256**  | **64**        | **306.80 μs** | **23.948 μs** | **15.840 μs** | **595.37 KB** |
+
+# CompiledGridAssemblyBenchmarks
+
+| Method                              | Size | Fragmented | Mean             | Error          | StdDev         | Allocated |
+|------------------------------------ |----- |----------- |-----------------:|---------------:|---------------:|----------:|
+| **Commit_AllChunksDirty**               | **64**   | **False**      |    **11,765.612 ns** |    **478.5538 ns** |    **284.7797 ns** |         **-** |
+| Commit_OneChunkDirty                | 64   | False      |       876.892 ns |     51.4922 ns |     34.0589 ns |         - |
+| Commit_NothingDirty                 | 64   | False      |         8.565 ns |      0.6523 ns |      0.4314 ns |         - |
+| TryRemoveCell_TryAddCell_Propagated | 64   | False      |     1,175.320 ns |     53.1676 ns |     35.1671 ns |         - |
+| **Commit_AllChunksDirty**               | **64**   | **True**       |    **88,298.359 ns** |  **5,443.0678 ns** |  **3,600.2524 ns** |         **-** |
+| Commit_OneChunkDirty                | 64   | True       |     6,229.585 ns |    123.1655 ns |     73.2938 ns |         - |
+| Commit_NothingDirty                 | 64   | True       |         9.612 ns |      0.4560 ns |      0.3016 ns |         - |
+| TryRemoveCell_TryAddCell_Propagated | 64   | True       |     1,805.689 ns |     70.7145 ns |     46.7733 ns |         - |
+| **Commit_AllChunksDirty**               | **256**  | **False**      |   **184,416.575 ns** |  **9,558.4927 ns** |  **5,688.1057 ns** |         **-** |
+| Commit_OneChunkDirty                | 256  | False      |       788.243 ns |     60.3433 ns |     39.9134 ns |         - |
+| Commit_NothingDirty                 | 256  | False      |         8.413 ns |      0.3486 ns |      0.2074 ns |         - |
+| TryRemoveCell_TryAddCell_Propagated | 256  | False      |     1,918.436 ns |     56.8822 ns |     33.8497 ns |         - |
+| **Commit_AllChunksDirty**               | **256**  | **True**       | **1,459,640.657 ns** | **76,319.1440 ns** | **45,416.2984 ns** |         **-** |
+| Commit_OneChunkDirty                | 256  | True       |     5,970.446 ns |    430.4545 ns |    284.7190 ns |         - |
+| Commit_NothingDirty                 | 256  | True       |         9.619 ns |      1.1278 ns |      0.7459 ns |         - |
+| TryRemoveCell_TryAddCell_Propagated | 256  | True       |     2,353.191 ns |     25.2697 ns |     13.2165 ns |         - |
+
+# CompiledGridAssemblyMutationBenchmarks
+
+| Method                    | Size | Mean        | Error       | StdDev      | Allocated  |
+|-------------------------- |----- |------------:|------------:|------------:|-----------:|
+| **Bind**                      | **64**   |    **186.0 μs** |    **16.86 μs** |     **8.82 μs** |   **64.77 KB** |
+| ConnectivityBuilder_Build | 64   | 10,011.1 μs | 4,901.05 μs | 3,241.74 μs |   16.77 KB |
+| CreateVacuumLayer         | 64   |    179.8 μs |    10.33 μs |     6.15 μs |   16.77 KB |
+| **Bind**                      | **256**  |    **905.5 μs** |    **52.66 μs** |    **27.54 μs** | **1033.21 KB** |
+| ConnectivityBuilder_Build | 256  | 17,113.0 μs |   320.70 μs |   190.84 μs |   265.2 KB |
+| CreateVacuumLayer         | 256  |  2,545.9 μs |   260.44 μs |   172.27 μs |   265.2 KB |
+
+# TopologyLocalityBenchmarks
+
+| Method         | Scale | Workload      | Mean             | Error           | StdDev          | Allocated |
+|--------------- |------ |-------------- |-----------------:|----------------:|----------------:|----------:|
+| **EditUnobserved** | **16**    | **Chunks**        |       **251.765 ns** |       **5.5172 ns** |       **2.8856 ns** |         **-** |
+| EditCompiled   | 16    | Chunks        |       725.738 ns |      14.3506 ns |       7.5056 ns |         - |
+| CommitClean    | 16    | Chunks        |         8.573 ns |       0.4258 ns |       0.2534 ns |         - |
+| CommitOneDirty | 16    | Chunks        |       719.007 ns |      14.6720 ns |       7.6737 ns |         - |
+| CommitAllDirty | 16    | Chunks        |    12,120.412 ns |     737.4470 ns |     438.8429 ns |         - |
+| CompileAndBind | 16    | Chunks        |    46,659.182 ns |   3,238.4821 ns |   2,142.0554 ns |  163248 B |
+| **EditUnobserved** | **16**    | **Fragmentation** |       **270.246 ns** |      **10.1740 ns** |       **6.7295 ns** |         **-** |
+| EditCompiled   | 16    | Fragmentation |       738.842 ns |      53.3080 ns |      35.2599 ns |         - |
+| CommitClean    | 16    | Fragmentation |        10.082 ns |       0.5018 ns |       0.3319 ns |         - |
+| CommitOneDirty | 16    | Fragmentation |       769.299 ns |      20.8474 ns |      13.7893 ns |         - |
+| CommitAllDirty | 16    | Fragmentation |     6,051.967 ns |     276.5237 ns |     182.9033 ns |         - |
+| CompileAndBind | 16    | Fragmentation |    31,023.728 ns |   2,520.8407 ns |   1,667.3800 ns |  130432 B |
+| **EditUnobserved** | **16**    | **Placements**    |       **258.697 ns** |      **15.0213 ns** |       **9.9356 ns** |         **-** |
+| EditCompiled   | 16    | Placements    |       699.712 ns |      29.2246 ns |      19.3303 ns |         - |
+| CommitClean    | 16    | Placements    |         9.513 ns |       0.6481 ns |       0.4287 ns |         - |
+| CommitOneDirty | 16    | Placements    |       721.478 ns |       8.8754 ns |       4.6420 ns |         - |
+| CommitAllDirty | 16    | Placements    |     5,977.214 ns |      92.3156 ns |      61.0611 ns |         - |
+| CompileAndBind | 16    | Placements    |   164,270.713 ns |  20,078.7597 ns |  13,280.8563 ns | 1281008 B |
+| **EditUnobserved** | **16**    | **Seams**         |       **255.269 ns** |      **11.3269 ns** |       **7.4921 ns** |         **-** |
+| EditCompiled   | 16    | Seams         |       878.230 ns |      44.5774 ns |      29.4852 ns |         - |
+| CommitClean    | 16    | Seams         |         9.782 ns |       0.5783 ns |       0.3825 ns |         - |
+| CommitOneDirty | 16    | Seams         |       804.853 ns |      32.5554 ns |      21.5334 ns |         - |
+| CommitAllDirty | 16    | Seams         |   103,639.204 ns |   6,057.0202 ns |   4,006.3438 ns |         - |
+| CompileAndBind | 16    | Seams         | 1,981,111.458 ns | 101,690.0054 ns |  67,261.6423 ns | 2408584 B |
+| **EditUnobserved** | **256**   | **Chunks**        |       **220.080 ns** |       **8.4788 ns** |       **5.6082 ns** |         **-** |
+| EditCompiled   | 256   | Chunks        |       824.831 ns |      29.7204 ns |      19.6582 ns |         - |
+| CommitClean    | 256   | Chunks        |         9.821 ns |       0.2495 ns |       0.1485 ns |         - |
+| CommitOneDirty | 256   | Chunks        |       846.219 ns |      26.9033 ns |      16.0097 ns |         - |
+| CommitAllDirty | 256   | Chunks        |   218,207.967 ns |  13,251.5853 ns |   8,765.1032 ns |         - |
+| CompileAndBind | 256   | Chunks        | 1,069,587.422 ns |  74,229.2707 ns |  49,098.0666 ns | 2295365 B |
+| **EditUnobserved** | **256**   | **Fragmentation** |       **206.289 ns** |      **13.5063 ns** |       **8.9336 ns** |         **-** |
+| EditCompiled   | 256   | Fragmentation |       761.548 ns |      33.8980 ns |      20.1722 ns |         - |
+| CommitClean    | 256   | Fragmentation |         8.336 ns |       0.4653 ns |       0.3078 ns |         - |
+| CommitOneDirty | 256   | Fragmentation |       757.086 ns |      49.2656 ns |      32.5862 ns |         - |
+| CommitAllDirty | 256   | Fragmentation |    44,961.288 ns |     953.1461 ns |     498.5139 ns |         - |
+| CompileAndBind | 256   | Fragmentation |   293,592.599 ns |  36,003.2117 ns |  23,813.8954 ns |  622174 B |
+| **EditUnobserved** | **256**   | **Placements**    |       **266.369 ns** |       **7.7893 ns** |       **4.6353 ns** |         **-** |
+| EditCompiled   | 256   | Placements    |       768.025 ns |      32.8946 ns |      21.7578 ns |         - |
+| CommitClean    | 256   | Placements    |         8.078 ns |       0.3488 ns |       0.2307 ns |         - |
+| CommitOneDirty | 256   | Placements    |       796.888 ns |      31.4749 ns |      20.8187 ns |         - |
+| CommitAllDirty | 256   | Placements    |     6,895.566 ns |     396.6891 ns |     262.3853 ns |         - |
+| CompileAndBind | 256   | Placements    |   156,615.204 ns |  12,707.4396 ns |   7,561.9935 ns | 1301240 B |
+| **EditUnobserved** | **256**   | **Seams**         |       **701.348 ns** |      **30.6582 ns** |      **18.2442 ns** |         **-** |
+| EditCompiled   | 256   | Seams         |     1,223.856 ns |      47.1661 ns |      31.1974 ns |         - |
+| CommitClean    | 256   | Seams         |        10.256 ns |       0.3019 ns |       0.1796 ns |         - |
+| CommitOneDirty | 256   | Seams         |       849.091 ns |      38.1032 ns |      25.2029 ns |         - |
+| CommitAllDirty | 256   | Seams         |   109,254.610 ns |   5,111.5005 ns |   3,380.9411 ns |         - |
+| CompileAndBind | 256   | Seams         | 2,886,456.429 ns | 270,227.5840 ns | 178,738.8155 ns | 3522478 B |
+
+# ConnectivityBuilderBenchmarks
+
+| Method            | Size | Mean       | Error     | StdDev    | Allocated |
+|------------------ |----- |-----------:|----------:|----------:|----------:|
+| **Update_SingleCell** | **64**   |   **1.023 μs** | **0.0453 μs** | **0.0300 μs** |         **-** |
+| Update_SeamCell   | 64   |   1.127 μs | 0.0556 μs | 0.0368 μs |         - |
+| Update_32x32      | 64   | 107.906 μs | 6.7642 μs | 4.4741 μs |         - |
+| **Update_SingleCell** | **256**  |   **1.440 μs** | **0.1060 μs** | **0.0701 μs** |         **-** |
+| Update_SeamCell   | 256  |   1.485 μs | 0.0720 μs | 0.0428 μs |         - |
+| Update_32x32      | 256  | 105.604 μs | 6.0142 μs | 3.9780 μs |         - |
+
+# DirectionExtensionsBenchmarks
+
+| Method            | Mean     | Error     | StdDev    | Allocated |
+|------------------ |---------:|----------:|----------:|----------:|
+| ToOffset          | 2.770 ns | 0.1357 ns | 0.0897 ns |         - |
+| Opposite          | 2.882 ns | 0.1251 ns | 0.0828 ns |         - |
+| TryGetOrthogonals | 1.302 ns | 0.0444 ns | 0.0264 ns |         - |
