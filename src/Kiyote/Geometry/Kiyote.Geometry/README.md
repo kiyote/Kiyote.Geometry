@@ -102,6 +102,11 @@ Triangle and hull starting indices are implementation details, not a canonical
 ordering. Edge legalization grows its temporary stack when necessary rather
 than discarding pending work.
 
+Factories validate and snapshot sites while preparing double-coordinate scratch
+in one pass. The owned point snapshot is retained by the result; coordinate
+scratch is temporary. Sanitized coordinate scratch can retain unused capacity,
+but triangulation consumes only the accepted-site prefix.
+
 `Triangle` is an immutable value type with ordered structural equality, not a
 nullable reference object. Its default value is degenerate and is rejected by
 filled rasterization. Triangles are stored inline in collections; copying large

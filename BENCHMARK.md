@@ -1,5 +1,33 @@
 # Benchmarks
 
+## Incremental D3 refactoring (2026-10-26)
+
+These focused runs use BenchmarkDotNet 0.15.8, .NET SDK
+11.0.100-rc.2.26504.105, .NET runtime 10.0.13, and the Intel Core i7-9700K.
+Each column uses two process launches, four warmups, twelve measured iterations,
+and a requested 300 ms iteration time. Values are means, not guaranteed
+improvements; some distributions were multimodal and allocations were unchanged
+by O7. G0 is the correctness baseline at `ea40865`, not the older suite below.
+Grid extents 100/500/1000 contain 400/10,000/40,000 sites respectively.
+
+| Workload | G0 mean | O7 fused preparation mean |
+|---|---:|---:|
+| Delaunay, 400 sites | 82.33 us | 74.09 us |
+| Delaunay, 10,000 sites | 3,800.41 us | 3,774.25 us |
+| Delaunay, 40,000 sites | 18,256.22 us | 17,903.06 us |
+| Voronoi, 400 sites | 398.78 us | 383.91 us |
+| Voronoi, 10,000 sites | 17,315.27 us | 16,556.34 us |
+| Voronoi, 40,000 sites | 91,459.14 us | 85,275.77 us |
+| Voronoi workload, grid | 384.73 us | 371.83 us |
+| Voronoi workload, jittered grid | 573.88 us | 568.82 us |
+| Voronoi workload, high degree | 35.85 us | 30.69 us |
+
+O7 fuses site validation, ownership, and coordinate conversion; it does not
+eliminate the retained point snapshot or the temporary double-coordinate array.
+No representation, deferred-output, or geometry approximation change is included.
+
+## Earlier full-suite measurements
+
 ```
 BenchmarkDotNet v0.15.8, Windows 11 (10.0.26100.8893/24H2/2024Update/HudsonValley)
 Intel Core i7-9700K CPU 3.60GHz (Coffee Lake), 1 CPU, 8 logical and 8 physical cores

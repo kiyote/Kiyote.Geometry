@@ -10,9 +10,10 @@ internal static class DiagramSites {
 		return (int)capacity;
 	}
 
-	internal static IReadOnlyList<Point> Snapshot(
+	internal static Point[] SnapshotAndConvert(
 		IReadOnlyList<Point> points,
 		bool sanitize,
+		out double[] coordinates,
 		Rect? bounds = null
 	) {
 		ArgumentNullException.ThrowIfNull( points );
@@ -22,8 +23,13 @@ internal static class DiagramSites {
 		}
 
 		Point[] snapshot = new Point[points.Count];
+		coordinates = new double[checked( points.Count * 2 )];
 		HashSet<Point>? seen = sanitize ? [] : null;
 		int count = 0;
+		Point first = default;
+		Point second = default;
+		bool hasSecond = false;
+		bool noncollinear = false;
 		for( int i = 0; i < points.Count; i++ ) {
 			Point point = points[i];
 			GeometryLimits.Validate( point, nameof( points ) );
@@ -36,26 +42,22 @@ internal static class DiagramSites {
 			if( seen is not null && !seen.Add( point ) ) {
 				continue;
 			}
-			snapshot[count++] = point;
-		}
-
-		bool noncollinear = false;
-		if( count >= 3 ) {
-			Point a = snapshot[0];
-			int second = 1;
-			while( second < count && snapshot[second] == a ) {
-				second++;
-			}
-			if( second < count ) {
-				Point b = snapshot[second];
-				for( int i = second + 1; i < count; i++ ) {
-					Point c = snapshot[i];
-					if( ( (long)b.X - a.X ) * ( c.Y - a.Y ) != ( (long)b.Y - a.Y ) * ( c.X - a.X ) ) {
-						noncollinear = true;
-						break;
+			if( !noncollinear ) {
+				if( count == 0 ) {
+					first = point;
+				} else if( !hasSecond ) {
+					if( point != first ) {
+						second = point;
+						hasSecond = true;
 					}
+				} else {
+					noncollinear = ( (long)second.X - first.X ) * ( point.Y - first.Y )
+						!= ( (long)second.Y - first.Y ) * ( point.X - first.X );
 				}
 			}
+			coordinates[count * 2] = point.X;
+			coordinates[(count * 2) + 1] = point.Y;
+			snapshot[count++] = point;
 		}
 		if( !noncollinear ) {
 			throw new ArgumentException( "At least three distinct, noncollinear sites are required.", nameof( points ) );
@@ -63,7 +65,8 @@ internal static class DiagramSites {
 		if( count != snapshot.Length ) {
 			Array.Resize( ref snapshot, count );
 		}
-		return Array.AsReadOnly( snapshot );
+		// Coordinate scratch keeps spare capacity; consumers use only snapshot.Length coordinate pairs.
+		return snapshot;
 	}
 
 	internal static void ValidateBounds( Rect bounds ) {

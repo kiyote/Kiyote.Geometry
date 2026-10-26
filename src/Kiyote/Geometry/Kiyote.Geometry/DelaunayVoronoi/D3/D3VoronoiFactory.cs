@@ -40,8 +40,8 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		bool sanitizePoints
 	) {
 		DiagramSites.ValidateBounds( bounds );
-		points = DiagramSites.Snapshot( points, sanitizePoints, bounds );
-		double[] coords = points.ToCoords();
+		Point[] sites = DiagramSites.SnapshotAndConvert( points, sanitizePoints, out double[] coordinateBuffer, bounds );
+		ReadOnlySpan<double> coords = coordinateBuffer.AsSpan( 0, sites.Length * 2 );
 
 		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( coords, rejectDuplicates: !sanitizePoints );
 		D3Delaunay delaunay = D3DelaunayFactory.Create( coords, delaunator );
@@ -53,9 +53,9 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		double[] projectedPointBuffer = new double[MaximumProjectedVertices * 2];
 		Span<Point> quantizedPointBuffer = stackalloc Point[MaximumClippedVertices];
 
-		List<Cell> cells = new List<Cell>( points.Count );
+		List<Cell> cells = new List<Cell>( sites.Length );
 		List<double> cellCoords = new List<double>( MaximumClippedVertices * 2 );
-		for( int i = 0; i < points.Count; i++ ) {
+		for( int i = 0; i < sites.Length; i++ ) {
 			bool isOpen = false;
 			Clip(
 				bounds,
@@ -101,7 +101,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				throw new InvalidOperationException( "Quantized Voronoi cell does not enclose positive area." );
 			}
 			Cell cell = new Cell(
-				points[i],
+				sites[i],
 				polygon,
 				isOpen,
 				new Rect( minX, minY, maxX - minX + 1, maxY - minY + 1 )
@@ -111,9 +111,9 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 
 		ReadOnlySpan<int> inedges = delaunay.Inedges;
 		ReadOnlySpan<int> hullIndex = delaunay.HullIndex;
-		Dictionary<Cell, IReadOnlyList<Cell>> cellNeighbours = new Dictionary<Cell, IReadOnlyList<Cell>>( points.Count );
+		Dictionary<Cell, IReadOnlyList<Cell>> cellNeighbours = new Dictionary<Cell, IReadOnlyList<Cell>>( sites.Length );
 		List<Cell> neighbours = new List<Cell>( IVoronoiFactory.MaximumCellVertices + 1 );
-		for( int i = 0; i < points.Count; i++ ) {
+		for( int i = 0; i < sites.Length; i++ ) {
 			int e0 = inedges[i];
 			if( e0 == -1 ) {
 				throw new InvalidOperationException( "Coincident point." );
@@ -149,7 +149,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			}
 		}
 
-		return new Voronoi( points, cells.AsReadOnly(),
+		return new Voronoi( Array.AsReadOnly( sites ), cells.AsReadOnly(),
 			new ReadOnlyDictionary<Cell, IReadOnlyList<Cell>>( cellNeighbours ), Array.AsReadOnly( edges.ToArray() ) );
 	}
 
