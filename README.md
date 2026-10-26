@@ -114,6 +114,11 @@ coordinate scratch when most sites are discarded.
 Infinite-cell rays are derived from adjacent hull sites on demand, without a
 four-double vector allocation for every site.
 
+Voronoi clipping uses bounded, call-local stack scratch reused across cells.
+Coordinate-pair insertion shifts the tail once; scratch never escapes into
+published results. The 64/66/140 traversal/projected/clipped vertex capacities
+remain distinct, with explicit overflow failures.
+
 Voronoi adjacency is stored in two contiguous owned integer arrays rather than
 a cell-keyed dictionary and per-cell collections. `GetNeighbourIndices(i)`
 returns an allocation-free `ReadOnlySpan<int>` of indices into `Cells`, in

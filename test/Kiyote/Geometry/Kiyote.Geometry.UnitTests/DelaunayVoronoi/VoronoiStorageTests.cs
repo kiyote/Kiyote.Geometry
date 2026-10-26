@@ -19,7 +19,7 @@ public sealed class VoronoiStorageTests {
 		long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
 		GC.KeepAlive( result );
 		Assert.That( result.Cells.Count, Is.EqualTo( sites.Length ) );
-		Assert.That( allocated, Is.LessThanOrEqualTo( 240 * 1024 ) );
+		Assert.That( allocated, Is.LessThanOrEqualTo( 230 * 1024 ) );
 	}
 
 	[Test]

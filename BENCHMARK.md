@@ -1,5 +1,65 @@
 # Benchmarks
 
+## O3 storage step: bounded Voronoi clipping scratch (2026-10-26)
+
+Reference: `44fd182`. Candidate: the bounded-clipping implementation committed
+with this record. The six existing Voronoi benchmarks and their inputs are
+unchanged. Reference and candidate suites ran serially, without overlapping
+agent-started builds/tests, using two launches, four warmups, twelve measured
+iterations and a requested 300 ms iteration time. Environment matches the ABBA
+comparison below: BenchmarkDotNet 0.15.8, SDK 11.0.100-rc.2.26504.105, .NET
+10.0.13, Intel Core i7-9700K.
+
+| Voronoi workload | Reference mean +/- error | Bounded scratch mean +/- error | Reference allocated | Bounded scratch allocated |
+|---|---:|---:|---:|---:|
+| Factory, 400 sites | 289.99 +/- 9.222 us | 296.41 +/- 5.817 us | 233.21 KB | 228.89 KB |
+| Factory, 10,000 sites | 9,480.15 +/- 430.515 us | 8,989.53 +/- 391.395 us | 5,655.45 KB | 5,651.76 KB |
+| Factory, 40,000 sites | 56,752.22 +/- 2,554.362 us | 55,425.28 +/- 2,487.618 us | 22,877.45 KB | 22,874.06 KB |
+| Workload grid, 400 sites | 302.30 +/- 9.687 us | 308.24 +/- 9.680 us | 233.21 KB | 228.89 KB |
+| Workload jittered grid, 400 sites | 423.90 +/- 10.488 us | 415.67 +/- 10.405 us | 269.34 KB | 265.02 KB |
+| Workload high degree, 41 sites | 26.55 +/- 0.830 us | 26.27 +/- 0.818 us | 29.95 KB | 25.63 KB |
+
+Error is the BenchmarkDotNet 99.9% confidence-interval half-width. All paired
+runtime intervals overlap, with some multimodal distributions; no runtime
+improvement or runtime equivalence is established. These are single before/after
+suites with two process launches each, not an ABBA experiment. The small-grid
+mean increases are about 2%; the current evidence does not establish a
+statistically distinct regression. A temporary-worktree repeat was not available
+because the worktree-creation command required unavailable approval.
+
+This is accepted as a bounded scratch-allocation reduction, not a demonstrated
+CPU optimization. On this x64 runtime the eliminated coordinate list, its
+backing array, and two other double arrays total four managed objects and 4,424
+bytes per creation (4,320 payload bytes, three array headers and one list
+object). Small-workload allocated-byte measurements reproduce the 4.32 KiB
+reduction; small differences in large-input B/op include measurement overhead.
+Retained output storage is unchanged; no peak-RSS improvement is claimed.
+
+The factory now reserves 5,440 bytes of bounded stack scratch outside the cell
+loop, including the existing quantized points. This is 4,320 more stack bytes
+than the prior factory. The nested generated-hull point buffer can add 2,240
+bytes, for at most 7,680 bytes of explicit cell/hull scratch, excluding ordinary
+call frames. The 64/66/140 traversal/projected/clipped capacities are unchanged.
+The span-backed buffer checks complete-pair capacity before either write,
+shifts a middle insertion once, and exposes only its populated prefix.
+
+Clipping math, cyclic simplification order, quantization, flags, bounds, polygon
+order, neighbours and global directed-edge order are unchanged. Eight exact
+full-output fingerprints were captured and verified on the reference before
+changing storage, then verified on the candidate. They include corner sites,
+seeded irregular/translated/thin inputs, full-domain endpoints, fractional
+geometry, and open/closed traversal-limit cells. Buffer tests also compare
+10,000 seeded insert/remove/clear operations with the original list operations,
+check dirty scratch, exact capacity, atomic overflow, and allocation-free reuse.
+
+Validation: 58 affected unit tests and 87 diagram integration tests pass,
+including concurrent ownership/failure/reuse. The 400-site full-diagram
+allocation regression is tightened from 240 to 230 KiB. Linear-time
+simplification and `Step` arithmetic changes from O3 remain unimplemented;
+this commit changes storage only. Reproduce with the command below, selecting
+only `*D3VoronoiFactoryBenchmarks*` and `*VoronoiWorkloadBenchmarks*`.
+Raw results are retained in session storage as `d3-span-before`/`d3-span-after`.
+
 ## Serial D3 reference/candidate comparison (2026-10-26)
 
 After the user reported concurrent compilation during earlier measurements,

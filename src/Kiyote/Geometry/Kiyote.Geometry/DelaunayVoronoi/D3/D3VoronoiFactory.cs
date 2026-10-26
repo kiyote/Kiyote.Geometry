@@ -46,12 +46,13 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 
 		double[] circumcenters = CalculateCircumcenters( delaunator, coords );
 
-		double[] cellPointBuffer = new double[IVoronoiFactory.MaximumCellVertices * 2];
-		double[] projectedPointBuffer = new double[MaximumProjectedVertices * 2];
+		Span<double> cellPointBuffer = stackalloc double[IVoronoiFactory.MaximumCellVertices * 2];
+		Span<double> projectedPointBuffer = stackalloc double[MaximumProjectedVertices * 2];
+		Span<double> clippedPointBuffer = stackalloc double[MaximumClippedVertices * 2];
 		Span<Point> quantizedPointBuffer = stackalloc Point[MaximumClippedVertices];
 
 		List<Cell> cells = new List<Cell>( sites.Length );
-		List<double> cellCoords = new List<double>( MaximumClippedVertices * 2 );
+		VoronoiCellBuffer cellCoords = new VoronoiCellBuffer( clippedPointBuffer );
 		long edgeCapacity = 0;
 		for( int i = 0; i < sites.Length; i++ ) {
 			bool isOpen = false;
@@ -62,7 +63,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				delaunator,
 				delaunay,
 				i,
-				cellCoords,
+				ref cellCoords,
 				cellPointBuffer,
 				projectedPointBuffer,
 				ref isOpen
@@ -76,9 +77,10 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			int minY = int.MaxValue;
 			int maxX = int.MinValue;
 			int maxY = int.MinValue;
-			for( int j = 0; j < cellCoords.Count / 2; j++ ) {
-				int x = (int)Math.Floor( cellCoords[( j * 2 ) + 0] );
-				int y = (int)Math.Floor( cellCoords[( j * 2 ) + 1] );
+			ReadOnlySpan<double> clippedCoords = cellCoords.Coordinates;
+			for( int j = 0; j < clippedCoords.Length / 2; j++ ) {
+				int x = (int)Math.Floor( clippedCoords[( j * 2 ) + 0] );
+				int y = (int)Math.Floor( clippedCoords[( j * 2 ) + 1] );
 				if( x < minX ) {
 					minX = x;
 				}
@@ -174,7 +176,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		MapboxDelaunator delaunator,
 		D3Delaunay delaunay,
 		int i,
-		List<double> cellCoords,
+		ref VoronoiCellBuffer cellCoords,
 		Span<double> cellPointBuffer,
 		Span<double> projectedPointBuffer,
 		ref bool isOpen
@@ -211,7 +213,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				x - coords[previous],
 				y - coords[next + 1],
 				coords[next] - x,
-				cellCoords,
+				ref cellCoords,
 				ref isOpen
 			);
 		} else {
@@ -222,15 +224,15 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				delaunay,
 				i,
 				cellPointBuffer[..cellPointCount],
-				cellCoords,
+				ref cellCoords,
 				ref isOpen
 			);
 		}
-		Simplify( cellCoords );
+		Simplify( ref cellCoords );
 	}
 
 	private static void Simplify(
-		List<double> points
+		ref VoronoiCellBuffer points
 	) {
 		if( points.Count > 4 ) {
 			for( int i = 0; i < points.Count; i += 2 ) {
@@ -240,7 +242,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 					|| ( points[i + 1] == points[j + 1]
 						&& points[j + 1] == points[k + 1] )
 				) {
-					points.RemoveRange( j, 2 );
+					points.RemoveAt( j );
 					i -= 2;
 				}
 			}
@@ -262,7 +264,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		double vy0,
 		double vxn,
 		double vyn,
-		List<double> cellCoords, // Re-used list of doubles for cell vertices
+		ref VoronoiCellBuffer cellCoords,
 		ref bool isOpen
 	) {
 		// Duplicate the points, but make spaces for potential points
@@ -290,7 +292,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				delaunay,
 				i,
 				projectedPointBuffer[startIndex..endIndex],
-				cellCoords,
+				ref cellCoords,
 				ref isOpen
 			);
 		if( cellCoords.Count != 0 ) {
@@ -312,7 +314,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 						i,
 						c0,
 						c1,
-						cellCoords,
+						ref cellCoords,
 						j
 					);
 					n = cellCoords.Count;
@@ -328,10 +330,10 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				( bounds.Y1 + bounds.Y2 ) / 2
 		) ) {
 			cellCoords.Clear();
-			InsertPoint( cellCoords, cellCoords.Count, bounds.X1, bounds.Y1 );
-			InsertPoint( cellCoords, cellCoords.Count, bounds.X2, bounds.Y1 );
-			InsertPoint( cellCoords, cellCoords.Count, bounds.X2, bounds.Y2 );
-			InsertPoint( cellCoords, cellCoords.Count, bounds.X1, bounds.Y2 );
+			cellCoords.Insert( cellCoords.Count, bounds.X1, bounds.Y1 );
+			cellCoords.Insert( cellCoords.Count, bounds.X2, bounds.Y1 );
+			cellCoords.Insert( cellCoords.Count, bounds.X2, bounds.Y2 );
+			cellCoords.Insert( cellCoords.Count, bounds.X1, bounds.Y2 );
 		}
 	}
 
@@ -342,7 +344,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		D3Delaunay delaunay,
 		int i,
 		ReadOnlySpan<double> points,
-		List<double> cellCoords,
+		ref VoronoiCellBuffer cellCoords,
 		ref bool isOpen
 	) {
 		int n = points.Length;
@@ -366,7 +368,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			if( c0 == 0 && c1 == 0 ) {
 				//e0 = e1;
 				e1 = 0;
-				InsertPoint( cellCoords, cellCoords.Count, x1, y1 );
+				cellCoords.Insert( cellCoords.Count, x1, y1 );
 			} else {
 				double sx0;
 				double sy0;
@@ -401,11 +403,11 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 						   i,
 						   e0,
 						   e1,
-						   cellCoords,
+						   ref cellCoords,
 						   cellCoords.Count
 					   );
 					}
-					InsertPoint( cellCoords, cellCoords.Count, sx0, sy0 );
+					cellCoords.Insert( cellCoords.Count, sx0, sy0 );
 				}
 				e0 = e1;
 				e1 = EdgeCode( bounds, sx1, sy1 );
@@ -421,11 +423,11 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 					   i,
 					   e0,
 					   e1,
-					   cellCoords,
+					   ref cellCoords,
 					   cellCoords.Count
 				   );
 				}
-				InsertPoint( cellCoords, cellCoords.Count, sx1, sy1 );
+				cellCoords.Insert( cellCoords.Count, sx1, sy1 );
 			}
 		}
 		if( cellCoords.Count != 0 ) {
@@ -443,7 +445,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				   i,
 				   e0,
 				   e1,
-				   cellCoords,
+				   ref cellCoords,
 				   cellCoords.Count
 			   );
 			}
@@ -457,19 +459,11 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				( bounds.Y1 + bounds.Y2 ) / 2
 		) ) {
 			cellCoords.Clear();
-			InsertPoint( cellCoords, cellCoords.Count, bounds.X2, bounds.Y1 );
-			InsertPoint( cellCoords, cellCoords.Count, bounds.X2, bounds.Y2 );
-			InsertPoint( cellCoords, cellCoords.Count, bounds.X1, bounds.Y2 );
-			InsertPoint( cellCoords, cellCoords.Count, bounds.X1, bounds.Y1 );
+			cellCoords.Insert( cellCoords.Count, bounds.X2, bounds.Y1 );
+			cellCoords.Insert( cellCoords.Count, bounds.X2, bounds.Y2 );
+			cellCoords.Insert( cellCoords.Count, bounds.X1, bounds.Y2 );
+			cellCoords.Insert( cellCoords.Count, bounds.X1, bounds.Y1 );
 		}
-	}
-
-	private static void InsertPoint( List<double> points, int index, double x, double y ) {
-		if( points.Count >= 2 * MaximumClippedVertices ) {
-			throw new InvalidOperationException( $"Clipped Voronoi scratch exceeds {MaximumClippedVertices} vertices." );
-		}
-		points.Insert( index, x );
-		points.Insert( index + 1, y );
 	}
 
 	private static int Edge(
@@ -480,7 +474,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		int i,
 		int e0,
 		int e1,
-		List<double> points,
+		ref VoronoiCellBuffer points,
 		int j
 	) {
 		while( e0 != e1 ) {
@@ -533,7 +527,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 					x,
 					y
 			) ) ) {
-				InsertPoint( points, j, x, y );
+				points.Insert( j, x, y );
 				j += 2;
 			}
 		}

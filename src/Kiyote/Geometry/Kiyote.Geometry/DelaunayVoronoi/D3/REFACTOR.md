@@ -384,6 +384,19 @@ Require no allocations in repeated span/ID traversal after construction.
 
 ### O3 - replace mutable clipping lists with bounded span writers
 
+**Implemented storage step (2026-10-26):** clipping now uses a bounded
+`VoronoiCellBuffer` over caller-owned span scratch, with paired insertion and
+single tail shifts. Traversal, projection, clipped coordinates, and quantized
+points consume 5,440 bytes of stack scratch per creation, outside the cell loop;
+the nested generated-hull buffer adds at most 2,240 bytes. This removes the
+coordinate list and three scratch arrays (4,424 managed bytes/four objects per
+call). The clipping math and cyclic simplification order are unchanged.
+Eight frozen full-output fingerprints were verified on the old list clipper
+and the new storage, alongside geometry, capacity, ownership, concurrency, and
+zero-allocation buffer tests. See [benchmark results][benchmark-results] for
+runtime/allocation evidence. Linear-time simplification and `Step` arithmetic
+changes remain separate, unimplemented experiments.
+
 **Where:** [D3VoronoiFactory][voronoi-factory]: `Clip`, `ClipFinite`,
 `ClipInfinite`, `Edge`, `InsertPoint`, `Simplify`, and `Step`.
 
