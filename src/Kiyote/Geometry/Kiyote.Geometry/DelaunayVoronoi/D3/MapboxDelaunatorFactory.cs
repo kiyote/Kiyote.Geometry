@@ -25,11 +25,7 @@ namespace Kiyote.Geometry.DelaunayVoronoi.D3;
 internal sealed class MapboxDelaunatorFactory {
 
 	internal static int GetTriangleCapacity( int pointCount ) {
-		long capacity = Math.Max( (2L * pointCount) - 5, 0 ) * 3;
-		if( pointCount < 0 || capacity > Array.MaxLength ) {
-			throw new ArgumentOutOfRangeException( nameof( pointCount ), "Site count exceeds representable triangulation array capacities." );
-		}
-		return (int)capacity;
+		return DiagramSites.GetTriangleCapacity( pointCount );
 	}
 
 	public static MapboxDelaunator Create(

@@ -1,6 +1,14 @@
-namespace Kiyote.Geometry.DelaunayVoronoi.D3;
+namespace Kiyote.Geometry.DelaunayVoronoi;
 
 internal static class DiagramSites {
+
+	internal static int GetTriangleCapacity( int pointCount ) {
+		long capacity = Math.Max( 2L * pointCount - 5, 0 ) * 3;
+		if( pointCount < 0 || capacity > Array.MaxLength ) {
+			throw new ArgumentOutOfRangeException( nameof( pointCount ), "Site count exceeds representable triangulation array capacities." );
+		}
+		return (int)capacity;
+	}
 
 	internal static IReadOnlyList<Point> Snapshot(
 		IReadOnlyList<Point> points,
@@ -8,7 +16,7 @@ internal static class DiagramSites {
 		Rect? bounds = null
 	) {
 		ArgumentNullException.ThrowIfNull( points );
-		_ = MapboxDelaunatorFactory.GetTriangleCapacity( points.Count );
+		_ = GetTriangleCapacity( points.Count );
 		if( points.Count < 3 ) {
 			throw new ArgumentException( "At least three distinct, noncollinear sites are required.", nameof( points ) );
 		}

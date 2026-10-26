@@ -47,7 +47,10 @@ public class VoronoiWorkloadBenchmarks {
 			}
 		}
 
-		IVoronoi result = Create();
+		Validate( Create() );
+	}
+
+	private void Validate( IVoronoi result ) {
 		if( result.Cells.Count != _points.Length ) {
 			throw new InvalidOperationException( "Voronoi benchmark did not produce one cell per site." );
 		}

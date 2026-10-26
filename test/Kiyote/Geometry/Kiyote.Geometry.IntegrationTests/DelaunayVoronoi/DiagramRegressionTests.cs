@@ -188,15 +188,13 @@ public sealed class DiagramRegressionTests {
 	[TestCase( -32769, 0, 65536, 10 )]
 	[TestCase( 0, 0, 32769, 10 )]
 	public void Create_InvalidBounds_RejectsBeforeClipping( int x, int y, int width, int height ) {
-		IVoronoiFactory factory = new D3VoronoiFactory();
-		Assert.That( () => factory.Create( new Rect( x, y, width, height ), TriangleSites ),
+		Assert.That( () => _voronoi.Create( new Rect( x, y, width, height ), TriangleSites ),
 			Throws.TypeOf<ArgumentOutOfRangeException>() );
 	}
 
-	private static IReadOnlyList<Point> CreatePoints( bool voronoi, IReadOnlyList<Point> points, bool sanitize = false ) {
+	private IReadOnlyList<Point> CreatePoints( bool voronoi, IReadOnlyList<Point> points, bool sanitize = false ) {
 		if( voronoi ) {
-			IVoronoiFactory factory = new D3VoronoiFactory();
-			return factory.Create( Bounds, points, sanitize ).Points;
+			return _voronoi.Create( Bounds, points, sanitize ).Points;
 		}
 		IDelaunayFactory delaunay = new D3DelaunayFactory();
 		return delaunay.Create( points, sanitize ).Points;

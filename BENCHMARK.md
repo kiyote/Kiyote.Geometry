@@ -325,7 +325,7 @@ Intel Core i7-9700K CPU 3.60GHz (Coffee Lake), 1 CPU, 8 logical and 8 physical c
 | Method            | Size | Mean       | Error     | StdDev    | Allocated |
 |------------------ |----- |-----------:|----------:|----------:|----------:|
 | **Update_SingleCell** | **64**   |   **1.023 μs** | **0.0453 μs** | **0.0300 μs** |         **-** |
-| Update_SeamCell   | 64   |   1.127 μs | 0.0556 μs | 0.0368 μs |         - |
+| Update_SeamCell   | 64   |   1,127 μs | 0.0556 μs | 0.0368 μs |         - |
 | Update_32x32      | 64   | 107.906 μs | 6.7642 μs | 4.4741 μs |         - |
 | **Update_SingleCell** | **256**  |   **1.440 μs** | **0.1060 μs** | **0.0701 μs** |         **-** |
 | Update_SeamCell   | 256  |   1.485 μs | 0.0720 μs | 0.0428 μs |         - |
