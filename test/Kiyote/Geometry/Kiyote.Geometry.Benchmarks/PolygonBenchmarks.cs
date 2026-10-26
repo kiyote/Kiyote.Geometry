@@ -83,6 +83,24 @@ public class PolygonBenchmarks {
 		return new Polygon( _polyPoints );
 	}
 
+	[Benchmark]
+	public Polygon FromRoundedConvexVertices_Triangle() {
+		Span<Point> points = stackalloc Point[3] { _p2, _p3, _p1 };
+		return Polygon.FromRoundedConvexVertices( points );
+	}
+
+	[Benchmark]
+	public Polygon FromRoundedConvexVertices_Quadrilateral() {
+		Span<Point> points = stackalloc Point[4] { _p2, _p3, _p4, _p1 };
+		return Polygon.FromRoundedConvexVertices( points );
+	}
+
+	[Benchmark]
+	public Polygon FromRoundedConvexVertices_ConcaveQuadrilateral() {
+		Span<Point> points = stackalloc Point[4] { _p1, _p2, new Point( 400, 400 ), _p4 };
+		return Polygon.FromRoundedConvexVertices( points );
+	}
+
 	[GlobalSetup]
 	public void Validate() {
 		(bool clipped, Polygon result) = TryIntersect_WithIntersection();
@@ -91,6 +109,9 @@ public class PolygonBenchmarks {
 			new( 200, 475 ), new( 250, 250 ), new( 750, 350 )
 		];
 		if( Ctor().Points.Count != 4
+			|| FromRoundedConvexVertices_Triangle().Points.Count != 3
+			|| FromRoundedConvexVertices_Quadrilateral().Points.Count != 4
+			|| FromRoundedConvexVertices_ConcaveQuadrilateral().Points.Count != 3
 			|| Contains_Polygon()
 			|| !HasIntersection_Edge()
 			|| !HasIntersection_Polygon()

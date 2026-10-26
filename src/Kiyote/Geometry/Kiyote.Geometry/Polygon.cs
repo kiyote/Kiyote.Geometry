@@ -283,6 +283,34 @@ public sealed class Polygon {
 		if( count < 3 ) {
 			return None;
 		}
+		if( count <= 4 ) {
+			int winding = Math.Sign( Orientation( candidates[0], candidates[1], candidates[2] ) );
+			// Four triangle signs cover all edge/other-vertex half-planes for a quad.
+			if( winding != 0 && (count == 3 || (
+				Orientation( candidates[0], candidates[1], candidates[3] ) * winding > 0
+				&& Orientation( candidates[0], candidates[2], candidates[3] ) * winding > 0
+				&& Orientation( candidates[1], candidates[2], candidates[3] ) * winding > 0
+			)) ) {
+				int start = 0;
+				for( int i = 1; i < count; i++ ) {
+					if( ComparePoints( candidates[i], candidates[start] ) < 0 ) {
+						start = i;
+					}
+				}
+				Span<Point> ordered = stackalloc Point[4];
+				int index = start;
+				for( int i = 0; i < count; i++ ) {
+					ordered[i] = candidates[index];
+					index += winding;
+					if( index == count ) {
+						index = 0;
+					} else if( index < 0 ) {
+						index = count - 1;
+					}
+				}
+				return new Polygon( Own( ordered[..count] ) );
+			}
+		}
 		candidates.Sort( ComparePoints );
 		Span<Point> hull = stackalloc Point[2 * count];
 		int hullCount = 0;

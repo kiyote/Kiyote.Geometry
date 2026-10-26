@@ -70,6 +70,10 @@ Their convex hull removes quantization-induced concavity; a collapsed cell
 throws rather than publishing a degenerate polygon. This trusted producer path
 does not relax public polygon construction.
 
+Strict generated triangles and quadrilaterals use exact orientation checks to
+produce the same canonical hull without sorting. Redundant, concave, crossed,
+collapsed, or larger candidates retain the full sort-and-hull fallback.
+
 ## Diagram factory contracts
 
 Delaunay and Voronoi factories require at least three distinct, noncollinear

@@ -1,5 +1,69 @@
 # Benchmarks
 
+## O4 tiny generated-hull fast path (2026-10-26)
+
+Reference normalization is `19d1da7`, with the three new direct benchmarks
+added before measurement. Candidate is the strict triangle/quadrilateral fast
+path committed with this record; benchmark code/inputs are identical between
+measurements. Both suites ran serially with two launches, four warmups, twelve
+measured iterations and 300 ms requested iteration time, without overlapping
+agent-started builds/tests/benchmarks. Hardware/runtime match the comparisons
+below. These are before/after suites, not a randomized or ABBA comparison.
+
+| Generated polygon | Reference mean +/- error | Fast path mean +/- error | Allocated, both |
+|---|---:|---:|---:|
+| Triangle | 79.69 +/- 1.950 ns | 60.83 +/- 2.207 ns | 192 B |
+| Quadrilateral | 110.67 +/- 3.288 ns | 70.94 +/- 1.803 ns | 216 B |
+| Concave quadrilateral (fallback) | 104.28 +/- 2.897 ns | 105.38 +/- 1.760 ns | 192 B |
+
+Error is the BenchmarkDotNet 99.9% confidence-interval half-width. Strict
+triangle/quad runtime intervals are disjoint in the favourable direction:
+observed mean creation time falls 23.7%/35.9%. Fallback intervals overlap;
+no fallback improvement or statistical equivalence is claimed.
+
+| Complete Voronoi workload | Reference mean +/- error | Fast path mean +/- error |
+|---|---:|---:|
+| Factory, 400 sites | 311.02 +/- 5.410 us | 283.41 +/- 6.869 us |
+| Factory, 10,000 sites | 9,414.49 +/- 175.576 us | 8,952.91 +/- 230.124 us |
+| Factory, 40,000 sites | 59,666.81 +/- 2,222.351 us | 57,900.50 +/- 3,307.984 us |
+| Workload grid, 400 sites | 319.04 +/- 6.217 us | 276.01 +/- 1.770 us |
+| Workload jittered grid, 400 sites | 443.44 +/- 12.928 us | 433.19 +/- 13.101 us |
+| Workload high degree, 41 sites | 26.44 +/- 0.511 us | 25.98 +/- 0.738 us |
+
+The 400-site factory/grid intervals are disjoint, with observed mean reductions
+8.9%/13.5%; the 10,000-site factory intervals are also disjoint in this run
+(4.9% lower mean). The other end-to-end intervals overlap. Some distributions,
+including the large factory and direct triangle case, are multimodal.
+Do not generalize these one-comparison percentages to all inputs or infer a
+large-diagram speedup.
+
+Output allocation and retention are unchanged: the owned point/edge arrays and
+cached interface box remain. Measured small-diagram B/op is identical before
+and after; small differences in large-input estimates are not a storage
+optimization. The fast path uses at most 32 bytes of local point scratch.
+No pooled storage, lazy work, public API change, or weakened validation is used.
+
+Only strict three/four-point candidates enter the fast path. Exact signed
+triangle areas establish every quadrilateral supporting half-plane, then output
+is rotated to the lexicographic minimum with the fallback's positive winding.
+Every failed check and every larger input uses the original sort-and-chain
+hull unchanged. This also applies to generated intersection candidates; public
+polygon construction still uses its original rejection/normalization path.
+
+The independent `Int128` gift-wrap oracle was verified on the old normalizer
+before implementation. Both versions agree on exact vertex order for all
+7,290 triples/quads over a 3x3 integer grid and 3,000 seeded full-domain sets,
+plus explicit star, full-domain winding/ownership and validation fixtures.
+All eight full-diagram reference fingerprints remain unchanged.
+Validation: Release solution build with zero warnings/errors, all 474 unit
+tests and 173 integration tests passing.
+
+Reproduce with the comparison command below, selecting
+`*PolygonBenchmarks.FromRoundedConvexVertices*`,
+`*D3VoronoiFactoryBenchmarks*`, and `*VoronoiWorkloadBenchmarks*`.
+Raw reports are retained in session storage as
+`d3-small-hull-before`/`d3-small-hull-after`.
+
 ## O3 storage step: bounded Voronoi clipping scratch (2026-10-26)
 
 Reference: `44fd182`. Candidate: the bounded-clipping implementation committed

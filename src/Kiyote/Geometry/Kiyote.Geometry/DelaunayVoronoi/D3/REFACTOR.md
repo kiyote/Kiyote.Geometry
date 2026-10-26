@@ -435,6 +435,20 @@ Benchmark regular, jittered, and high-degree workloads separately.
 
 ### O4 - accelerate generated polygons without weakening validation
 
+**Implemented tiny-hull step (2026-10-26):** strict generated triangles and
+quadrilaterals bypass sorting after exact integer checks. Four signed triangle
+areas cover all quadrilateral edge/other-vertex half-plane tests. Accepted
+candidates are rotated to the lexicographic minimum and oriented exactly like
+the existing monotone-chain hull. All uncertain, redundant, concave, crossed,
+collapsed, or larger input retains that unchanged fallback; public construction
+still rejects invalid boundaries. An independent `Int128` gift-wrap oracle
+matches exact canonical output for 7,290 exhaustive small-grid triples/quads
+and 3,000 seeded full-domain inputs. Direct generated-triangle/quad benchmarks
+improve with unchanged allocation; see [benchmark results][benchmark-results]
+for settings, end-to-end results, and limitations. The threshold remains four.
+Removing the cached interface box, changing edge storage, and larger thresholds
+remain unimplemented options.
+
 **Where:** [Polygon][polygon], its generated-hull path, and the quantization
 loop in [D3VoronoiFactory][voronoi-factory].
 
