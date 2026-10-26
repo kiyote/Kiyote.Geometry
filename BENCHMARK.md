@@ -108,6 +108,33 @@ and O1. The checked-core distribution has multiple modes. The main core result
 is an approximately 11-15% mean reduction relative to G0, retaining the
 growable-stack correctness fix rather than returning to silent overflow.
 
+### Execution status and limits of these measurements
+
+Accepted work covers G0's seed/degeneracy/stack gates, O7 preparation, O8 hull
+rays, O2's incremental CSR variant, O6's compact/pre-sized directed-edge
+publication, and O1's local cursor/invariant-key changes. The original result
+still owns `Cell`/`Polygon` objects; no lazy output or reduced-work mode was used.
+
+For 40,000-site full Voronoi creation, G0 versus the latest measured stage is
+91.46 ms versus 54.42 ms, and 41,427.87 KB versus approximately 22,878 KB allocated
+per call. This is about 40.5% lower mean time and 44.8% lower allocation. These
+are sequential, two-launch benchmark runs, not a randomized interleaved
+experiment. Runtime variance, JIT tiering, hardware load, and GC can influence
+the comparison. Allocated bytes are not retained-memory or peak-RSS figures.
+
+The full flattened-cell/vertex rewrite, bounded clipping writers, polygon fast
+paths, shared traversal, expanded workspace pooling, indexed Delaunay output,
+alternative sorts/layouts, parallel creation, and half-plane clipping remain
+unimplemented options. Further work should first collect current CPU/allocation
+profiles and include irregular/clustered, translated thin, mostly-hull, and
+sanitization workloads; existing end-to-end fixtures do not cover that complete
+matrix. No claim is made that all fourteen plan options are complete or that
+the sampled exact-predicate tests prove every integer-domain input correct.
+
+Regression coverage now also includes a warm-pool full-diagram allocation
+ceiling (400-site grid, 240 KiB) and old-result stability across concurrent
+creation, duplicate rejection, and subsequent successful reuse.
+
 ## Earlier full-suite measurements
 
 ```
