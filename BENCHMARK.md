@@ -1,11 +1,114 @@
 # Benchmarks
 
-## Incremental D3 refactoring (2026-10-26)
+## Serial D3 reference/candidate comparison (2026-10-26)
+
+After the user reported concurrent compilation during earlier measurements,
+the correctness baseline `ea40865` and committed candidate `6cfaa5b` were
+remeasured in separate worktrees. The benchmark project is unchanged between
+these commits. The reference includes the seed/degeneracy/stack correctness
+fixes; it is not the original, silently overflowing implementation.
+
+Four complete suites ran serially in reference/candidate/candidate/reference
+order (ABBA), without overlapping agent-started builds, tests, or benchmarks.
+Each suite contained eleven benchmarks. Every benchmark used two process
+launches, four warmups, twelve measured iterations, and a requested 300 ms
+iteration time. Both worktrees used BenchmarkDotNet 0.15.8, SDK
+11.0.100-rc.2.26504.105, .NET 10.0.13, and the same Intel Core i7-9700K.
+The machine was not reserved or externally load-isolated; ABBA reduces the
+one-way order bias but does not eliminate hardware, GC, or background-load noise.
+
+### Runtime results
+
+All values are microseconds, shown as mean +/- the BenchmarkDotNet 99.9%
+confidence-interval half-width. Columns follow actual execution order; paired
+comparisons are reference 1 versus candidate 1 and reference 2 versus candidate 2.
+No pooled confidence interval or universal speedup is inferred.
+
+| Workload | Reference 1 | Candidate 1 | Candidate 2 | Reference 2 |
+|---|---:|---:|---:|---:|
+| Delaunay, 400 sites | 74.55 +/- 1.680 | 67.36 +/- 1.646 | 66.16 +/- 1.249 | 70.04 +/- 1.755 |
+| Delaunay, 10,000 sites | 3,590.60 +/- 195.376 | 3,373.92 +/- 69.537 | 3,440.86 +/- 126.224 | 3,345.10 +/- 22.518 |
+| Delaunay, 40,000 sites | 15,923.03 +/- 141.503 | 15,653.94 +/- 378.833 | 16,352.34 +/- 822.623 | 16,203.27 +/- 357.315 |
+| Voronoi, 400 sites | 351.05 +/- 9.897 | 286.23 +/- 7.181 | 291.13 +/- 9.440 | 349.16 +/- 8.975 |
+| Voronoi, 10,000 sites | 15,548.46 +/- 841.748 | 8,514.85 +/- 223.783 | 9,218.96 +/- 341.942 | 14,587.75 +/- 368.719 |
+| Voronoi, 40,000 sites | 81,458.05 +/- 2,292.242 | 54,811.31 +/- 3,464.458 | 59,436.57 +/- 2,484.120 | 79,505.77 +/- 2,401.591 |
+| Voronoi workload, grid (400 sites) | 348.47 +/- 7.638 | 300.88 +/- 8.983 | 293.35 +/- 3.137 | 348.36 +/- 4.514 |
+| Voronoi workload, jittered grid (400 sites) | 551.71 +/- 25.951 | 440.57 +/- 13.288 | 418.43 +/- 6.588 | 540.96 +/- 13.905 |
+| Voronoi workload, high degree (41 sites) | 32.07 +/- 1.156 | 27.35 +/- 0.592 | 25.95 +/- 0.602 | 32.73 +/- 0.920 |
+| Core, 40,000 sites, unchecked | 13,673.40 +/- 328.932 | 12,958.04 +/- 318.050 | 13,331.17 +/- 302.598 | 12,816.11 +/- 115.460 |
+| Core, 40,000 sites, duplicate check | 13,679.89 +/- 424.705 | 13,946.92 +/- 440.504 | 13,601.99 +/- 324.199 | 13,418.32 +/- 268.011 |
+
+Voronoi runtime intervals are disjoint in the favourable direction in both
+paired comparisons for every measured workload. The 40,000-site mean reductions
+are 32.7% and 25.2%; the 10,000-site reductions are 45.2% and 36.8%.
+The small factory reductions are 18.5% and 16.6%. These are reductions in observed
+mean creation time, not throughput percentages or guarantees for other inputs.
+Large candidate Voronoi distributions were multimodal in both suites, so the
+size of the speedup remains variable despite the repeatable direction.
+
+The small Delaunay case also improves in both comparisons. Larger Delaunay
+intervals overlap and their mean direction reverses between comparisons.
+Unchecked-core mean direction also reverses, while checked-core intervals
+overlap. Therefore the earlier O1 claim of an 11-15% core improvement is not
+reproduced, and no core or large-Delaunay speedup is claimed. O1 retains the
+simple local cursor/span and invariant-hash implementation; these end-to-end
+measurements do not isolate its individual effects.
+
+### Allocation results
+
+Values are managed allocated KB per operation, where 1 KB = 1,024 bytes.
+Ranges cover both suites for that revision, not confidence intervals.
+
+| Voronoi workload | Reference allocated | Candidate allocated | Reduction |
+|---|---:|---:|---:|
+| 400 sites | 346.11 KB | 233.21 KB | 32.6% |
+| 10,000 sites | 10,036.43 KB | 5,655.88-5,656.08 KB | 43.6% |
+| 40,000 sites | 41,428.39-41,428.40 KB | 22,877.75-22,878.25 KB | 44.8% |
+| Workload grid | 346.11 KB | 233.21 KB | 32.6% |
+| Workload jittered grid | 485.67 KB | 269.34 KB | 44.5% |
+| Workload high degree | 52.59 KB | 29.95 KB | 43.1% |
+
+Core and Delaunay allocation is effectively unchanged. Allocated bytes do not
+measure retained storage, peak working set, or total native memory. Results
+remain eager and owned; the allocation improvement is not achieved by omitting
+geometry or deferring output construction. Sanitization is not exercised by
+these benchmark selectors; its heavy-filter memory correction is covered by
+the dedicated preparation regressions described below.
+
+### Reproduction and validation
+
+From each worktree's own root, build the Release benchmark project, then run:
+
+```powershell
+dotnet run --project .\test\Kiyote\Geometry\Kiyote.Geometry.Benchmarks\Kiyote.Geometry.Benchmarks.csproj `
+  -c Release --no-build --no-restore -- `
+  --filter "*MapboxDelaunatorFactoryBenchmarks.Create_1000x1000*" `
+           "*D3DelaunayFactoryBenchmarks*" `
+           "*D3VoronoiFactoryBenchmarks*" `
+           "*VoronoiWorkloadBenchmarks*" `
+  --warmupCount 4 --iterationCount 12 --iterationTime 300 --launchCount 2 --join `
+  --artifacts "<unique absolute results directory outside the worktree>"
+```
+
+Repeat in the ABBA order above, with no overlapping benchmark/build/test work.
+Grid labels 100/500/1000 represent 400/10,000/40,000 sites, not site counts.
+Raw logs and BenchmarkDotNet reports were retained outside the worktrees in
+session storage; the temporary reference worktree is not part of the changes.
+
+Candidate validation before measurement: Release solution build with no
+warnings/errors, 454 unit tests and 165 integration tests passing. Every code
+update is separately committed. Accepted/deferred plan scope is listed below;
+this comparison validates the current batch, not completion of all fourteen
+options. The next architectural changes should be selected using profiles and
+expanded irregular/sanitized workload coverage, rather than the contaminated
+incremental timings or an unconfirmed core-kernel gain.
+
+## Earlier incremental D3 observations (2026-10-26)
 
 **Timing status:** the user reported concurrent compilation during the earlier
 measurement window. The incremental timing tables below are retained as raw
 historical observations, but their speedup/regression conclusions are
-provisional. Use the subsequent isolated reference/candidate comparison for
+provisional. Use the serial reference/candidate comparison above for
 runtime decisions. Allocation figures and deterministic storage calculations
 are separate from this CPU-load concern.
 
