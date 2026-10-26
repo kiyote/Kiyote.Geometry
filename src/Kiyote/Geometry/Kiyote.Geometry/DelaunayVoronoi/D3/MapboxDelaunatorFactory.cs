@@ -33,14 +33,23 @@ internal sealed class MapboxDelaunatorFactory {
 		bool rejectDuplicates = false
 	) {
 		int n = coords.Length / 2;
+		if( coords.Length % 2 != 0 ) {
+			throw new ArgumentException( "Site coordinates must be supplied in pairs.", nameof( coords ) );
+		}
+		if( n < 3 ) {
+			throw new InvalidOperationException( "No Delaunay triangulation exists for this input." );
+		}
 		int triangleCapacity = GetTriangleCapacity( n );
 		int hashSize = (int)Math.Ceiling( Math.Sqrt( n ) );
+		Span<int> initialEdgeStack = stackalloc int[512];
+		DelaunatorEdgeStack edgeStack = new DelaunatorEdgeStack( initialEdgeStack );
 		int[] scratch = ArrayPool<int>.Shared.Rent( checked( (4 * n) + hashSize ) );
 		double[]? distances = null;
 		try {
 			distances = ArrayPool<double>.Shared.Rent( n );
-			return CreateCore( coords, rejectDuplicates, triangleCapacity, scratch, distances.AsSpan( 0, n ) );
+			return CreateCore( coords, rejectDuplicates, triangleCapacity, scratch, distances.AsSpan( 0, n ), ref edgeStack );
 		} finally {
+			edgeStack.Dispose();
 			ArrayPool<int>.Shared.Return( scratch );
 			if( distances is not null ) {
 				ArrayPool<double>.Shared.Return( distances );
@@ -53,10 +62,10 @@ internal sealed class MapboxDelaunatorFactory {
 		bool rejectDuplicates,
 		int triangleCapacity,
 		Span<int> scratch,
-		Span<double> dists
+		Span<double> dists,
+		ref DelaunatorEdgeStack edgeStack
 	) {
 		int n = coords.Length / 2;
-		Span<int> edgeStack = stackalloc int[512];
 		// temporary arrays for tracking the edges of the advancing convex hull
 		int hashSize = (int)Math.Ceiling( Math.Sqrt( n ) );
 		Span<int> hullPrev = scratch[..n];
@@ -110,7 +119,7 @@ internal sealed class MapboxDelaunatorFactory {
 
 			ids[i] = i;
 		}
-		double cx = ( minX + maxY ) / 2.0D;
+		double cx = ( minX + maxX ) / 2.0D;
 		double cy = ( minY + maxY ) / 2.0D;
 
 		int i0 = int.MinValue;
@@ -126,6 +135,9 @@ internal sealed class MapboxDelaunatorFactory {
 			}
 		}
 
+		if( i0 == int.MinValue ) {
+			throw new InvalidOperationException( "No finite triangulation seed exists for this input." );
+		}
 		double i0x = coords[( 2 * i0 ) + 0];
 		double i0y = coords[( 2 * i0 ) + 1];
 
@@ -145,6 +157,9 @@ internal sealed class MapboxDelaunatorFactory {
 			}
 		}
 
+		if( i1 == int.MinValue ) {
+			throw new InvalidOperationException( "No distinct triangulation seed exists for this input." );
+		}
 		double i1x = coords[( 2 * i1 ) + 0];
 		double i1y = coords[( 2 * i1 ) + 1];
 
@@ -165,12 +180,11 @@ internal sealed class MapboxDelaunatorFactory {
 			}
 		}
 
-		double i2x = coords[( 2 * i2 ) + 0];
-		double i2y = coords[( 2 * i2 ) + 1];
-
-		if( minRadius == double.PositiveInfinity ) {
+		if( i2 == int.MinValue ) {
 			throw new InvalidOperationException( "No Delaunay triangulation exists for this input." );
 		}
+		double i2x = coords[( 2 * i2 ) + 0];
+		double i2y = coords[( 2 * i2 ) + 1];
 
 		if( Orient( i0x, i0y, i1x, i1y, i2x, i2y ) < 0D ) {
 			int i = i1;
@@ -250,16 +264,15 @@ internal sealed class MapboxDelaunatorFactory {
 				q = hullNext[e];
 			}
 
-			// likely a near-duplicate point; skip it
 			if( e == -1 ) {
-				continue;
+				throw new InvalidOperationException( "Unable to insert a site into the triangulation." );
 			}
 
 			// add the first triangle from the point
 			int t = AddTriangle( e, i, hullNext[e], -1, -1, hullTri[e], ref trianglesLen, triangles, halfEdges );
 
 			// recursively flip triangles from the point until they satisfy the Delaunay condition
-			hullTri[i] = Legalize( t + 2, hullStart, halfEdges, edgeStack, triangles, coords, hullTri, hullPrev );
+			hullTri[i] = Legalize( t + 2, hullStart, halfEdges, ref edgeStack, triangles, coords, hullTri, hullPrev );
 			hullTri[e] = t; // keep track of boundary triangles on the hull
 			hullSize++;
 
@@ -268,7 +281,7 @@ internal sealed class MapboxDelaunatorFactory {
 			q = hullNext[next];
 			while( Orient( x, y, coords[2 * next], coords[( 2 * next ) + 1], coords[2 * q], coords[( 2 * q ) + 1] ) < 0.0D ) {
 				t = AddTriangle( next, i, q, hullTri[i], -1, hullTri[next], ref trianglesLen, triangles, halfEdges );
-				hullTri[i] = Legalize( t + 2, hullStart, halfEdges, edgeStack, triangles, coords, hullTri, hullPrev );
+				hullTri[i] = Legalize( t + 2, hullStart, halfEdges, ref edgeStack, triangles, coords, hullTri, hullPrev );
 				hullNext[next] = next; // mark as removed
 				hullSize--;
 				next = q;
@@ -281,7 +294,7 @@ internal sealed class MapboxDelaunatorFactory {
 				q = hullPrev[e];
 				while( Orient( x, y, coords[2 * q], coords[( 2 * q ) + 1], coords[2 * e], coords[( 2 * e ) + 1] ) < 0.0D ) {
 					t = AddTriangle( q, i, e, -1, hullTri[e], hullTri[q], ref trianglesLen, triangles, halfEdges );
-					 Legalize( t + 2, hullStart, halfEdges, edgeStack, triangles, coords, hullTri, hullPrev );
+					Legalize( t + 2, hullStart, halfEdges, ref edgeStack, triangles, coords, hullTri, hullPrev );
 					hullTri[q] = t;
 					hullNext[e] = e; // mark as removed
 					hullSize--;
@@ -321,13 +334,12 @@ internal sealed class MapboxDelaunatorFactory {
 		int a,
 		int hullStart,
 		Span<int> halfEdges,
-		Span<int> edgeStack,
+		ref DelaunatorEdgeStack edgeStack,
 		Span<int> triangles,
 		ReadOnlySpan<double> coords,
 		Span<int> hullTri,
 		Span<int> hullPrev
 	) {
-		int i = 0;
 		int ar;
 		while( true ) {
 			int b = halfEdges[a];
@@ -351,10 +363,10 @@ internal sealed class MapboxDelaunatorFactory {
 			ar = a0 + ( ( a + 2 ) % 3 );
 
 			if( b == -1 ) {
-				if( i == 0 ) {
+				if( edgeStack.Count == 0 ) {
 					break;
 				}
-				a = edgeStack[--i];
+				a = edgeStack.Pop();
 				continue;
 			}
 
@@ -397,15 +409,12 @@ internal sealed class MapboxDelaunatorFactory {
 
 				int br = b0 + ( ( b + 1 ) % 3 );
 
-				// don't worry about hitting the cap: it can only happen on extremely degenerate input
-				if( i < edgeStack.Length ) {
-					edgeStack[i++] = br;
-				}
+				edgeStack.Push( br );
 			} else {
-				if( i == 0 ) {
+				if( edgeStack.Count == 0 ) {
 					break;
 				}
-				a = edgeStack[--i];
+				a = edgeStack.Pop();
 			}
 		}
 

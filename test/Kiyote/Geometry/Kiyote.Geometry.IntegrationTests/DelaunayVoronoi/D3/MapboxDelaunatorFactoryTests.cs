@@ -158,13 +158,13 @@ public sealed class MapboxDelaunatorFactoryTests {
 
 		Assert.That( delaunator, Is.Not.Null );
 		// The 3 points of the hull
-		Assert.That( points[delaunator.Hull[0]], Is.EqualTo( p2 ), nameof( p2 ) );
-		Assert.That( points[delaunator.Hull[1]], Is.EqualTo( p1 ), nameof( p1 ) );
-		Assert.That( points[delaunator.Hull[2]], Is.EqualTo( p3 ), nameof( p3 ) );
+		Assert.That( points[delaunator.Hull[0]], Is.EqualTo( p1 ), nameof( p1 ) );
+		Assert.That( points[delaunator.Hull[1]], Is.EqualTo( p3 ), nameof( p3 ) );
+		Assert.That( points[delaunator.Hull[2]], Is.EqualTo( p2 ), nameof( p2 ) );
 		// The two triangles
-		Assert.That( points[delaunator.Triangles[0]], Is.EqualTo( p2 ), nameof( p2 ) );
-		Assert.That( points[delaunator.Triangles[1]], Is.EqualTo( p1 ), nameof( p1 ) );
-		Assert.That( points[delaunator.Triangles[2]], Is.EqualTo( p3 ), nameof( p3 ) );
+		Assert.That( points[delaunator.Triangles[0]], Is.EqualTo( p1 ), nameof( p1 ) );
+		Assert.That( points[delaunator.Triangles[1]], Is.EqualTo( p3 ), nameof( p3 ) );
+		Assert.That( points[delaunator.Triangles[2]], Is.EqualTo( p2 ), nameof( p2 ) );
 	}
 
 	[TestCase( 0, 0, 10, 0, 0, 10, false )]

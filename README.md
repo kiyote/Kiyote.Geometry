@@ -100,6 +100,11 @@ collections; reusing or mutating an input array/list cannot change an existing
 diagram. Quantized Voronoi polygons approximate the continuous cells, not an
 exact partition of continuous space.
 
+Triangulation seed selection uses the bounding-box center on each axis.
+Triangle and hull starting indices are implementation details, not a canonical
+ordering. Edge legalization grows its temporary stack when necessary rather
+than discarding pending work.
+
 `Triangle` is an immutable value type with ordered structural equality, not a
 nullable reference object. Its default value is degenerate and is rejected by
 filled rasterization. Triangles are stored inline in collections; copying large
