@@ -1,5 +1,47 @@
 # Benchmarks
 
+## O5 shared one-ring traversal (2026-10-26)
+
+Reference: `a4c6539`. Candidate: the O5 implementation committed with this
+record. Existing complete-output benchmark fixtures are unchanged. Settings
+remain two launches, four warmups, twelve iterations, 300 ms requested iteration
+time, BenchmarkDotNet 0.15.8 / .NET 10.0.13 on the same i7-9700K.
+Suites ran serially without overlapping agent-started builds/tests.
+
+| Voronoi workload | Reference mean +/- error | Shared walk mean +/- error |
+|---|---:|---:|
+| Factory, 400 sites | 264.64 +/- 3.646 us | 254.66 +/- 2.827 us |
+| Factory, 10,000 sites | 8,474.16 +/- 267.052 us | 8,243.67 +/- 133.097 us |
+| Factory, 40,000 sites | 52,088.88 +/- 1,409.584 us | 51,170.64 +/- 2,547.015 us |
+| Workload grid | 274.23 +/- 2.495 us | 272.57 +/- 5.651 us |
+| Workload jittered grid | 418.14 +/- 15.079 us | 407.46 +/- 8.885 us |
+| Workload high degree | 24.45 +/- 0.667 us | 25.16 +/- 0.550 us |
+
+Error is the 99.9% confidence-interval half-width. Only the 400-site factory
+intervals are disjoint in the favourable direction (3.8% lower observed mean).
+Other intervals overlap; no general speedup or statistical equivalence is
+established by this single before/after comparison.
+
+An initial candidate passed the new two-span topology view by value. Its
+40,000-site mean was 58,002.72 +/- 2,746.365 us, worse than the reference.
+It was not accepted. The final readonly-reference variant above avoids those
+view copies, although these runs alone cannot isolate copying from load drift.
+Raw reports are retained as `d3-shared-before`, `d3-shared-after` (rejected
+by-value variant), and `d3-shared-byref`.
+
+The accepted variant removes the duplicate cell/adjacency topology walk and one
+32-byte heap wrapper per call. Small-input B/op reproduces this saving
+(234,384 to 234,352 bytes); large-input estimates include measurement overhead.
+The final CSR arrays, output geometry, eager work and retention are unchanged.
+The two traversal-index arrays remain allocated; broader pooling is O9.
+
+Validation: Release solution build, 61 affected unit tests and 87 diagram
+integration tests pass, including eight frozen ordered-output fingerprints and
+open/closed degrees 25/26/40/63/64. New tests cover dirty sliced index buffers,
+exterior-halfedge preference and zero-allocation repeated index building.
+The old index profiler now reuses caller-owned buffers and measures index
+construction rather than allocation of an owning wrapper.
+
 ## O4 tiny generated-hull fast path (2026-10-26)
 
 Reference normalization is `19d1da7`, with the three new direct benchmarks

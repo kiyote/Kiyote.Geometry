@@ -1,17 +1,16 @@
 namespace Kiyote.Geometry.DelaunayVoronoi.D3;
 
-internal sealed class D3Delaunay {
+internal readonly ref struct D3Delaunay {
 
 	public D3Delaunay(
-		int[] inedges,
-		int[] hullIndex
+		ReadOnlySpan<int> inedges,
+		ReadOnlySpan<int> hullIndex
 	) {
 		Inedges = inedges;
 		HullIndex = hullIndex;
 	}
 
-	public int[] Inedges { get; }
+	public ReadOnlySpan<int> Inedges { get; }
 
-	public int[] HullIndex { get; }
+	public ReadOnlySpan<int> HullIndex { get; }
 }
-

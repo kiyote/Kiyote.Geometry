@@ -127,6 +127,10 @@ one-ring traversal order. Cell indices match site order. Resolve a neighbour as
 `diagram.Cells[neighbourIndex]`. This replaces the former `Neighbours` property.
 Adjacency remains eager, complete, and stable for the diagram's lifetime.
 
+Cell circumcentres and ordered neighbour indices are collected in one topology
+walk, including the terminal hull neighbour. Traversal indices are built into
+caller-owned buffers and accessed through a non-owning, stack-only view.
+
 Global Voronoi edges are distinct directed polygon sides: reversing endpoints
 produces a different edge. Construction uses pre-sized compact bounded-coordinate
 keys internally; published edges retain full `Point` coordinates.

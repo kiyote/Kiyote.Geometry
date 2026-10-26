@@ -62,19 +62,20 @@ internal sealed class D3DelaunayFactory : IDelaunayFactory {
 		return result;
 	}
 
-	internal static D3Delaunay Create(
-		ReadOnlySpan<double> coords,
-		MapboxDelaunator delaunator
+	internal static void BuildIndices(
+		MapboxDelaunator delaunator,
+		Span<int> inedges,
+		Span<int> hullIndex
 	) {
-		int n = coords.Length / 2;
-		int[] inedges = new int[n];
-		int[] hullIndex = new int[n];
+		if( inedges.Length != hullIndex.Length ) {
+			throw new ArgumentException( "Traversal index buffers must have the same site count.", nameof( hullIndex ) );
+		}
 
 		ReadOnlySpan<int> halfEdges = delaunator.HalfEdges;
 		ReadOnlySpan<int> hull = delaunator.Hull;
 		ReadOnlySpan<int> triangles = delaunator.Triangles;
-		Array.Fill( inedges, -1 );
-		Array.Fill( hullIndex, -1 );
+		inedges.Fill( -1 );
+		hullIndex.Fill( -1 );
 
 		// Compute an index from each point to an (arbitrary) incoming halfedge
 		// Used to give the first neighbor of each point; for this reason,
@@ -94,7 +95,5 @@ internal sealed class D3DelaunayFactory : IDelaunayFactory {
 		if( hull.Length <= 2 ) {
 			throw new InvalidOperationException( "Degenerate diagram detected." );
 		}
-
-		return new D3Delaunay( inedges, hullIndex );
 	}
 }

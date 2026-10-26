@@ -26,8 +26,10 @@ public sealed class D3DelaunayFactoryProfiler {
 	}
 
 	public void Profile() {
+		int[] inedges = new int[_coords.Length / 2];
+		int[] hullIndex = new int[inedges.Length];
 		for( int i = 0; i < Iterations; i++ ) {
-			 D3DelaunayFactory.Create( _coords, _delaunator );
+			D3DelaunayFactory.BuildIndices( _delaunator, inedges, hullIndex );
 		}
 	}
 }

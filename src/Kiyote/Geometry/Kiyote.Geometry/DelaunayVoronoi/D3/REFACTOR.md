@@ -488,6 +488,18 @@ rejection tests unchanged. Benchmark polygon construction and complete diagrams.
 
 ### O5 - share topology traversal and remove temporary wrapper ownership
 
+**Implemented (2026-10-26):** `BuildIndices` fills caller-owned spans with the
+original sentinel initialization and exterior-halfedge preference.
+`D3Delaunay` is now a readonly, non-owning ref-struct view passed by readonly
+reference, not a heap owner. Cell collection emits both circumcentres and CSR
+neighbour IDs in the original one-ring order, including the terminal hull
+neighbour. There is no second adjacency walk or temporary neighbour buffer.
+`Contains`/`Step` retain their specialized traversal and distance comparisons.
+Exact output fingerprints, supported-degree/limit tests, primal adjacency,
+dirty sliced index buffers, concurrency and allocation regressions pass.
+One wrapper allocation (32 bytes on x64) is removed; runtime evidence is in
+[benchmark results][benchmark-results], without a large-input speedup claim.
+
 **Where:** [D3DelaunayFactory][delaunay-factory],
 [D3Delaunay][delaunay-topology], and cell/neighbour traversal in
 [D3VoronoiFactory][voronoi-factory].

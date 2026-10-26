@@ -42,9 +42,20 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		ReadOnlySpan<double> coords = coordinateBuffer.AsSpan( 0, sites.Length * 2 );
 
 		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( coords, rejectDuplicates: !sanitizePoints );
-		D3Delaunay delaunay = D3DelaunayFactory.Create( coords, delaunator );
+		int[] inedges = new int[sites.Length];
+		int[] hullIndex = new int[sites.Length];
+		D3DelaunayFactory.BuildIndices( delaunator, inedges, hullIndex );
+		D3Delaunay delaunay = new D3Delaunay( inedges, hullIndex );
 
 		double[] circumcenters = CalculateCircumcenters( delaunator, coords );
+
+		long neighbourCapacity = (long)delaunator.Triangles.Length + delaunator.Hull.Length;
+		if( neighbourCapacity > Array.MaxLength ) {
+			throw new ArgumentOutOfRangeException( nameof( points ), "Site count exceeds representable adjacency array capacities." );
+		}
+		int[] neighbourOffsets = new int[sites.Length + 1];
+		int[] neighbourIndices = new int[(int)neighbourCapacity];
+		int neighbourCount = 0;
 
 		Span<double> cellPointBuffer = stackalloc double[IVoronoiFactory.MaximumCellVertices * 2];
 		Span<double> projectedPointBuffer = stackalloc double[MaximumProjectedVertices * 2];
@@ -55,16 +66,20 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		VoronoiCellBuffer cellCoords = new VoronoiCellBuffer( clippedPointBuffer );
 		long edgeCapacity = 0;
 		for( int i = 0; i < sites.Length; i++ ) {
+			neighbourOffsets[i] = neighbourCount;
+			neighbourCount += CollectCell(
+				i, circumcenters, delaunator, delaunay, cellPointBuffer,
+				neighbourIndices.AsSpan( neighbourCount ), out int cellPointCount
+			);
 			bool isOpen = false;
 			Clip(
 				bounds,
 				coords,
-				circumcenters,
 				delaunator,
 				delaunay,
 				i,
 				ref cellCoords,
-				cellPointBuffer,
+				cellPointBuffer[..cellPointCount],
 				projectedPointBuffer,
 				ref isOpen
 			);
@@ -109,42 +124,6 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			edgeCapacity += polygon.Edges.Length;
 		}
 
-		ReadOnlySpan<int> inedges = delaunay.Inedges;
-		ReadOnlySpan<int> hullIndex = delaunay.HullIndex;
-		long neighbourCapacity = (long)delaunator.Triangles.Length + delaunator.Hull.Length;
-		if( neighbourCapacity > Array.MaxLength ) {
-			throw new ArgumentOutOfRangeException( nameof( points ), "Site count exceeds representable adjacency array capacities." );
-		}
-		int[] neighbourOffsets = new int[sites.Length + 1];
-		int[] neighbourIndices = new int[(int)neighbourCapacity];
-		int neighbourCount = 0;
-		for( int i = 0; i < sites.Length; i++ ) {
-			neighbourOffsets[i] = neighbourCount;
-			int e0 = inedges[i];
-			if( e0 == -1 ) {
-				throw new InvalidOperationException( "Coincident point." );
-			}
-			int e = e0;
-			int p0;
-			do {
-				p0 = delaunator.Triangles[e];
-				neighbourIndices[neighbourCount++] = p0;
-
-				e = e % 3 == 2 ? e - 2 : e + 1;
-				if( delaunator.Triangles[e] != i ) {
-					throw new InvalidOperationException( "Bad triangulation." );
-				}
-				e = delaunator.HalfEdges[e];
-				if( e == -1 ) {
-					int p = delaunator.Hull[( hullIndex[i] + 1 ) % delaunator.Hull.Length];
-					if( p != p0 ) {
-						neighbourIndices[neighbourCount++] = p;
-					}
-					break;
-				}
-
-			} while( e != e0 );
-		}
 		neighbourOffsets[sites.Length] = neighbourCount;
 		if( neighbourCount != neighbourIndices.Length ) {
 			throw new InvalidOperationException( "Triangulation adjacency does not match the mesh edge count." );
@@ -172,28 +151,14 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	private static void Clip(
 		Rect bounds,
 		ReadOnlySpan<double> coords,
-		ReadOnlySpan<double> circumcenters,
 		MapboxDelaunator delaunator,
-		D3Delaunay delaunay,
+		in D3Delaunay delaunay,
 		int i,
 		ref VoronoiCellBuffer cellCoords,
-		Span<double> cellPointBuffer,
+		ReadOnlySpan<double> cellPoints,
 		Span<double> projectedPointBuffer,
 		ref bool isOpen
 	) {
-		Cell(
-			i,
-			circumcenters,
-			delaunator,
-			delaunay,
-			cellPointBuffer,
-			out int cellPointCount
-		);
-		// If it's an empty calculation, bail early
-		if( cellPointCount == 0 ) {
-			throw new InvalidOperationException( "Cell contains no points." );
-			//return Array.Empty<double>();
-		}
 		int hullPosition = delaunay.HullIndex[i];
 		if( hullPosition >= 0 ) {
 			ReadOnlySpan<int> hull = delaunator.Hull;
@@ -207,7 +172,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				delaunator,
 				delaunay,
 				i,
-				cellPointBuffer[..cellPointCount],
+				cellPoints,
 				projectedPointBuffer,
 				coords[previous + 1] - y,
 				x - coords[previous],
@@ -223,7 +188,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				delaunator,
 				delaunay,
 				i,
-				cellPointBuffer[..cellPointCount],
+				cellPoints,
 				ref cellCoords,
 				ref isOpen
 			);
@@ -256,7 +221,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		Rect bounds,
 		ReadOnlySpan<double> coords,
 		MapboxDelaunator delaunator,
-		D3Delaunay delaunay,
+		in D3Delaunay delaunay,
 		int i,
 		ReadOnlySpan<double> points,
 		Span<double> projectedPointBuffer,
@@ -341,7 +306,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		Rect bounds,
 		ReadOnlySpan<double> coords,
 		MapboxDelaunator delaunator,
-		D3Delaunay delaunay,
+		in D3Delaunay delaunay,
 		int i,
 		ReadOnlySpan<double> points,
 		ref VoronoiCellBuffer cellCoords,
@@ -470,7 +435,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		Rect bounds,
 		ReadOnlySpan<double> coords,
 		MapboxDelaunator delaunator,
-		D3Delaunay delaunay,
+		in D3Delaunay delaunay,
 		int i,
 		int e0,
 		int e1,
@@ -537,7 +502,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	private static bool Contains(
 		ReadOnlySpan<double> coords,
 		MapboxDelaunator delaunator,
-		D3Delaunay delaunay,
+		in D3Delaunay delaunay,
 		int i,
 		double x,
 		double y
@@ -548,7 +513,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 	private static int Step(
 		ReadOnlySpan<double> coords,
 		MapboxDelaunator delaunator,
-		D3Delaunay delaunay,
+		in D3Delaunay delaunay,
 		int i,
 		double x,
 		double y
@@ -778,12 +743,13 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		return true;
 	}
 
-	private static void Cell(
+	private static int CollectCell(
 		int i,
 		ReadOnlySpan<double> circumcenters,
 		MapboxDelaunator delaunator,
-		D3Delaunay delaunay,
+		in D3Delaunay delaunay,
 		Span<double> cellPointBuffer,
+		Span<int> neighbours,
 		out int cellPointCount
 	) {
 		ReadOnlySpan<int> triangles = delaunator.Triangles;
@@ -792,10 +758,10 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		int e0 = inedges[i];
 		if( e0 == -1 ) {
 			throw new InvalidOperationException( "Coincident points." );
-			// return Array.Empty<double>();
 		}
 		int e = e0;
 		cellPointCount = 0;
+		int neighbourCount = 0;
 		do {
 			int t = e / 3;
 			if( cellPointCount == cellPointBuffer.Length ) {
@@ -804,12 +770,23 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			cellPointBuffer[cellPointCount + 0] = circumcenters[( t * 2 ) + 0];
 			cellPointBuffer[cellPointCount + 1] = circumcenters[( t * 2 ) + 1];
 			cellPointCount += 2;
+			int neighbour = triangles[e];
+			neighbours[neighbourCount++] = neighbour;
 			e = ( e % 3 ) == 2 ? e - 2 : e + 1;
 			if( triangles[e] != i ) {
 				throw new InvalidOperationException( "Bad triangulation." );
 			}
 			e = halfEdges[e];
-		} while( e != e0 && e != -1 );
+			if( e == -1 ) {
+				int hullPosition = delaunay.HullIndex[i];
+				int next = delaunator.Hull[(hullPosition + 1) % delaunator.Hull.Length];
+				if( next != neighbour ) {
+					neighbours[neighbourCount++] = next;
+				}
+				break;
+			}
+		} while( e != e0 );
+		return neighbourCount;
 	}
 
 	private static double[] CalculateCircumcenters(
