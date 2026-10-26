@@ -109,6 +109,10 @@ Triangle and hull starting indices are implementation details, not a canonical
 ordering. Edge legalization grows its temporary stack when necessary rather
 than discarding pending work.
 
+Delaunay triangles and hull points are filled directly into exact-length owned
+arrays and wrapped read-only once; no intermediate lists or trimming copies
+are used for publication.
+
 Without sanitization, factories validate and snapshot sites while preparing
 double-coordinate scratch in one pass. The owned point snapshot is retained by
 the result; coordinate scratch is temporary. Sanitization filters sites first,

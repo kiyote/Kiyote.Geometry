@@ -672,6 +672,16 @@ Measure cold/warm pools, concurrent peak memory, and end-to-end speed.
 
 ### O10 - choose a deliberate Delaunay output representation
 
+**Implemented low-risk variant (2026-10-26):** final `Triangle[]` and hull
+`Point[]` use exact logical lengths and direct indexed writes, then one
+read-only wrapper each. This removes two list objects (64 bytes on x64), not
+per-triangle objects or payload copies. Core hull publication fills every
+entry from the linked boundary; tests verify all-hull counts 3/32/128 have no
+sentinels, preserve mesh order and expose only populated triangles. The obsolete
+nonnegative-index skip is removed. Ownership/read-only behavior is unchanged.
+See [benchmark results][benchmark-results] for measurements. Indexed triangle
+publication and capacity-trimming alternatives remain unimplemented.
+
 **Where:** [D3DelaunayFactory][delaunay-factory],
 [Delaunay][delaunay-result], [IDelaunay][delaunay-api], and
 [Triangle][triangle].

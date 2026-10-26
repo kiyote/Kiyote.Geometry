@@ -34,29 +34,27 @@ internal sealed class D3DelaunayFactory : IDelaunayFactory {
 		ReadOnlySpan<double> coords = coordinateBuffer.AsSpan( 0, sites.Length * 2 );
 		MapboxDelaunator delaunator = MapboxDelaunatorFactory.Create( coords, rejectDuplicates: !sanitizePoints );
 
-		List<Triangle> triangles = new List<Triangle>( delaunator.Triangles.Length / 3 );
-		for( int i = 0; i < delaunator.Triangles.Length; i += 3 ) {
-			triangles.Add(
-				new Triangle(
-					sites[delaunator.Triangles[i + 0]],
-					sites[delaunator.Triangles[i + 1]],
-					sites[delaunator.Triangles[i + 2]]
-				)
+		ReadOnlySpan<int> triangleIndices = delaunator.Triangles;
+		Triangle[] triangles = new Triangle[triangleIndices.Length / 3];
+		for( int i = 0; i < triangles.Length; i++ ) {
+			int edge = i * 3;
+			triangles[i] = new Triangle(
+				sites[triangleIndices[edge]],
+				sites[triangleIndices[edge + 1]],
+				sites[triangleIndices[edge + 2]]
 			);
 		}
 
-		List<Point> hull = new List<Point>( delaunator.Hull.Length );
-		for( int i = 0; i < delaunator.Hull.Length; i++ ) {
-			int c = delaunator.Hull[i];
-			if( c >= 0 ) {
-				hull.Add( sites[c] );
-			}
+		ReadOnlySpan<int> hullIndices = delaunator.Hull;
+		Point[] hull = new Point[hullIndices.Length];
+		for( int i = 0; i < hull.Length; i++ ) {
+			hull[i] = sites[hullIndices[i]];
 		}
 
 		Delaunay result = new Delaunay(
 			Array.AsReadOnly( sites ),
-			triangles.AsReadOnly(),
-			hull.AsReadOnly()
+			Array.AsReadOnly( triangles ),
+			Array.AsReadOnly( hull )
 		);
 
 		return result;

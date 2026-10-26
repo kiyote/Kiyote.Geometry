@@ -1,5 +1,37 @@
 # Benchmarks
 
+## O10 direct Delaunay materialization (2026-10-26)
+
+Reference public Delaunay construction is unchanged between `a4c6539` and
+`08865fb`; the reference results come from `d3-shared-before` at `a4c6539`.
+Candidate is the direct-array implementation committed with this record.
+Existing grid fixtures, two-launch/four-warmup/twelve-iteration/300 ms settings,
+runtime and hardware match O5 below. Runs were serial, not interleaved.
+
+| Sites | Reference mean +/- error | Direct arrays mean +/- error |
+|---|---:|---:|
+| 400 | 69.93 +/- 1.821 us | 64.62 +/- 1.746 us |
+| 10,000 | 3,339.53 +/- 89.999 us | 3,166.50 +/- 28.715 us |
+| 40,000 | 15,384.91 +/- 148.490 us | 15,379.29 +/- 373.113 us |
+
+Error is the 99.9% confidence-interval half-width. The 400/10,000-site
+intervals are disjoint in the favourable direction (7.6%/5.2% lower observed
+means); 40,000-site intervals overlap and no improvement is claimed there.
+No general speedup or equivalence is inferred from one before/after comparison.
+Raw candidate results are retained as `d3-direct-arrays`.
+
+Two 32-byte list objects are eliminated; the already-exact payload arrays and
+three read-only collection wrappers remain. Small-case B/op changes from
+46.21 to 46.15 KiB, reproducing the 64-byte saving. Large-case measurement
+overhead varies by more than this small saving and is not a retention claim.
+All work remains eager, ordered and materialized into complete `Triangle`
+values. No site-index API, extra mesh retention, or output reduction is used.
+
+All 90 affected diagram integration tests pass. New all-hull fixtures at
+3/32/128 sites check every published hull ID is valid, output order exactly
+matches the mesh, only logical triangle entries are materialized, and old
+results remain read-only/stable after mutation, failure and later creation.
+
 ## O5 shared one-ring traversal (2026-10-26)
 
 Reference: `a4c6539`. Candidate: the O5 implementation committed with this
