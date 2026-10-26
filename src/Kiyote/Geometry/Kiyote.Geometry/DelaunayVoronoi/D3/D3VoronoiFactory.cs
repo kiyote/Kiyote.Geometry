@@ -52,6 +52,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 
 		List<Cell> cells = new List<Cell>( sites.Length );
 		List<double> cellCoords = new List<double>( MaximumClippedVertices * 2 );
+		long edgeCapacity = 0;
 		for( int i = 0; i < sites.Length; i++ ) {
 			bool isOpen = false;
 			Clip(
@@ -103,6 +104,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				new Rect( minX, minY, maxX - minX + 1, maxY - minY + 1 )
 			);
 			cells.Add( cell );
+			edgeCapacity += polygon.Edges.Length;
 		}
 
 		ReadOnlySpan<int> inedges = delaunay.Inedges;
@@ -146,15 +148,23 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			throw new InvalidOperationException( "Triangulation adjacency does not match the mesh edge count." );
 		}
 
-		HashSet<Edge> edges = [];
+		if( edgeCapacity > Array.MaxLength ) {
+			throw new ArgumentOutOfRangeException( nameof( points ), "Cell sides exceed representable edge array capacities." );
+		}
+		HashSet<DirectedEdgeKey> edgeKeys = new HashSet<DirectedEdgeKey>( (int)edgeCapacity );
 		foreach( Cell cell in cells ) {
 			foreach( Edge edge in cell.Polygon.Edges ) {
-				edges.Add( edge );
+				edgeKeys.Add( new DirectedEdgeKey( edge ) );
 			}
+		}
+		Edge[] edges = new Edge[edgeKeys.Count];
+		int edgeIndex = 0;
+		foreach( DirectedEdgeKey key in edgeKeys ) {
+			edges[edgeIndex++] = key.ToEdge();
 		}
 
 		return new Voronoi( Array.AsReadOnly( sites ), cells.AsReadOnly(),
-			neighbourOffsets, neighbourIndices, Array.AsReadOnly( edges.ToArray() ) );
+			neighbourOffsets, neighbourIndices, Array.AsReadOnly( edges ) );
 	}
 
 	private static void Clip(

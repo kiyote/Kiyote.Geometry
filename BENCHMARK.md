@@ -66,6 +66,28 @@ covered by a zero-allocation regression and compared with primal-mesh adjacency.
 Cells and polygon objects remain unchanged; this is not the full flat-vertex
 representation proposed in O2.
 
+### O6: pre-sized compact directed-edge keys
+
+Final polygon side counts size the edge set once. Keys contain two packed
+32-bit points, use mixed endpoint hashing rather than plain `ulong` XOR hashing,
+and preserve edge direction. Published output still contains complete `Edge`
+values, produced eagerly. Same two-launch settings:
+
+| Voronoi workload | CSR mean | Compact/pre-sized mean | CSR allocated | Compact/pre-sized allocated |
+|---|---:|---:|---:|---:|
+| 400 sites | 318.88 us | 295.17 us | 295.19 KB | 233.21 KB |
+| 10,000 sites | 10,002.88 us | 9,330.42 us | 8,782.84 KB | 5,655.49 KB |
+| 40,000 sites | 56,807.16 us | 57,296.33 us | 36,335.53 KB | 22,877.57 KB |
+| Workload grid | 310.44 us | 300.38 us | 295.19 KB | 233.21 KB |
+| Workload jittered grid | 505.47 us | 420.09 us | 434.26 KB | 269.34 KB |
+| Workload high degree | 28.01 us | 25.98 us | 46.94 KB | 29.95 KB |
+
+The 40,000-site runtime intervals overlap; this case is a memory win, not a
+demonstrated incremental speedup. Allocated bytes decrease about 37% there.
+An initial compact-key variant without capacity sizing regressed the small grid
+workload (330.61 us versus 310.44 us); it was not accepted. Sizing from finalized
+side counts removed repeated set growth and produced the results above.
+
 ## Earlier full-suite measurements
 
 ```

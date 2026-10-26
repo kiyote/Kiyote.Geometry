@@ -117,6 +117,10 @@ one-ring traversal order. Cell indices match site order. Resolve a neighbour as
 `diagram.Cells[neighbourIndex]`. This replaces the former `Neighbours` property.
 Adjacency remains eager, complete, and stable for the diagram's lifetime.
 
+Global Voronoi edges are distinct directed polygon sides: reversing endpoints
+produces a different edge. Construction uses pre-sized compact bounded-coordinate
+keys internally; published edges retain full `Point` coordinates.
+
 `Triangle` is an immutable value type with ordered structural equality, not a
 nullable reference object. Its default value is degenerate and is rejected by
 filled rasterization. Triangles are stored inline in collections; copying large
