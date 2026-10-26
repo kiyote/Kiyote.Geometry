@@ -107,6 +107,9 @@ in one pass. The owned point snapshot is retained by the result; coordinate
 scratch is temporary. Sanitized coordinate scratch can retain unused capacity,
 but triangulation consumes only the accepted-site prefix.
 
+Infinite-cell rays are derived from adjacent hull sites on demand, without a
+four-double vector allocation for every site.
+
 `Triangle` is an immutable value type with ordered structural equality, not a
 nullable reference object. Its default value is degenerate and is rejected by
 filled rasterization. Triangles are stored inline in collections; copying large

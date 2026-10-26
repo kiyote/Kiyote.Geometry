@@ -47,7 +47,6 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		D3Delaunay delaunay = D3DelaunayFactory.Create( coords, delaunator );
 
 		double[] circumcenters = CalculateCircumcenters( delaunator, coords );
-		double[] vectors = CalculateVectors( delaunator, coords );
 
 		double[] cellPointBuffer = new double[IVoronoiFactory.MaximumCellVertices * 2];
 		double[] projectedPointBuffer = new double[MaximumProjectedVertices * 2];
@@ -63,7 +62,6 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				circumcenters,
 				delaunator,
 				delaunay,
-				vectors,
 				i,
 				cellCoords,
 				cellPointBuffer,
@@ -159,7 +157,6 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		ReadOnlySpan<double> circumcenters,
 		MapboxDelaunator delaunator,
 		D3Delaunay delaunay,
-		ReadOnlySpan<double> vectors,
 		int i,
 		List<double> cellCoords,
 		Span<double> cellPointBuffer,
@@ -179,10 +176,13 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			throw new InvalidOperationException( "Cell contains no points." );
 			//return Array.Empty<double>();
 		}
-		int v = i * 4;
-		if( vectors[v] != 0
-			|| vectors[v + 1] != 0
-		) {
+		int hullPosition = delaunay.HullIndex[i];
+		if( hullPosition >= 0 ) {
+			ReadOnlySpan<int> hull = delaunator.Hull;
+			int previous = hull[hullPosition == 0 ? hull.Length - 1 : hullPosition - 1] * 2;
+			int next = hull[hullPosition + 1 == hull.Length ? 0 : hullPosition + 1] * 2;
+			double x = coords[i * 2];
+			double y = coords[(i * 2) + 1];
 			ClipInfinite(
 				bounds,
 				coords,
@@ -191,10 +191,10 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				i,
 				cellPointBuffer[..cellPointCount],
 				projectedPointBuffer,
-				vectors[v + 0],
-				vectors[v + 1],
-				vectors[v + 2],
-				vectors[v + 3],
+				coords[previous + 1] - y,
+				x - coords[previous],
+				y - coords[next + 1],
+				coords[next] - x,
 				cellCoords,
 				ref isOpen
 			);
@@ -800,37 +800,6 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			}
 			e = halfEdges[e];
 		} while( e != e0 && e != -1 );
-	}
-
-	private static double[] CalculateVectors(
-		MapboxDelaunator delaunator,
-		ReadOnlySpan<double> coords
-	) {
-		ReadOnlySpan<int> hull = delaunator.Hull;
-		// Two vectors for each point
-		double[] vectors = new double[coords.Length * 2];
-		int h = hull[^1];
-		int p0;
-		int p1 = h * 4;
-		double x0;
-		double x1 = coords[( 2 * h ) + 0];
-		double y0;
-		double y1 = coords[( 2 * h ) + 1];
-
-		for( int i = 0; i < hull.Length; i++ ) {
-			h = hull[i];
-			p0 = p1;
-			x0 = x1;
-			y0 = y1;
-			p1 = h * 4;
-			x1 = coords[( 2 * h ) + 0];
-			y1 = coords[( 2 * h ) + 1];
-			double v0 = y0 - y1;
-			double v1 = x1 - x0;
-			vectors[p0 + 2] = vectors[p1 + 0] = v0;
-			vectors[p0 + 3] = vectors[p1 + 1] = v1;
-		}
-		return vectors;
 	}
 
 	private static double[] CalculateCircumcenters(

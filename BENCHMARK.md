@@ -26,6 +26,24 @@ O7 fuses site validation, ownership, and coordinate conversion; it does not
 eliminate the retained point snapshot or the temporary double-coordinate array.
 No representation, deferred-output, or geometry approximation change is included.
 
+### O8: on-demand hull rays
+
+The next isolated change removes the `4n`-double vector array and derives rays
+only for hull sites. Same two-launch settings as O7:
+
+| Voronoi workload | O7 mean | O8 mean | O7 allocated | O8 allocated |
+|---|---:|---:|---:|---:|
+| 400 sites | 383.91 us | 342.69 us | 346.11 KB | 333.59 KB |
+| 10,000 sites | 16,556.34 us | 12,881.30 us | 10,035.70 KB | 9,720.50 KB |
+| 40,000 sites | 85,275.77 us | 73,218.06 us | 41,428.42 KB | 40,178.40 KB |
+| Workload grid | 371.83 us | 350.82 us | 346.11 KB | 333.59 KB |
+| Workload jittered grid | 568.82 us | 535.62 us | 485.67 KB | 473.15 KB |
+| Workload high degree | 30.69 us | 31.21 us | 52.59 KB | 51.28 KB |
+
+The high-degree runtime intervals overlap; no speedup is claimed there.
+The 40,000-site runtime distribution is bimodal. The payload saving is
+deterministically `32n` bytes plus one array header, independent of timing noise.
+
 ## Earlier full-suite measurements
 
 ```
