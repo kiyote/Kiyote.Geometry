@@ -2,6 +2,13 @@
 
 ## Incremental D3 refactoring (2026-10-26)
 
+**Timing status:** the user reported concurrent compilation during the earlier
+measurement window. The incremental timing tables below are retained as raw
+historical observations, but their speedup/regression conclusions are
+provisional. Use the subsequent isolated reference/candidate comparison for
+runtime decisions. Allocation figures and deterministic storage calculations
+are separate from this CPU-load concern.
+
 These focused runs use BenchmarkDotNet 0.15.8, .NET SDK
 11.0.100-rc.2.26504.105, .NET runtime 10.0.13, and the Intel Core i7-9700K.
 Each column uses two process launches, four warmups, twelve measured iterations,
@@ -115,9 +122,10 @@ rays, O2's incremental CSR variant, O6's compact/pre-sized directed-edge
 publication, and O1's local cursor/invariant-key changes. The original result
 still owns `Cell`/`Polygon` objects; no lazy output or reduced-work mode was used.
 
-For 40,000-site full Voronoi creation, G0 versus the latest measured stage is
+For 40,000-site full Voronoi creation, the earlier G0 versus O1 observation was
 91.46 ms versus 54.42 ms, and 41,427.87 KB versus approximately 22,878 KB allocated
-per call. This is about 40.5% lower mean time and 44.8% lower allocation. These
+per call. This is an observed 40.5% lower mean time and 44.8% lower allocation,
+not a confirmed uncontended speedup. These
 are sequential, two-launch benchmark runs, not a randomized interleaved
 experiment. Runtime variance, JIT tiering, hardware load, and GC can influence
 the comparison. Allocated bytes are not retained-memory or peak-RSS figures.
@@ -134,6 +142,21 @@ the sampled exact-predicate tests prove every integer-domain input correct.
 Regression coverage now also includes a warm-pool full-diagram allocation
 ceiling (400-site grid, 240 KiB) and old-result stability across concurrent
 creation, duplicate rejection, and subsequent successful reuse.
+
+### O7 follow-up: heavily sanitized input
+
+The normal, unsanitized path still snapshots and fills coordinates in one pass.
+The sanitized path now determines the accepted sites before allocating their
+coordinates. This deliberately uses a second pass over accepted sites rather
+than retaining coordinate capacity for every rejected input site.
+
+For 10,000 input sites reduced to three, coordinate payload falls from 160,000
+bytes in the initial O7 variant to 48 bytes. Regressions verify exact coordinate
+length/order and total preparation allocation at most 82,048 bytes, including
+the input-sized point snapshot, for both duplicate-heavy and outside-heavy
+inputs. These tests failed before the fix and pass afterward. This restores
+the original sanitized path's coordinate-memory scaling; no sanitized runtime
+improvement is claimed.
 
 ## Earlier full-suite measurements
 

@@ -23,7 +23,7 @@ internal static class DiagramSites {
 		}
 
 		Point[] snapshot = new Point[points.Count];
-		coordinates = new double[checked( points.Count * 2 )];
+		coordinates = sanitize ? [] : new double[checked( points.Count * 2 )];
 		HashSet<Point>? seen = sanitize ? [] : null;
 		int count = 0;
 		Point first = default;
@@ -55,8 +55,10 @@ internal static class DiagramSites {
 						!= ( (long)second.Y - first.Y ) * ( point.X - first.X );
 				}
 			}
-			coordinates[count * 2] = point.X;
-			coordinates[(count * 2) + 1] = point.Y;
+			if( !sanitize ) {
+				coordinates[count * 2] = point.X;
+				coordinates[(count * 2) + 1] = point.Y;
+			}
 			snapshot[count++] = point;
 		}
 		if( !noncollinear ) {
@@ -65,7 +67,9 @@ internal static class DiagramSites {
 		if( count != snapshot.Length ) {
 			Array.Resize( ref snapshot, count );
 		}
-		// Coordinate scratch keeps spare capacity; consumers use only snapshot.Length coordinate pairs.
+		if( sanitize ) {
+			coordinates = snapshot.ToCoords();
+		}
 		return snapshot;
 	}
 

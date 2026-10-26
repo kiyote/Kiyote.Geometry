@@ -105,10 +105,11 @@ Triangle and hull starting indices are implementation details, not a canonical
 ordering. Edge legalization grows its temporary stack when necessary rather
 than discarding pending work.
 
-Factories validate and snapshot sites while preparing double-coordinate scratch
-in one pass. The owned point snapshot is retained by the result; coordinate
-scratch is temporary. Sanitized coordinate scratch can retain unused capacity,
-but triangulation consumes only the accepted-site prefix.
+Without sanitization, factories validate and snapshot sites while preparing
+double-coordinate scratch in one pass. The owned point snapshot is retained by
+the result; coordinate scratch is temporary. Sanitization filters sites first,
+then allocates coordinates for the accepted sites only, avoiding input-sized
+coordinate scratch when most sites are discarded.
 
 Infinite-cell rays are derived from adjacent hull sites on demand, without a
 four-double vector allocation for every site.
