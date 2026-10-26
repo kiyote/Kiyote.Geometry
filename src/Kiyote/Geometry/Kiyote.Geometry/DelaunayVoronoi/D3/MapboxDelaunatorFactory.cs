@@ -241,9 +241,8 @@ internal sealed class MapboxDelaunatorFactory {
 
 			// find a visible edge on the convex hull using edge hash
 			int start = 0;
+			int key = HashKey( x, y, hashSize, circumcenterX, circumcenterY );
 			for( int j = 0; j < hashSize; j++ ) {
-				int key = HashKey( x, y, hashSize, circumcenterX, circumcenterY );
-
 				start = hullHash[( key + j ) % hashSize];
 				if( start != -1
 					&& start != hullNext[start]
@@ -340,6 +339,8 @@ internal sealed class MapboxDelaunatorFactory {
 		Span<int> hullTri,
 		Span<int> hullPrev
 	) {
+		Span<int> pendingEdges = edgeStack.Buffer;
+		int i = 0;
 		int ar;
 		while( true ) {
 			int b = halfEdges[a];
@@ -363,10 +364,10 @@ internal sealed class MapboxDelaunatorFactory {
 			ar = a0 + ( ( a + 2 ) % 3 );
 
 			if( b == -1 ) {
-				if( edgeStack.Count == 0 ) {
+				if( i == 0 ) {
 					break;
 				}
-				a = edgeStack.Pop();
+				a = pendingEdges[--i];
 				continue;
 			}
 
@@ -409,12 +410,15 @@ internal sealed class MapboxDelaunatorFactory {
 
 				int br = b0 + ( ( b + 1 ) % 3 );
 
-				edgeStack.Push( br );
+				if( i == pendingEdges.Length ) {
+					pendingEdges = edgeStack.Grow();
+				}
+				pendingEdges[i++] = br;
 			} else {
-				if( edgeStack.Count == 0 ) {
+				if( i == 0 ) {
 					break;
 				}
-				a = edgeStack.Pop();
+				a = pendingEdges[--i];
 			}
 		}
 

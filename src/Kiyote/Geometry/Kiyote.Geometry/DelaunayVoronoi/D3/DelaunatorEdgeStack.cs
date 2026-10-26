@@ -9,30 +9,19 @@ internal ref struct DelaunatorEdgeStack {
 	internal DelaunatorEdgeStack( Span<int> buffer ) {
 		_buffer = buffer;
 		_rented = null;
-		Count = 0;
 	}
 
-	internal int Count { get; private set; }
+	internal Span<int> Buffer => _buffer;
 
-	internal void Push( int edge ) {
-		if( Count == _buffer.Length ) {
-			Grow();
-		}
-		_buffer[Count++] = edge;
-	}
-
-	internal int Pop() {
-		return _buffer[--Count];
-	}
-
-	private void Grow() {
+	internal Span<int> Grow() {
 		int[] next = ArrayPool<int>.Shared.Rent( checked( Math.Max( 16, _buffer.Length * 2 ) ) );
-		_buffer[..Count].CopyTo( next );
+		_buffer.CopyTo( next );
 		if( _rented is not null ) {
 			ArrayPool<int>.Shared.Return( _rented );
 		}
 		_rented = next;
 		_buffer = next;
+		return _buffer;
 	}
 
 	public void Dispose() {

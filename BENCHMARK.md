@@ -88,6 +88,26 @@ An initial compact-key variant without capacity sizing regressed the small grid
 workload (330.61 us versus 310.44 us); it was not accepted. Sizing from finalized
 side counts removed repeated set growth and produced the results above.
 
+### O1: local legalization cursor and invariant hull hashing
+
+Keep the legalization cursor/span local while the call-scoped owner handles
+only cold pooled growth. Hoist the hull probe key outside its inner loop.
+Same two-launch settings; core/Delaunay allocation is unchanged.
+
+| Workload | Relevant previous mean | O1 mean |
+|---|---:|---:|
+| Core, 40,000 sites, unchecked | 14,866.50 us (G0) | 12,693.43 us |
+| Core, 40,000 sites, duplicate check | 14,985.24 us (G0) | 13,400.10 us |
+| Delaunay, 400 sites | 74.09 us (O7) | 65.28 us |
+| Delaunay, 10,000 sites | 3,774.25 us (O7) | 3,232.74 us |
+| Delaunay, 40,000 sites | 17,903.06 us (O7) | 15,440.40 us |
+| Voronoi, 40,000 sites | 57,296.33 us (O6) | 54,421.19 us |
+
+The core and Delaunay code did not change between their named previous stage
+and O1. The checked-core distribution has multiple modes. The main core result
+is an approximately 11-15% mean reduction relative to G0, retaining the
+growable-stack correctness fix rather than returning to silent overflow.
+
 ## Earlier full-suite measurements
 
 ```
