@@ -1,4 +1,4 @@
-﻿namespace Kiyote.Geometry.DelaunayVoronoi;
+namespace Kiyote.Geometry.DelaunayVoronoi.D3;
 
 internal sealed class D3Delaunay {
 

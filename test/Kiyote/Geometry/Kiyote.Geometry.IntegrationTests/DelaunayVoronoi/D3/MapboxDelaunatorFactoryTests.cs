@@ -1,6 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
+using Kiyote.Geometry.DelaunayVoronoi;
+using Kiyote.Geometry.DelaunayVoronoi.D3;
 
-namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
+namespace Kiyote.Geometry.IntegrationTests.DelaunayVoronoi.D3;
 
 [TestFixture]
 [ExcludeFromCodeCoverage]

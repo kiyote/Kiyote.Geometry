@@ -1,3 +1,4 @@
+using Kiyote.Geometry.DelaunayVoronoi.D3;
 using Kiyote.Geometry.Trees;
 
 namespace Kiyote.Geometry.DelaunayVoronoi.Benchmarks;
@@ -14,7 +15,7 @@ public class SearchableVoronoiBenchmarks {
 	public void Setup() {
 		Point[] sites = new Point[400];
 		for( int i = 0; i < sites.Length; i++ ) {
-			sites[i] = new Point( ( i % 20 ) * 10 + 5, ( i / 20 ) * 10 + 5 );
+			sites[i] = new Point( ( i % 20  * 10) + 5, ( i / 20  * 10) + 5 );
 		}
 		IVoronoiFactory factory = new D3VoronoiFactory();
 		IVoronoi diagram = factory.Create( new Rect( 0, 0, 200, 200 ), sites );

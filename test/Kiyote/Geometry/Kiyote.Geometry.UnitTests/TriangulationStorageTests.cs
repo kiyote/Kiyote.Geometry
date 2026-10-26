@@ -1,6 +1,6 @@
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
-using Kiyote.Geometry.DelaunayVoronoi;
+using Kiyote.Geometry.DelaunayVoronoi.D3;
 
 namespace Kiyote.Geometry.UnitTests;
 
@@ -17,7 +17,7 @@ public sealed class TriangulationStorageTests {
 		int[] triangles = first.Triangles.ToArray();
 		int[] halfEdges = first.HalfEdges.ToArray();
 		int[] hull = first.Hull.ToArray();
-		int scratchLength = 4 * count + (int)Math.Ceiling( Math.Sqrt( count ) );
+		int scratchLength = (4 * count) + (int)Math.Ceiling( Math.Sqrt( count ) );
 		int[] scratch = ArrayPool<int>.Shared.Rent( scratchLength );
 		double[] distances = ArrayPool<double>.Shared.Rent( count );
 		scratch.AsSpan().Fill( int.MinValue );
@@ -31,7 +31,7 @@ public sealed class TriangulationStorageTests {
 		Assert.That( second.Triangles.ToArray(), Is.EqualTo( triangles ) );
 		Assert.That( second.HalfEdges.ToArray(), Is.EqualTo( halfEdges ) );
 		Assert.That( second.Hull, Is.EqualTo( hull ) );
-		Assert.That( bytes, Is.LessThanOrEqualTo( 8L * MapboxDelaunatorFactory.GetTriangleCapacity( count ) + 4L * hull.Length + 256 ) );
+		Assert.That( bytes, Is.LessThanOrEqualTo( (8L * MapboxDelaunatorFactory.GetTriangleCapacity( count )) + (4L * hull.Length) + 256 ) );
 
 		Parallel.For( 0, 16, _ => {
 			MapboxDelaunator next = MapboxDelaunatorFactory.Create( coords, true );
@@ -49,7 +49,7 @@ public sealed class TriangulationStorageTests {
 		double[] coords = new double[Count * 2];
 		for( int i = 0; i < Count; i++ ) {
 			coords[2 * i] = Math.Round( Math.Cos( i * 2 * Math.PI / Count ) * 10000 );
-			coords[2 * i + 1] = Math.Round( Math.Sin( i * 2 * Math.PI / Count ) * 10000 );
+			coords[(2 * i) + 1] = Math.Round( Math.Sin( i * 2 * Math.PI / Count ) * 10000 );
 		}
 		MapboxDelaunator mesh = MapboxDelaunatorFactory.Create( coords, true );
 		Assert.That( mesh.Hull, Has.Length.EqualTo( Count ) );
@@ -97,8 +97,8 @@ public sealed class TriangulationStorageTests {
 		coords[2] = 1000;
 		coords[5] = 1000;
 		for( int i = 3; i < count; i++ ) {
-			coords[2 * i] = ( i % 64 ) * 2 + 1;
-			coords[2 * i + 1] = ( i / 64 ) * 2 + 1;
+			coords[2 * i] = ( i % 64  * 2) + 1;
+			coords[(2 * i) + 1] = ( i / 64  * 2) + 1;
 		}
 		return coords;
 	}

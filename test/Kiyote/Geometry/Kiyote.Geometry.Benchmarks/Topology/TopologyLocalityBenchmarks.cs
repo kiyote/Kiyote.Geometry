@@ -98,13 +98,13 @@ public class TopologyLocalityBenchmarks {
 					for( int x = 0; x < width; x += 32 ) {
 						_ = source.TrySetCell( x, 0, _cell );
 					}
-					_ = Attach( assembly, source, 1024 + i * width, 1024 );
+					_ = Attach( assembly, source, 1024 + (i * width), 1024 );
 				}
 				break;
 			case "Seams":
 				for( int i = 0; i < 256; i++ ) {
-					_ = Attach( assembly, CreateSource( 2, 16 ), 1024 + i * 32, 1024 );
-					_ = Attach( assembly, CreateSource( 2, 16 ), 1024 + i * 32 + ( i < Scale ? 2 : 4 ), 1024 );
+					_ = Attach( assembly, CreateSource( 2, 16 ), 1024 + (i * 32), 1024 );
+					_ = Attach( assembly, CreateSource( 2, 16 ), 1024 + (i * 32) + ( i < Scale ? 2 : 4 ), 1024 );
 				}
 				break;
 			case "Fragmentation":

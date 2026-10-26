@@ -1,4 +1,4 @@
-using Kiyote.Geometry.Trees;
+using Kiyote.Geometry.DelaunayVoronoi.D3;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Kiyote.Geometry.DelaunayVoronoi;
@@ -18,8 +18,7 @@ internal static class ExtensionMethods {
 	public static IServiceCollection AddDelaunayVoronoi(
 		this IServiceCollection services
 	) {
-		services.AddSingleton<IVoronoiFactory, D3VoronoiFactory>();
-		services.AddSingleton<IDelaunayFactory, D3DelaunayFactory>();
+		services.AddD3Voronoi();
 		services.AddSingleton<ISearchableVoronoiFactory, QuadTreeSearchableVoronoiFactory>();
 
 		return services;

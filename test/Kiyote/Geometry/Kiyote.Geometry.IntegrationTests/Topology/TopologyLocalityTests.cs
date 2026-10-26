@@ -214,7 +214,7 @@ internal sealed class TopologyLocalityTests {
 			Location( compiled.ChunkLayout, link.NeighbourChunkIndex, link.NeighbourLocalIndex ), link.Direction) );
 
 	private static Point Location( GridLayout layout, int chunk, int local ) =>
-		new Point( layout.GetChunkColumn( chunk ) * 32 + local % 32, layout.GetChunkRow( chunk ) * 32 + local / 32 );
+		new Point( (layout.GetChunkColumn( chunk ) * 32) + (local % 32), (layout.GetChunkRow( chunk ) * 32) + (local / 32) );
 
 	private static void Attach( GridAssembly<int> assembly, int width, int height, int x, int y, bool sparse ) {
 		DenseGridSource<int> source = new DenseGridSource<int>( width, height );
@@ -232,7 +232,7 @@ internal sealed class TopologyLocalityTests {
 			DenseGridSource<ValueCell> source = new DenseGridSource<ValueCell>( 20, 2 );
 			for( int y = 0; y < 2; y++ ) {
 				for( int x = 0; x < 20; x++ ) {
-					int id = placement * 20 + x + y * 40;
+					int id = (placement * 20) + x + (y * 40);
 					if( id is not ( 5 or 23 or 45 ) ) {
 						source.TrySetCell( x, y, new ValueCell( id, 1 ) );
 					}

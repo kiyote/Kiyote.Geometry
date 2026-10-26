@@ -1,4 +1,4 @@
-using Kiyote.Geometry.Visualizer.DelaunayVoronoi;
+using Kiyote.Geometry.Visualizer.DelaunayVoronoi.D3;
 using Kiyote.Geometry.Visualizer.Rasterizers;
 
 namespace Kiyote.Geometry.Visualizer;

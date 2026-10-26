@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Kiyote.Geometry.Trees;
+using Kiyote.Geometry.DelaunayVoronoi.D3;
 
 namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
 
@@ -12,7 +13,7 @@ public sealed class SearchableVoronoiRegressionTests {
 		Rect bounds = new Rect( 0, 0, 41, 41 );
 		Point[] sites = new Point[400];
 		for( int i = 0; i < sites.Length; i++ ) {
-			sites[i] = new Point( 1 + i % 20 * 2, 1 + i / 20 * 2 );
+			sites[i] = new Point( 1 + (i % 20 * 2), 1 + (i / 20 * 2) );
 		}
 		IVoronoiFactory factory = new D3VoronoiFactory();
 		IVoronoi diagram = factory.Create( bounds, sites );

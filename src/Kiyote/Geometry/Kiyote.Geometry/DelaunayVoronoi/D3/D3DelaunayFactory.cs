@@ -1,4 +1,4 @@
-﻿namespace Kiyote.Geometry.DelaunayVoronoi;
+namespace Kiyote.Geometry.DelaunayVoronoi.D3;
 
 // Ported from: https://github.com/d3/d3-delaunay/blob/main/src/delaunay.js
 /*

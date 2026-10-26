@@ -163,13 +163,13 @@ public sealed class ArithmeticRegressionTests {
 			Assert.That( a.HasIntersection( b ), Is.EqualTo( expected ), $"{a}, {b}" );
 			Assert.That( b.HasIntersection( a ), Is.EqualTo( expected ), $"{a}, {b}" );
 			if( expected ) {
-				decimal denominator = ( (decimal)a.B.X - a.A.X ) * ( b.B.Y - b.A.Y )
-					- ( (decimal)a.B.Y - a.A.Y ) * ( b.B.X - b.A.X );
+				decimal denominator = (( (decimal)a.B.X - a.A.X ) * ( b.B.Y - b.A.Y ))
+					- (( (decimal)a.B.Y - a.A.Y ) * ( b.B.X - b.A.X ));
 				if( denominator != 0 ) {
-					decimal numerator = ( (decimal)b.A.X - a.A.X ) * ( b.B.Y - b.A.Y )
-						- ( (decimal)b.A.Y - a.A.Y ) * ( b.B.X - b.A.X );
-					int x = (int)decimal.Round( ( a.A.X * denominator + numerator * ( a.B.X - a.A.X ) ) / denominator );
-					int y = (int)decimal.Round( ( a.A.Y * denominator + numerator * ( a.B.Y - a.A.Y ) ) / denominator );
+					decimal numerator = (( (decimal)b.A.X - a.A.X ) * ( b.B.Y - b.A.Y ))
+						- (( (decimal)b.A.Y - a.A.Y ) * ( b.B.X - b.A.X ));
+					int x = (int)decimal.Round( ( (a.A.X * denominator) + (numerator * ( a.B.X - a.A.X )) ) / denominator );
+					int y = (int)decimal.Round( ( (a.A.Y * denominator) + (numerator * ( a.B.Y - a.A.Y )) ) / denominator );
 					AssertIntersection( a, b, true, true, new Point( x, y ) );
 					AssertIntersection( b, a, true, true, new Point( x, y ) );
 				}
@@ -210,7 +210,7 @@ public sealed class ArithmeticRegressionTests {
 	}
 
 	private static decimal Orientation( Point a, Point b, Point c ) {
-		return ( (decimal)b.X - a.X ) * ( c.Y - a.Y ) - ( (decimal)b.Y - a.Y ) * ( c.X - a.X );
+		return (( (decimal)b.X - a.X ) * ( c.Y - a.Y )) - (( (decimal)b.Y - a.Y ) * ( c.X - a.X ));
 	}
 
 	private static bool OnSegment( Edge edge, Point point ) {

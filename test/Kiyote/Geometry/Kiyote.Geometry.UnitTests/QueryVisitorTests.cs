@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Kiyote.Geometry.DelaunayVoronoi;
+using Kiyote.Geometry.DelaunayVoronoi.D3;
 using Kiyote.Geometry.Trees;
 
 namespace Kiyote.Geometry.UnitTests;
@@ -106,7 +107,7 @@ public sealed class QueryVisitorTests {
 		IQuadTree<Rect> tree = new SimpleQuadTree<Rect>( new Rect( 0, 0, 128, 128 ) );
 		items = new Rect[1026];
 		for( int i = 0; i < 1024; i++ ) {
-			items[i] = new Rect( ( i % 32 ) * 4, ( i / 32 ) * 4, 2, 2 );
+			items[i] = new Rect(  i % 32  * 4,  i / 32  * 4, 2, 2 );
 		}
 		items[1024] = new Rect( 60, 60, 10, 10 );
 		items[1025] = items[0];
@@ -119,7 +120,7 @@ public sealed class QueryVisitorTests {
 	private static ISearchableVoronoi CreateSearchable() {
 		Point[] sites = new Point[100];
 		for( int i = 0; i < sites.Length; i++ ) {
-			sites[i] = new Point( ( i % 10 ) * 10 + 5, ( i / 10 ) * 10 + 5 );
+			sites[i] = new Point( ( i % 10  * 10) + 5, ( i / 10  * 10) + 5 );
 		}
 		IVoronoiFactory factory = new D3VoronoiFactory();
 		IVoronoi diagram = factory.Create( new Rect( 0, 0, 100, 100 ), sites );

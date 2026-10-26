@@ -1,6 +1,3 @@
-﻿namespace Kiyote.Geometry.DelaunayVoronoi;
-
-using System.Collections.ObjectModel;
 
 // Ported from: https://github.com/d3/d3-delaunay/blob/main/src/voronoi.js
 /*
@@ -20,11 +17,15 @@ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 */
 
+using System.Collections.ObjectModel;
+
+namespace Kiyote.Geometry.DelaunayVoronoi.D3;
+
 internal sealed class D3VoronoiFactory : IVoronoiFactory {
 
 	private const int MaximumProjectedVertices = IVoronoiFactory.MaximumCellVertices + 2;
 	// Each projected edge emits at most two clipped endpoints; each clipping pass adds at most four box corners.
-	private const int MaximumClippedVertices = 2 * MaximumProjectedVertices + 8;
+	private const int MaximumClippedVertices = (2 * MaximumProjectedVertices) + 8;
 
 	IVoronoi IVoronoiFactory.Create(
 		Rect bounds,

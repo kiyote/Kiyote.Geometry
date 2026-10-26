@@ -1,8 +1,3 @@
-﻿using System.Buffers;
-using System.Runtime.CompilerServices;
-
-namespace Kiyote.Geometry.DelaunayVoronoi;
-
 // Ported from: https://github.com/mapbox/delaunator/blob/main/index.js
 /*
 ISC License
@@ -22,10 +17,15 @@ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
  */
 
+using System.Buffers;
+using System.Runtime.CompilerServices;
+
+namespace Kiyote.Geometry.DelaunayVoronoi.D3;
+
 internal sealed class MapboxDelaunatorFactory {
 
 	internal static int GetTriangleCapacity( int pointCount ) {
-		long capacity = Math.Max( 2L * pointCount - 5, 0 ) * 3;
+		long capacity = Math.Max( (2L * pointCount) - 5, 0 ) * 3;
 		if( pointCount < 0 || capacity > Array.MaxLength ) {
 			throw new ArgumentOutOfRangeException( nameof( pointCount ), "Site count exceeds representable triangulation array capacities." );
 		}
@@ -39,7 +39,7 @@ internal sealed class MapboxDelaunatorFactory {
 		int n = coords.Length / 2;
 		int triangleCapacity = GetTriangleCapacity( n );
 		int hashSize = (int)Math.Ceiling( Math.Sqrt( n ) );
-		int[] scratch = ArrayPool<int>.Shared.Rent( checked( 4 * n + hashSize ) );
+		int[] scratch = ArrayPool<int>.Shared.Rent( checked( (4 * n) + hashSize ) );
 		double[]? distances = null;
 		try {
 			distances = ArrayPool<double>.Shared.Rent( n );
@@ -74,7 +74,7 @@ internal sealed class MapboxDelaunatorFactory {
 			// Reuse distance scratch rather than allocating a default-path hash set.
 			for( int i = 0; i < n; i++ ) {
 				dists[i] = ( ( (long)coords[i * 2] - GeometryLimits.MinimumCoordinate ) << 16 )
-					+ ( (long)coords[i * 2 + 1] - GeometryLimits.MinimumCoordinate );
+					+ ( (long)coords[(i * 2) + 1] - GeometryLimits.MinimumCoordinate );
 			}
 			dists.Sort();
 			for( int i = 1; i < n; i++ ) {

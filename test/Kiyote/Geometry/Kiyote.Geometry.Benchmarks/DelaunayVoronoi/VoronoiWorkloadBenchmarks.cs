@@ -1,3 +1,5 @@
+using Kiyote.Geometry.DelaunayVoronoi.D3;
+
 namespace Kiyote.Geometry.DelaunayVoronoi.Benchmarks;
 
 public enum VoronoiWorkload {

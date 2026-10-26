@@ -1,4 +1,7 @@
-namespace Kiyote.Geometry.DelaunayVoronoi.Profiler;
+using Kiyote.Geometry.DelaunayVoronoi;
+using Kiyote.Geometry.DelaunayVoronoi.D3;
+
+namespace Kiyote.Geometry.Profiler.DelaunayVoronoi.D3;
 
 public sealed class D3DelaunayFactoryProfiler {
 

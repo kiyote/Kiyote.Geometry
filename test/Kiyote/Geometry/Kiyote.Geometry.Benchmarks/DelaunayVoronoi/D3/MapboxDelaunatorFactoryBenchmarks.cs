@@ -1,4 +1,6 @@
-namespace Kiyote.Geometry.DelaunayVoronoi.Benchmarks;
+using Kiyote.Geometry.DelaunayVoronoi.D3;
+
+namespace Kiyote.Geometry.Benchmarks.DelaunayVoronoi.D3;
 
 [MemoryDiagnoser( false )]
 public class MapboxDelaunatorFactoryBenchmarks {

@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Kiyote.Geometry.Trees;
+using Kiyote.Geometry.DelaunayVoronoi.D3;
 
 namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
 

@@ -49,7 +49,7 @@ public class IntegerRasterizerBenchmarks {
 		for( int y = 0; y < Size; y++ ) {
 			for( int x = 0; x < Size; x++ ) {
 				uint expected = x >= 1 && x <= 8 && y >= 1 && y <= 8 ? uint.MaxValue : 0;
-				if( _buffer[y * Size + x] != expected ) {
+				if( _buffer[(y * Size) + x] != expected ) {
 					throw new InvalidOperationException( "Rasterizer benchmark differs from the inclusive square reference." );
 				}
 			}
@@ -59,13 +59,13 @@ public class IntegerRasterizerBenchmarks {
 	[Benchmark]
 	public uint FillSmallRaw_PerSpan() {
 		_rasterizer.Rasterize( _smallVertices.AsSpan(), new SpanWriter( _buffer, uint.MaxValue ) );
-		return _buffer[4 * Size + 4];
+		return _buffer[(4 * Size) + 4];
 	}
 
 	[Benchmark]
 	public uint FillSmallValidated_PerSpan() {
 		_rasterizer.Rasterize( _smallPolygon, new SpanWriter( _buffer, uint.MaxValue ) );
-		return _buffer[4 * Size + 4];
+		return _buffer[(4 * Size) + 4];
 	}
 
 	/// <summary>

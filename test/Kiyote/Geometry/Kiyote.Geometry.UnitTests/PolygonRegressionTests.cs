@@ -302,12 +302,12 @@ public sealed class PolygonRegressionTests {
 			long minA = long.MaxValue, maxA = long.MinValue;
 			long minB = long.MaxValue, maxB = long.MinValue;
 			foreach( Point point in a ) {
-				long projection = point.X * nx + point.Y * ny;
+				long projection = (point.X * nx) + (point.Y * ny);
 				minA = Math.Min( minA, projection );
 				maxA = Math.Max( maxA, projection );
 			}
 			foreach( Point point in b ) {
-				long projection = point.X * nx + point.Y * ny;
+				long projection = (point.X * nx) + (point.Y * ny);
 				minB = Math.Min( minB, projection );
 				maxB = Math.Max( maxB, projection );
 			}
@@ -335,7 +335,7 @@ public sealed class PolygonRegressionTests {
 	}
 
 	private static long Cross( Point a, Point b, Point c ) {
-		return ( (long)b.X - a.X ) * ( c.Y - a.Y ) - ( (long)b.Y - a.Y ) * ( c.X - a.X );
+		return (( (long)b.X - a.X ) * ( c.Y - a.Y )) - (( (long)b.Y - a.Y ) * ( c.X - a.X ));
 	}
 
 	private static Polygon Box( int x1, int y1, int x2, int y2 ) {
@@ -357,8 +357,8 @@ public sealed class PolygonRegressionTests {
 			Point a = polygon.Points[i];
 			Point b = polygon.Points[( i + 1 ) % polygon.Points.Count];
 			Point c = polygon.Points[( i + 2 ) % polygon.Points.Count];
-			area += (long)a.X * b.Y - (long)a.Y * b.X;
-			long cross = ( (long)b.X - a.X ) * ( c.Y - a.Y ) - ( (long)b.Y - a.Y ) * ( c.X - a.X );
+			area += ((long)a.X * b.Y) - ((long)a.Y * b.X);
+			long cross = (( (long)b.X - a.X ) * ( c.Y - a.Y )) - (( (long)b.Y - a.Y ) * ( c.X - a.X ));
 			Assert.That( cross, Is.Not.Zero );
 			sign = sign == 0 ? Math.Sign( cross ) : sign;
 			Assert.That( Math.Sign( cross ), Is.EqualTo( sign ) );

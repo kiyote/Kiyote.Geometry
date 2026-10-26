@@ -1,11 +1,12 @@
 using System.IO.Abstractions;
 using Kiyote.Buffers;
 using Kiyote.Geometry.DelaunayVoronoi;
+using Kiyote.Geometry.DelaunayVoronoi.D3;
 using Kiyote.Geometry.Rasterizers;
 using Kiyote.Imaging;
 using Kiyote.Imaging.Png;
 
-namespace Kiyote.Geometry.Visualizer.DelaunayVoronoi;
+namespace Kiyote.Geometry.Visualizer.DelaunayVoronoi.D3;
 
 public sealed class D3DelaunayFactoryVisualizer {
 

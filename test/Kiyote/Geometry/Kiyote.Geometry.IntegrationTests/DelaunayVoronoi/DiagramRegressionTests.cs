@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using Kiyote.Geometry.DelaunayVoronoi.D3;
 
 namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
 
@@ -53,7 +54,7 @@ public sealed class DiagramRegressionTests {
 	[Test]
 	public void GetTriangleCapacity_RepresentableBoundary_IsCheckedWithoutAllocation() {
 		int maximumCount = (int)( ( Array.MaxLength + 15L ) / 6 );
-		Assert.That( MapboxDelaunatorFactory.GetTriangleCapacity( maximumCount ), Is.EqualTo( 6L * maximumCount - 15 ) );
+		Assert.That( MapboxDelaunatorFactory.GetTriangleCapacity( maximumCount ), Is.EqualTo( (6L * maximumCount) - 15 ) );
 		Assert.That( () => MapboxDelaunatorFactory.GetTriangleCapacity( maximumCount + 1 ), Throws.TypeOf<ArgumentOutOfRangeException>() );
 	}
 
@@ -63,8 +64,8 @@ public sealed class DiagramRegressionTests {
 		for( int sample = 0; sample < 10; sample++ ) {
 			Point[] sites = new Point[36];
 			for( int i = 0; i < sites.Length; i++ ) {
-				sites[i] = new Point( -6000 + i % 6 * 2000 + random.Next( -600, 601 ),
-					-6000 + i / 6 * 2000 + random.Next( -600, 601 ) );
+				sites[i] = new Point( -6000 + (i % 6 * 2000) + random.Next( -600, 601 ),
+					-6000 + (i / 6 * 2000) + random.Next( -600, 601 ) );
 			}
 			ValidateDiagram( _voronoi.Create( Bounds, sites ), sites );
 		}
@@ -211,7 +212,7 @@ public sealed class DiagramRegressionTests {
 	private static Point[] Ring( int count, bool open ) {
 		Point[] points = new Point[count + 1];
 		for( int i = 0; i < count; i++ ) {
-			double angle = open ? -1.4 + 2.8 * i / ( count - 1 ) : 2 * Math.PI * i / count;
+			double angle = open ? -1.4 + (2.8 * i / ( count - 1 )) : 2 * Math.PI * i / count;
 			points[i + 1] = new Point( (int)Math.Round( 10000 * Math.Cos( angle ) ), (int)Math.Round( 10000 * Math.Sin( angle ) ) );
 		}
 		return points;
@@ -239,9 +240,9 @@ public sealed class DiagramRegressionTests {
 				Assert.That( Bounds.Contains( point ), Is.True );
 				foreach( Point other in sites ) {
 					long dx = (long)other.X - cell.Center.X, dy = (long)other.Y - cell.Center.Y;
-					long offset = (long)other.X * other.X + (long)other.Y * other.Y
-						- (long)cell.Center.X * cell.Center.X - (long)cell.Center.Y * cell.Center.Y;
-					long excess = 2 * ( dx * point.X + dy * point.Y ) - offset;
+					long offset = ((long)other.X * other.X) + ((long)other.Y * other.Y)
+						- ((long)cell.Center.X * cell.Center.X) - ((long)cell.Center.Y * cell.Center.Y);
+					long excess = (2 * ( (dx * point.X) + (dy * point.Y) )) - offset;
 					long floorMargin = 2 * ( Math.Max( 0, -dx ) + Math.Max( 0, -dy ) );
 					Assert.That( excess, Is.LessThanOrEqualTo( floorMargin ),
 						$"Site {cell.Center}, neighbour candidate {other}, output vertex {point}" );

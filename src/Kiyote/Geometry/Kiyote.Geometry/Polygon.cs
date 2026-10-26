@@ -438,7 +438,7 @@ public sealed class Polygon {
 	private static long Orientation(
 		Point a, Point b, Point c
 	) {
-		return ( (long)b.X - a.X ) * ( c.Y - a.Y ) - ( (long)b.Y - a.Y ) * ( c.X - a.X );
+		return (( (long)b.X - a.X ) * ( c.Y - a.Y )) - (( (long)b.Y - a.Y ) * ( c.X - a.X ));
 	}
 
 	private static void AddUnique(

@@ -71,8 +71,8 @@ public static class Intersect {
 		}
 
 		// Exact numerators and bounded rational spacing preserve half ties in double.
-		long x = a.A.X * denominator + numeratorA * ( a.B.X - a.A.X );
-		long y = a.A.Y * denominator + numeratorA * ( a.B.Y - a.A.Y );
+		long x = (a.A.X * denominator) + (numeratorA * ( a.B.X - a.A.X ));
+		long y = (a.A.Y * denominator) + (numeratorA * ( a.B.Y - a.A.Y ));
 		point = new Point(
 			(int)Math.Round( (double)x / denominator ),
 			(int)Math.Round( (double)y / denominator )
@@ -87,9 +87,9 @@ public static class Intersect {
 		long sy = (long)b.B.Y - b.A.Y;
 		long qx = (long)b.A.X - a.A.X;
 		long qy = (long)b.A.Y - a.A.Y;
-		long denominator = rx * sy - ry * sx;
-		numeratorA = qx * sy - qy * sx;
-		numeratorB = qx * ry - qy * rx;
+		long denominator = (rx * sy) - (ry * sx);
+		numeratorA = (qx * sy) - (qy * sx);
+		numeratorB = (qx * ry) - (qy * rx);
 		if( denominator < 0 ) {
 			numeratorA = -numeratorA;
 			numeratorB = -numeratorB;

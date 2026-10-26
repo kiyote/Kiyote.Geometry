@@ -2,6 +2,7 @@ using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
 using Kiyote.Geometry.Benchmarks;
+using Kiyote.Geometry.Benchmarks.DelaunayVoronoi.D3;
 using Kiyote.Geometry.Benchmarks.Rasterizers;
 using Kiyote.Geometry.Benchmarks.Topology;
 using Kiyote.Geometry.DelaunayVoronoi.Benchmarks;

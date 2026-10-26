@@ -1,4 +1,4 @@
-﻿namespace Kiyote.Geometry;
+namespace Kiyote.Geometry;
 
 public readonly struct Edge : IEquatable<Edge> {
 
@@ -123,8 +123,8 @@ public readonly struct Edge : IEquatable<Edge> {
 		if( !( amount >= 0f && amount <= 1f ) ) {
 			throw new ArgumentOutOfRangeException( nameof( amount ), amount, "Interpolation amount must be finite and in [0, 1]." );
 		}
-		int x = (int)Math.Round( p1.X + ( (double)p2.X - p1.X ) * amount );
-		int y = (int)Math.Round( p1.Y + ( (double)p2.Y - p1.Y ) * amount );
+		int x = (int)Math.Round( p1.X + (( (double)p2.X - p1.X ) * amount) );
+		int y = (int)Math.Round( p1.Y + (( (double)p2.Y - p1.Y ) * amount) );
 		return new Point( x, y );
 	}
 

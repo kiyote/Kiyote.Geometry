@@ -1,6 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
+using Kiyote.Geometry.DelaunayVoronoi;
+using Kiyote.Geometry.DelaunayVoronoi.D3;
 
-namespace Kiyote.Geometry.DelaunayVoronoi.Tests;
+namespace Kiyote.Geometry.IntegrationTests.DelaunayVoronoi.D3;
 
 [TestFixture]
 [ExcludeFromCodeCoverage]
@@ -53,9 +55,9 @@ public sealed class D3VoronoiFactoryTests {
 		Point[] points = new Point[400];
 		for( int row = 0; row < 20; row++ ) {
 			for( int column = 0; column < 20; column++ ) {
-				points[row * 20 + column] = new Point(
-					-475 + column * 50 + random.Next( -10, 11 ),
-					-475 + row * 50 + random.Next( -10, 11 )
+				points[(row * 20) + column] = new Point(
+					-475 + (column * 50) + random.Next( -10, 11 ),
+					-475 + (row * 50) + random.Next( -10, 11 )
 				);
 			}
 		}
@@ -75,7 +77,7 @@ public sealed class D3VoronoiFactoryTests {
 						continue;
 					}
 					Point p = polygon.Points[j];
-					long side = ( (long)b.X - a.X ) * ( p.Y - a.Y ) - ( (long)b.Y - a.Y ) * ( p.X - a.X );
+					long side = (( (long)b.X - a.X ) * ( p.Y - a.Y )) - (( (long)b.Y - a.Y ) * ( p.X - a.X ));
 					Assert.That( side, Is.Not.Zero, $"Cell {cellIndex}, edge {i}, vertex {j}" );
 					winding = winding == 0 ? Math.Sign( side ) : winding;
 					Assert.That( Math.Sign( side ), Is.EqualTo( winding ), $"Cell {cellIndex}, edge {i}, vertex {j}" );

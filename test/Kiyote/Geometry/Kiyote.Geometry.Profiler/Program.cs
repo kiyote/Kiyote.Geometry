@@ -1,4 +1,4 @@
-using Kiyote.Geometry.DelaunayVoronoi.Profiler;
+using Kiyote.Geometry.Profiler.DelaunayVoronoi.D3;
 using Kiyote.Geometry.Profiler;
 using Kiyote.Geometry.Trees.Profiler;
 
