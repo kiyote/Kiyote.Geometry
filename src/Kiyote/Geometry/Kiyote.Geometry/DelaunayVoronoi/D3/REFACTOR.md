@@ -632,14 +632,16 @@ grids and mostly-hull inputs.
 
 ### O9 - introduce one call-scoped workspace for temporary data
 
-**Next measured experiment (2026-10-26):** post-O5/O10 managed stack/allocation
-profiles now cover irregular, translated thin, all-hull and heavily sanitized
-inputs with shared test/benchmark/profiler generators. They show significant
-output storage as well as temporary numeric arrays. First test a narrow scoped
-workspace for traversal indices and circumcentres; do not pool final output or
-rewrite the full representation at the same time. See
-[benchmark results][benchmark-results] for exact B/op, profiling limitations,
-and cold/concurrent pool tradeoffs.
+**Scoped experiment rejected (2026-10-26):** post-O5/O10 managed stack/allocation
+profiles cover irregular, translated thin, all-hull and heavily sanitized
+inputs with shared test/benchmark/profiler generators. A narrow call-scoped
+workspace pooled one combined traversal-index array and one circumcentre array.
+It passed ownership, dirty-buffer, partial-failure and geometry gates and
+reduced warm allocated bytes, but both candidate runs were slower on grid
+workloads than the intervening isolated reference. The performance-first gate
+therefore rejected it; all experimental code and its tighter allocation budget
+were removed. O9 is not complete. See [benchmark results][benchmark-results]
+for results, profiling limitations, bucket-capacity tradeoffs and next steps.
 
 **Where:** [MapboxDelaunatorFactory][mapbox-factory],
 [MapboxDelaunator][mapbox-result], both factories, and traversal-index building.

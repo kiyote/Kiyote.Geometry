@@ -1,5 +1,77 @@
 # Benchmarks
 
+## O9 scoped traversal/circumcentre pooling: rejected (2026-10-26)
+
+Reference: `5f95ad4`, in an isolated worktree rooted at that commit for every
+reference invocation. Candidate was a call-scoped ref-struct owner renting
+one `int[]` for two logical site-count spans and one `double[]` for
+circumcentre coordinates. `try/finally` returned both buffers, including when
+the second rent or subsequent cell creation failed. The remaining creation
+body was extracted into a helper that consumed the workspace spans. No output
+was pooled. This whole candidate was removed; it is not in production.
+
+An initial comparison against earlier timings looked slower. To check this,
+all ten unchanged Voronoi workloads were run serially in
+candidate 1 / isolated reference / candidate 2 order. Every suite used the
+same two launches, four warmups, twelve iterations and requested 300 ms
+iteration time on the existing runtime/hardware. No agent-started builds,
+tests, traces or benchmarks overlapped these suites.
+
+| Workload | Isolated reference mean +/- error | Candidate 1 mean +/- error | Candidate 2 mean +/- error |
+|---|---:|---:|---:|
+| Factory, 400 sites | 244.19 +/- 3.150 us | 260.11 +/- 10.021 us | 259.41 +/- 11.115 us |
+| Factory, 10,000 sites | 8,116.97 +/- 288.948 us | 9,319.59 +/- 249.495 us | 8,713.51 +/- 255.809 us |
+| Factory, 40,000 sites | 48,090.16 +/- 2,435.901 us | 54,756.24 +/- 2,425.204 us | 53,747.32 +/- 1,998.437 us |
+| Workload grid | 256.50 +/- 4.026 us | 281.90 +/- 6.708 us | 284.57 +/- 4.607 us |
+| Workload jittered grid | 401.26 +/- 16.894 us | 418.86 +/- 16.905 us | 391.18 +/- 13.512 us |
+| Workload high degree | 24.69 +/- 0.793 us | 24.24 +/- 0.717 us | 23.28 +/- 0.554 us |
+| Irregular | 4,947.91 +/- 128.793 us | 4,741.15 +/- 121.375 us | 4,673.78 +/- 111.794 us |
+| Mostly hull | 96.43 +/- 1.908 us | 98.91 +/- 2.951 us | 94.91 +/- 1.736 us |
+| Sanitized | 489.26 +/- 8.995 us | 549.54 +/- 23.065 us | 483.15 +/- 17.007 us |
+| Thin | 464.20 +/- 6.259 us | 483.65 +/- 18.241 us | 471.40 +/- 20.851 us |
+
+Error is the 99.9% confidence-interval half-width. Both candidate runs have
+disjoint intervals in the unfavourable direction for each factory grid size
+and the separate grid workload. The 10,000-site observed mean increase is
+14.8%/7.3%; the 40,000-site increase is 13.9%/11.8%. Irregular input is
+promising in one comparison, but not a general improvement. This is not a
+randomized experiment, and it does not prove that all pooling variants are
+slower. It is sufficient reason not to accept this implementation under the
+performance-first policy. No specific low-level regression cause is asserted.
+
+Warm allocation did decrease: 400-site factory 228.86 to 214.38 KiB,
+10,000-site factory about 5,652 to 5,269 KiB, and 40,000-site factory about
+22,874 to 21,321 KiB. The deterministic logical saving is
+`8n + 16t + 72` bytes per call on x64. This saving did not outweigh the
+observed runtime regressions.
+
+Cold/concurrent pool capacity is a further tradeoff, not a free memory win.
+For the 40,000-site grid (`t = 79,202`), logical numeric payload was 1,587,232
+bytes. The usual shared-pool power-of-two buckets for those requests hold
+131,072 ints and 262,144 doubles, or 2,621,440 payload bytes per concurrently
+active workspace. This is a capacity calculation, not a measured peak. Pools
+may retain returned capacity; no peak-RSS reduction was measured or claimed.
+
+Before rejection, candidate tests covered dirty oversized slices, independent
+index ranges, exactly-once returns, failure of the second rental, exceptions
+after initialization, allocation-free warm rentals, existing concurrent
+ownership and all output fingerprints. A proposed 216 KiB diagram budget
+failed on the reference (234,352 bytes) and passed with pooling. That budget
+and the candidate-only tests were removed with the rejected implementation;
+the accepted 230 KiB allocation budget is unchanged.
+
+Production source and storage tests were verified identical to `5f95ad4`
+after removing the experiment. Final validation: Release solution build with
+zero warnings/errors, all 477 unit tests and 180 integration tests passing.
+Reports are retained as `d3-scoped-workspace`, `d3-workspace-control`, and
+`d3-workspace-repeat`. The temporary reference worktree is removed after use.
+
+**Next architectural candidate:** O2 flat cell/vertex storage remains worth
+an independently measured prototype because polygon/edge storage is prominent
+in the profiles. Establish create-and-consume/search baselines first. Do not
+automatically ship that larger API/storage rewrite, or try progressively wider
+pooling, merely because the smaller workspace experiment failed.
+
 ## Post-O5/O10 workload profiling (2026-10-26)
 
 Production baseline: `bd70222`. The profiler now accepts a noninteractive
@@ -39,7 +111,7 @@ input-sized snapshot before compaction. Tick attribution is sampled and can be
 phase-locked to deterministic allocation sequences; these are not exact type
 totals or retained/peak-memory measurements.
 
-**Next choice:** perform a limited O9 experiment pooling only the two temporary
+**Choice made before the experiment above:** perform a limited O9 experiment pooling only the two temporary
 traversal-index ranges and the circumcentre range. Their lifetimes end with
 creation, and O5 already provides a caller-owned-span boundary. Exact potential
 warm-pool savings are `8n + 16t + 72` bytes per call on x64, where `t` is logical
