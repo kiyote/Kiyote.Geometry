@@ -1,17 +1,21 @@
 ﻿namespace Kiyote.Geometry.DelaunayVoronoi;
 
 internal sealed class Voronoi : IVoronoi {
+	private readonly int[] _neighbourOffsets;
+	private readonly int[] _neighbourIndices;
 
 	// Transfers factory-owned read-only storage; no mutable aliases may escape.
 	public Voronoi(
 		IReadOnlyList<Point> points,
 		IReadOnlyList<Cell> cells,
-		IReadOnlyDictionary<Cell, IReadOnlyList<Cell>> neighbours,
+		int[] neighbourOffsets,
+		int[] neighbourIndices,
 		IReadOnlyList<Edge> edges
 	) {
 		Points = points;
 		Cells = cells;
-		Neighbours = neighbours;
+		_neighbourOffsets = neighbourOffsets;
+		_neighbourIndices = neighbourIndices;
 		Edges = edges;
 	}
 
@@ -19,7 +23,12 @@ internal sealed class Voronoi : IVoronoi {
 
 	public IReadOnlyList<Cell> Cells { get; }
 
-	public IReadOnlyDictionary<Cell, IReadOnlyList<Cell>> Neighbours { get; }
+	public ReadOnlySpan<int> GetNeighbourIndices( int cellIndex ) {
+		ArgumentOutOfRangeException.ThrowIfNegative( cellIndex );
+		ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual( cellIndex, Cells.Count );
+		int start = _neighbourOffsets[cellIndex];
+		return _neighbourIndices.AsSpan( start, _neighbourOffsets[cellIndex + 1] - start );
+	}
 
 	public IReadOnlyList<Edge> Edges { get; }
 }

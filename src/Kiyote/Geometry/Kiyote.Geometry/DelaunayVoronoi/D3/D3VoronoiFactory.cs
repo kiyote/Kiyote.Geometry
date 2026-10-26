@@ -17,8 +17,6 @@ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 */
 
-using System.Collections.ObjectModel;
-
 namespace Kiyote.Geometry.DelaunayVoronoi.D3;
 
 internal sealed class D3VoronoiFactory : IVoronoiFactory {
@@ -109,9 +107,15 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 
 		ReadOnlySpan<int> inedges = delaunay.Inedges;
 		ReadOnlySpan<int> hullIndex = delaunay.HullIndex;
-		Dictionary<Cell, IReadOnlyList<Cell>> cellNeighbours = new Dictionary<Cell, IReadOnlyList<Cell>>( sites.Length );
-		List<Cell> neighbours = new List<Cell>( IVoronoiFactory.MaximumCellVertices + 1 );
+		long neighbourCapacity = (long)delaunator.Triangles.Length + delaunator.Hull.Length;
+		if( neighbourCapacity > Array.MaxLength ) {
+			throw new ArgumentOutOfRangeException( nameof( points ), "Site count exceeds representable adjacency array capacities." );
+		}
+		int[] neighbourOffsets = new int[sites.Length + 1];
+		int[] neighbourIndices = new int[(int)neighbourCapacity];
+		int neighbourCount = 0;
 		for( int i = 0; i < sites.Length; i++ ) {
+			neighbourOffsets[i] = neighbourCount;
 			int e0 = inedges[i];
 			if( e0 == -1 ) {
 				throw new InvalidOperationException( "Coincident point." );
@@ -120,7 +124,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			int p0;
 			do {
 				p0 = delaunator.Triangles[e];
-				neighbours.Add( cells[p0] );
+				neighbourIndices[neighbourCount++] = p0;
 
 				e = e % 3 == 2 ? e - 2 : e + 1;
 				if( delaunator.Triangles[e] != i ) {
@@ -130,14 +134,16 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				if( e == -1 ) {
 					int p = delaunator.Hull[( hullIndex[i] + 1 ) % delaunator.Hull.Length];
 					if( p != p0 ) {
-						neighbours.Add( cells[p] );
+						neighbourIndices[neighbourCount++] = p;
 					}
 					break;
 				}
 
 			} while( e != e0 );
-			cellNeighbours[cells[i]] = Array.AsReadOnly( neighbours.ToArray() );
-			neighbours.Clear();
+		}
+		neighbourOffsets[sites.Length] = neighbourCount;
+		if( neighbourCount != neighbourIndices.Length ) {
+			throw new InvalidOperationException( "Triangulation adjacency does not match the mesh edge count." );
 		}
 
 		HashSet<Edge> edges = [];
@@ -148,7 +154,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		}
 
 		return new Voronoi( Array.AsReadOnly( sites ), cells.AsReadOnly(),
-			new ReadOnlyDictionary<Cell, IReadOnlyList<Cell>>( cellNeighbours ), Array.AsReadOnly( edges.ToArray() ) );
+			neighbourOffsets, neighbourIndices, Array.AsReadOnly( edges.ToArray() ) );
 	}
 
 	private static void Clip(

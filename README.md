@@ -96,7 +96,7 @@ requires rebuilding and revisiting their derived scratch bounds.
 There is no fixed total site-count cap. Required array lengths must be
 representable, and allocations remain subject to available memory. Results own
 stable site snapshots and read-only triangles, hulls, cells, edges, and neighbour
-collections; reusing or mutating an input array/list cannot change an existing
+index spans; reusing or mutating an input array/list cannot change an existing
 diagram. Quantized Voronoi polygons approximate the continuous cells, not an
 exact partition of continuous space.
 
@@ -112,6 +112,13 @@ but triangulation consumes only the accepted-site prefix.
 
 Infinite-cell rays are derived from adjacent hull sites on demand, without a
 four-double vector allocation for every site.
+
+Voronoi adjacency is stored in two contiguous owned integer arrays rather than
+a cell-keyed dictionary and per-cell collections. `GetNeighbourIndices(i)`
+returns an allocation-free `ReadOnlySpan<int>` of indices into `Cells`, in
+one-ring traversal order. Cell indices match site order. Resolve a neighbour as
+`diagram.Cells[neighbourIndex]`. This replaces the former `Neighbours` property.
+Adjacency remains eager, complete, and stable for the diagram's lifetime.
 
 `Triangle` is an immutable value type with ordered structural equality, not a
 nullable reference object. Its default value is degenerate and is rejected by

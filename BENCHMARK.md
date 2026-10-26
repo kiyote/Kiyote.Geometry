@@ -44,6 +44,28 @@ The high-degree runtime intervals overlap; no speedup is claimed there.
 The 40,000-site runtime distribution is bimodal. The payload saving is
 deterministically `32n` bytes plus one array header, independent of timing noise.
 
+### O2, incremental variant: CSR adjacency
+
+Replace cell-keyed dictionaries and per-cell neighbour arrays/wrappers with
+owned offset/index arrays and `GetNeighbourIndices(int)`. All geometry and
+adjacency are still computed eagerly. Same two-launch settings:
+
+| Voronoi workload | O8 mean | CSR mean | O8 allocated | CSR allocated |
+|---|---:|---:|---:|---:|
+| 400 sites | 342.69 us | 318.88 us | 333.59 KB | 295.19 KB |
+| 10,000 sites | 12,881.30 us | 10,002.88 us | 9,720.50 KB | 8,782.84 KB |
+| 40,000 sites | 73,218.06 us | 56,807.16 us | 40,178.40 KB | 36,335.53 KB |
+| Workload grid | 350.82 us | 310.44 us | 333.59 KB | 295.19 KB |
+| Workload jittered grid | 535.62 us | 505.47 us | 473.15 KB | 434.26 KB |
+| Workload high degree | 31.21 us | 28.01 us | 51.28 KB | 46.94 KB |
+
+The 40,000-site means improve about 22% and allocated bytes about 9.6%
+relative to O8. The 400-site factory distribution has multiple modes; its
+timing is less conclusive than the large-input result. Neighbour traversal is
+covered by a zero-allocation regression and compared with primal-mesh adjacency.
+Cells and polygon objects remain unchanged; this is not the full flat-vertex
+representation proposed in O2.
+
 ## Earlier full-suite measurements
 
 ```

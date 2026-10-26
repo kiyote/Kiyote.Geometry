@@ -156,9 +156,8 @@ public sealed class D3VoronoiFactoryVisualizer {
 
 		Render( buffer, voronoi );
 
-		Cell cell = voronoi.Cells[0];
-		foreach( Cell neighbour in voronoi.Neighbours[cell] ) {
-
+		foreach( int neighbourIndex in voronoi.GetNeighbourIndices( 0 ) ) {
+			Cell neighbour = voronoi.Cells[neighbourIndex];
 			_rasterizer.Rasterize( neighbour.Polygon, new BufferPixelWriter( buffer, 0xFF0000FFU ), false );
 		}
 

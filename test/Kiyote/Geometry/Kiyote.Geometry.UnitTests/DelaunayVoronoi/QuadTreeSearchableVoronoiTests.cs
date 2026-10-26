@@ -39,7 +39,9 @@ public sealed class QuadTreeSearchableVoronoiTests {
 		Assert.That( voronoi.Points, Is.SameAs( _searchableVoronoi.Points ) );
 		Assert.That( voronoi.Cells, Is.SameAs( _searchableVoronoi.Cells ) );
 		Assert.That( voronoi.Edges, Is.SameAs( _searchableVoronoi.Edges ) );
-		Assert.That( voronoi.Neighbours, Is.SameAs( _searchableVoronoi.Neighbours ) );
+		for( int i = 0; i < _voronoi.Cells.Count; i++ ) {
+			Assert.That( _searchableVoronoi.GetNeighbourIndices( i ).SequenceEqual( _voronoi.GetNeighbourIndices( i ) ), Is.True );
+		}
 	}
 
 	[TestCase( 1, 1, 48, 48, 25, 25 )]

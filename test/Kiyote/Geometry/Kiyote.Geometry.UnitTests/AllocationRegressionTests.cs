@@ -90,7 +90,7 @@ public sealed class AllocationRegressionTests {
 			new Polygon( [new Point( 0, 0 ), new Point( 2, 0 ), new Point( 0, 2 )] ), false, bounds );
 		Cell b = new Cell( new Point( 2, 2 ),
 			new Polygon( [new Point( 2, 2 ), new Point( 0, 2 ), new Point( 2, 0 )] ), false, bounds );
-		IVoronoi diagram = new Voronoi( [a.Center, b.Center], [a, b], new Dictionary<Cell, IReadOnlyList<Cell>>(), [] );
+		IVoronoi diagram = new Voronoi( [a.Center, b.Center], [a, b], [0, 0, 0], [], [] );
 		ISearchableVoronoiFactory factory = new QuadTreeSearchableVoronoiFactory( new SimpleQuadTreeFactory() );
 		ISearchableVoronoi searchable = factory.Create( diagram, new Point( 3, 3 ) );
 		Assert.That( searchable.Search( bounds ), Is.EquivalentTo( new[] { a, b } ) );

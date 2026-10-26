@@ -24,7 +24,7 @@ public sealed class DiagramRegressionTests {
 		IVoronoi diagram = _voronoi.Create( Bounds, sites );
 		ValidateDiagram( diagram, sites );
 		Assert.That( diagram.Cells[0].Polygon.Points, Has.Count.EqualTo( degree ) );
-		Assert.That( diagram.Neighbours[diagram.Cells[0]], Has.Count.EqualTo( degree ) );
+		Assert.That( diagram.GetNeighbourIndices( 0 ).Length, Is.EqualTo( degree ) );
 		Assert.That( diagram.Cells[0].IsOpen, Is.False );
 	}
 
@@ -166,10 +166,9 @@ public sealed class DiagramRegressionTests {
 		IVoronoi voronoi = _voronoi.Create( Bounds, TriangleSites );
 		AssertReadOnly( voronoi.Cells );
 		AssertReadOnly( voronoi.Edges );
-		AssertReadOnly( voronoi.Neighbours[voronoi.Cells[0]] );
-		if( voronoi.Neighbours is IDictionary<Cell, IReadOnlyList<Cell>> dictionary ) {
-			Assert.That( () => dictionary[voronoi.Cells[0]] = dictionary[voronoi.Cells[0]], Throws.TypeOf<NotSupportedException>() );
-		}
+		int[] neighbours = voronoi.GetNeighbourIndices( 0 ).ToArray();
+		_ = _voronoi.Create( Bounds, TriangleSites );
+		Assert.That( voronoi.GetNeighbourIndices( 0 ).ToArray(), Is.EqualTo( neighbours ) );
 		IDelaunayFactory factory = new D3DelaunayFactory();
 		IDelaunay delaunay = factory.Create( TriangleSites );
 		AssertReadOnly( delaunay.Triangles );
@@ -246,12 +245,12 @@ public sealed class DiagramRegressionTests {
 						$"Site {cell.Center}, neighbour candidate {other}, output vertex {point}" );
 				}
 			}
-			IReadOnlyList<Cell> neighbours = diagram.Neighbours[cell];
-			Assert.That( neighbours.Distinct().Count(), Is.EqualTo( neighbours.Count ) );
-			foreach( Cell neighbour in neighbours ) {
-				Assert.That( neighbour, Is.Not.SameAs( cell ) );
-				Assert.That( diagram.Cells, Does.Contain( neighbour ) );
-				Assert.That( diagram.Neighbours[neighbour], Does.Contain( cell ) );
+			ReadOnlySpan<int> neighbours = diagram.GetNeighbourIndices( i );
+			Assert.That( neighbours.ToArray().Distinct().Count(), Is.EqualTo( neighbours.Length ) );
+			foreach( int neighbour in neighbours ) {
+				Assert.That( neighbour, Is.InRange( 0, sites.Length - 1 ) );
+				Assert.That( neighbour, Is.Not.EqualTo( i ) );
+				Assert.That( diagram.GetNeighbourIndices( neighbour ).Contains( i ), Is.True );
 			}
 		}
 	}

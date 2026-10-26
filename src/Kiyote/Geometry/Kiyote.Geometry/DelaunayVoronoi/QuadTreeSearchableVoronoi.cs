@@ -24,7 +24,7 @@ internal sealed class QuadTreeSearchableVoronoi : ISearchableVoronoi {
 
 	IReadOnlyList<Edge> IVoronoi.Edges => _voronoi.Edges;
 
-	IReadOnlyDictionary<Cell, IReadOnlyList<Cell>> IVoronoi.Neighbours => _voronoi.Neighbours;
+	ReadOnlySpan<int> IVoronoi.GetNeighbourIndices( int cellIndex ) => _voronoi.GetNeighbourIndices( cellIndex );
 
 	IReadOnlyList<Cell> ISearchableVoronoi.Search(
 		Rect area
