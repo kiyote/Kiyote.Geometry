@@ -20,6 +20,7 @@ Summary[] summaries = BenchmarkSwitcher
 		typeof( IntersectBenchmarks ),
 		typeof( GeometryWorkloadBenchmarks ),
 		typeof( VoronoiWorkloadBenchmarks ),
+		typeof( D3ProfileWorkloadBenchmarks ),
 		typeof( PolygonBenchmarks ),
 		typeof( RectangleBenchmarks ),
 		typeof( SimpleQuadTreeNodeBenchmarks ),

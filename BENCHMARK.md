@@ -1,5 +1,71 @@
 # Benchmarks
 
+## Post-O5/O10 workload profiling (2026-10-26)
+
+Production baseline: `bd70222`. The profiler now accepts a noninteractive
+`--d3 <Irregular|Thin|MostlyHull|Sanitized> <iterations>` mode. One shared
+test-only fixture is compiled into the profiler, benchmarks and integration
+tests to prevent generator/validation drift; no production dependency is added.
+Existing interactive profiling without arguments is preserved.
+
+| Workload | Input / accepted sites | Measured warm B/op | Benchmark mean +/- error |
+|---|---:|---:|---:|
+| Seeded irregular grid | 4,096 / 4,096 | 2,836,084 | 4,919.3 +/- 198.52 us |
+| Translated thin rectangle | 512 / 512 | 350,960 | 515.8 +/- 10.00 us |
+| All-hull circle | 128 / 128 | 76,072 | 101.1 +/- 4.06 us |
+| Outside/duplicate-heavy sanitization | 40,000 / 400 | 570,360 | 515.8 +/- 14.23 us |
+
+Warm B/op is `GC.GetAllocatedBytesForCurrentThread` over 2,000 / 20,000 /
+60,000 / 15,000 creations respectively, after 20 warmups, during trace
+collection. Benchmark runtime comes from separate untraced BenchmarkDotNet
+runs with the usual two launches, four warmups, twelve iterations and requested
+300 ms iteration time. Runtime error is the 99.9% interval half-width.
+No traced elapsed time is used as a benchmark result.
+
+Four serial `dotnet-trace` captures used the installed 10.0.745401 tool with
+`--profile dotnet-sampled-thread-time,gc-verbose`. The managed stack reports
+show core triangulation, generated polygon construction, circumcentres and
+edge-set initialization among active paths. These are sampled managed-thread
+time, not native CPU cycles: finalizer/GC waits, inlining and background-thread
+activity affect attribution, so their percentages are not interpreted as
+precise phase CPU costs.
+
+Allocation ticks show substantial `Edge[]`, edge-set entry arrays, per-cell
+objects/point arrays/interface boxes, and temporary numeric arrays. The
+irregular trace assigns approximately 37% of sampled allocation weight to
+`Edge[]`, 14% to edge-set entries, 14% to `int[]`, and 9% to `double[]`.
+Sanitized input assigns about 61% to `Point[]`, consistent with its 320,000-byte
+input-sized snapshot before compaction. Tick attribution is sampled and can be
+phase-locked to deterministic allocation sequences; these are not exact type
+totals or retained/peak-memory measurements.
+
+**Next choice:** perform a limited O9 experiment pooling only the two temporary
+traversal-index ranges and the circumcentre range. Their lifetimes end with
+creation, and O5 already provides a caller-owned-span boundary. Exact potential
+warm-pool savings are `8n + 16t + 72` bytes per call on x64, where `t` is logical
+triangle count. This avoids a public-result rewrite and does not pretend to
+solve the dominant retained polygon/edge storage or the sanitizer snapshot.
+The broader O2 flattening remains a larger follow-up; coordinate/mesh pooling
+also remains separate. Pool bucket capacity, cold rents and concurrent cache
+retention must be accounted for before accepting O9.
+
+Reproduction:
+
+```powershell
+dotnet build .\test\Kiyote\Geometry\Kiyote.Geometry.Profiler\Kiyote.Geometry.Profiler.csproj -c Release --no-restore
+dotnet-trace collect --profile dotnet-sampled-thread-time,gc-verbose `
+  --output "<absolute trace path>" --show-child-io -- `
+  dotnet .\test\Kiyote\Geometry\Kiyote.Geometry.Profiler\bin\Release\net10.0\Kiyote.Geometry.Profiler.dll --d3 Irregular 2000
+dotnet-trace report "<absolute trace path>" topN -n 12
+```
+
+Use the iteration counts above for the other named workloads. Benchmark with
+`*D3ProfileWorkloadBenchmarks*`. Fixture setup checks complete site-preserving
+geometry; four integration cases additionally check reciprocal adjacency,
+bounded vertices, accepted counts and all-hull membership.
+Raw captures are retained as `d3-profile-{irregular,thin,hull,sanitized}.nettrace`
+and benchmark reports as `d3-profile-benchmarks` in session storage.
+
 ## O10 direct Delaunay materialization (2026-10-26)
 
 Reference public Delaunay construction is unchanged between `a4c6539` and

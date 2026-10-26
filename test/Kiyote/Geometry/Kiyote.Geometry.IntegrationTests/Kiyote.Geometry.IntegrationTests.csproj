@@ -15,5 +15,6 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\..\src\Kiyote\Geometry\Kiyote.Geometry\Kiyote.Geometry.csproj" />
+		<Compile Include="..\Shared\D3WorkloadFixture.cs" Link="DelaunayVoronoi\D3\D3WorkloadFixture.cs" />
 	</ItemGroup>
 </Project>
