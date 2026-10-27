@@ -22,7 +22,7 @@ calculations.
 | G0 | Implemented correctness/ownership gates | Extend gates for each new algorithm or lifetime change |
 | O1 | Local legalization/span cleanup and invariant hull hashing implemented | Profile current core; selectively test branch/load/bounds-check or rare hull-repair changes |
 | O2 | Implemented contiguous metadata/vertices, ID/span API and searchable migration | No required representation migration remains |
-| O3 | Bounded span scratch and explicit squared-distance multiplication implemented | Test linear-time cyclic simplification independently |
+| O3 | Bounded span scratch and explicit squares implemented; linear linked compaction rejected | No required O3 work remains; a different simplifier needs new evidence |
 | O4 | Exact tiny-hull path implemented; O2 removes Voronoi's per-cell polygon graph | Standalone polygon boxing/edge storage and larger tiny-hull thresholds remain optional |
 | O5 | Implemented shared cell/adjacency walk and non-owning traversal view | No required topology-walk migration remains |
 | O6 | Compact pre-sized directed-edge publication implemented | Optional cells-only/output-capability API, driven by actual consumer needs |
@@ -456,8 +456,20 @@ queries are bounded integers, so squared distances fit exactly in double.
 Repeated complete-diagram measurements show no established general speedup;
 some short high-degree/hull runs improve but longer comparisons overlap.
 This simple arithmetic cleanup is retained without claiming a minimum runtime
-gain or an allocation reduction. Linear-time simplification remains a separate
-experiment.
+gain or an allocation reduction.
+
+**Linear simplification experiment rejected (2026-10-27):** a bounded
+next-index ring replaces each tail shift with an O(1) unlink and performs one
+final stable compaction. It preserves the original one-way cyclic scan,
+including its exit after removing the first vertex. It passed 87,381 exhaustive
+binary-grid sequences, 10,000 seeded sequences up to 140 vertices, dirty scratch/
+zero-allocation tests and every frozen output fingerprint. A second variant
+skipped final copies for unchanged cells. Both regressed the 400-site complete
+consumer versus the intervening isolated scalar-only reference; neither saved
+managed bytes, and both added 560 bytes of per-call stack scratch. All prototype
+code, buffer mutations and candidate-only tests were removed. The original
+bounded simplifier remains; do not repeat this linked-ring design without a
+different measured hypothesis. See [benchmark results][benchmark-results].
 
 **Where:** [D3VoronoiFactory][voronoi-factory]: `Clip`, `ClipFinite`,
 `ClipInfinite`, `Edge`, `InsertPoint`, `Simplify`, and `Step`.

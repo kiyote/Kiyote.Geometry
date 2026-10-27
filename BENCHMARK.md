@@ -1,5 +1,59 @@
 # Benchmarks
 
+## O3 linear cyclic simplification: rejected (2026-10-27)
+
+Reference `043eb56`, rebuilt in an isolated worktree. The prototype initialized
+a bounded next-index ring in 140 reusable stack integers, unlinked redundant
+horizontal/vertical middle vertices in O(1), then compacted surviving coordinate
+pairs once. This is linear in input vertices and preserves the exact original
+forward cyclic deletion order, including immediate scan exit when the first
+vertex is removed. It does not substitute a convex hull or a different
+collinearity predicate. A refined variant avoided final copying for unchanged
+cells. Neither candidate changed clipping, quantization or distance arithmetic.
+
+Both variants passed 87,381 exhaustive sequences of zero through eight
+binary-grid vertices, 10,000 seeded sequences of three through 140 vertices
+(including duplicate/fractional/nonfinite scratch values), zero-allocation dirty
+scratch reuse and all eight frozen diagram fingerprints. Nonfinite values are
+test-only stress inputs, not an expansion of accepted factory coordinates.
+The focused unit suites passed 23 tests and diagram integration suites 94.
+Candidate-only tests and all production prototype changes were removed after
+the decision; no buffer mutation API or extra scratch is retained.
+
+Serial candidate / isolated-reference / refined-candidate suites used two
+launches, four warmups, twelve iterations and requested 300 ms iteration time,
+without overlapping agent-started builds/tests/traces. Error is the 99.9% CI
+half-width:
+
+| Workload | Reference mean +/- error (us) | Candidate 1 mean +/- error (us) | Refined candidate mean +/- error (us) |
+|---|---:|---:|---:|
+| Create and consume, 400 | 366.55 +/- 5.687 | 389.59 +/- 8.869 | 395.82 +/- 10.787 |
+| Create and consume, 4,096 | 4,150.76 +/- 126.326 | 4,213.07 +/- 151.104 | 4,283.74 +/- 169.049 |
+| Workload grid, 400 | 239.82 +/- 4.440 | 231.54 +/- 5.521 | 247.77 +/- 7.626 |
+| Jittered grid, 400 | 385.35 +/- 15.738 | 362.00 +/- 9.278 | 373.05 +/- 10.855 |
+| High degree, 41 | 21.91 +/- 0.661 | 21.57 +/- 0.594 | 22.73 +/- 0.650 |
+| Irregular, 4,096 | 4,305.78 +/- 152.260 | 3,989.23 +/- 45.700 | 4,384.99 +/- 108.755 |
+| Mostly hull, 128 | 91.98 +/- 3.622 | 89.43 +/- 2.253 | 94.89 +/- 1.635 |
+| Sanitized | 447.14 +/- 14.141 | 455.54 +/- 11.894 | 485.03 +/- 7.405 |
+| Thin, 512 | 437.97 +/- 6.534 | 455.76 +/- 15.475 | 465.64 +/- 12.744 |
+| Factory, 400 | 232.28 +/- 7.078 | 228.57 +/- 9.407 | 224.80 +/- 5.692 |
+| Factory, 10,000 | 7,102.90 +/- 101.517 | 7,363.25 +/- 305.682 | 7,486.13 +/- 292.045 |
+| Factory, 40,000 | 32,912.57 +/- 1,868.312 | 31,907.30 +/- 1,847.168 | 32,526.35 +/- 917.562 |
+
+The 400-site complete consumer is 6.3%/8.0% slower, with disjoint intervals
+in both comparisons. The refined sanitized/thin cases also regress; the
+irregular improvement of candidate 1 does not reproduce. Logical managed
+allocation is unchanged (400-site factory 164,320 B, jittered complete consumer
+191,224 B), while stack scratch grows by 560 bytes. Some large-suite B/op noise
+comes from runtime/pool behavior, not a smaller result. Fewer worst-case shifts
+do not establish an equivalent-work win for these short bounded cells.
+
+Reject both variants under the performance-first policy. This is not a proof
+that every linear simplifier is slower, but further complexity needs a new
+profile-backed hypothesis. The original cyclic implementation is restored
+exactly; the accepted explicit-square change remains. Raw logs are
+`d3-o3-linear`, `d3-o3-linear-control` and `d3-o3-linear-repeat` in session files.
+
 ## O3 explicit squared-distance arithmetic (2026-10-27)
 
 Reference `84fc3fa` (production code unchanged from `f880ab7`). Disassembly
