@@ -1,5 +1,93 @@
 # Benchmarks
 
+## Post-O2/O3 profiling and next experiment (2026-10-27)
+
+Retained production baseline `47e9766`: flat Voronoi storage plus explicit
+squared-distance multiplication, with the rejected linked simplifier removed.
+The Release solution build is warning/error-free; final restored-code checks
+passed all 486 unit and 180 integration tests. Frozen fingerprint expectations
+were not changed.
+
+Four fresh, serial profiler processes used the existing deterministic fixtures
+and `dotnet-trace --profile dotnet-sampled-thread-time,gc-verbose`. Iterations
+were 3,000 irregular, 30,000 thin, 120,000 mostly-hull and 30,000 sanitized.
+Exclusive top-18 and inclusive top-25 reports were collected. No agent-started
+builds, tests or other traces overlapped these captures.
+
+These are **sampled managed-thread-time reports, not CPU-cycle profiles**.
+Whole-process denominators include finalizer/pool waits and runtime work;
+inlining also attributes work to callers. For example, `GC.RunFinalizers`
+accounts for 49.46% inclusive in irregular, `DynamicResolver.Finalize` for
+43.47% exclusive in mostly-hull, and `Utilities.GetMemoryPressure` for 46.41%
+exclusive in sanitized. These percentages do not establish that the named
+methods consume that fraction of execution CPU. Traced elapsed times are not
+used as benchmark timings.
+
+Selected inclusive percentages of the whole sampled process:
+
+| Fixture | Voronoi creation subtree | `CreateCore` subtree | Directed-edge set `Initialize` | Snapshot/conversion |
+|---|---:|---:|---:|---:|
+| Irregular, 4,096 sites | 50.30% | 16.45% | 5.79% | 1.97% |
+| Thin, 512 sites | 99.52% | 38.31% | 32.42% | Not in top 25 |
+| Mostly hull, 128 sites | 56.22% | 6.87% | 17.58% | 3.67% |
+| Sanitized, 40,000 inputs / 400 sites | 50.33% | 6.96% | 2.90% | 28.43% |
+
+The columns are selected call-tree entries, not disjoint phases or percentages
+to sum. Within reported creation stacks, the core is prominent for irregular
+and thin inputs; the edge-set initialization remains prominent, especially on
+thin/mostly-hull inputs. Mostly-hull also exposes vertex-builder growth
+(`List<Point>.AddWithResize`, 5.27% inclusive of the whole process). Snapshotting is
+the largest named creation subtree for heavily sanitized input. These findings
+identify targets, not the speedup available from changing them.
+
+Separate untraced loops, following fixture validation and 20 warmup creations,
+recorded `GC.GetAllocatedBytesForCurrentThread`:
+
+| Fixture | Measured iterations | Allocated B/op |
+|---|---:|---:|
+| Irregular | 300 | 2,008,473 |
+| Thin | 3,000 | 249,952 |
+| Mostly hull | 12,000 | 59,072 |
+| Sanitized | 3,000 | 500,333 |
+
+These are current-loop totals, not new comparisons or retained/peak sizes.
+Pool/runtime activity makes the irregular and sanitized totals slightly
+variable. Allocation-tick parsing excluded each trace's first second and
+grouped sampled interval weights by reported type. Large recurring types
+include directed-edge hash entries, points, edges, cell metadata, integers and
+doubles; sanitized sampling is dominated by point arrays. Do not interpret the
+weights as exact allocation-by-type fractions: deterministic sampling in the
+thin fixture reports only hash entries and integers despite other known
+allocations. The owned snapshot is still sized from input count on sanitized
+input, whereas coordinates are already sized from accepted sites.
+
+**Decision:** proceed with a bounded deeper O1 core experiment before indexed
+O10 output. Start by measuring legalization/no-flip/flip/boundary-repair
+frequencies separately from timed runs, then inspect generated loads, checks,
+spills and branch layout for one targeted hypothesis. Preserve exact ordering,
+predicates and stack ownership; require core plus both public-factory and full
+consumer measurements before accepting a change. The aggregate profile does
+not prove that `Legalize` alone is the dominant core phase.
+
+The initial disassembly investigation has started. A separate non-tiered
+FullOpts capture of `Legalize` contains 1,493 code bytes, no `idiv`, and no
+out-of-line `InCircle` call. Constant division/remainder is already
+strength-reduced; do not propose removal of expensive divisions based on source
+syntax. The normal-tiered capture produced only instrumented Tier0 listings
+(1,940 bytes), not a standalone Tier1 listing, so its `idiv`/call instructions
+are not evidence about the steady-state optimized caller. No additional core
+rewrite is accepted at this checkpoint.
+
+Indexed O10 remains a separate representation experiment needing Delaunay
+create-and-consume baselines; a Voronoi trace cannot demonstrate that its
+consumer indirection pays off. Keep edge-table sizing/output publication and
+sanitized preprocessing as secondary profile-backed targets. Do not resurrect
+rejected O9 pooling or linear simplification merely to lower allocation or
+asymptotic complexity.
+
+Raw captures/reports are `d3-post-flat-*` in session files; initial assembly is
+`d3-o1-legalize-tiered.asm` and `d3-o1-legalize-optimized.asm`.
+
 ## O3 linear cyclic simplification: rejected (2026-10-27)
 
 Reference `043eb56`, rebuilt in an isolated worktree. The prototype initialized

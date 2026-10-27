@@ -8,9 +8,9 @@ classes and their dependencies are in scope. Public and internal API
 compatibility is not a constraint.
 
 The original plan was based on source revision `4c73cae`, inspected on
-2026-10-26. It now includes implementation/experiment status through `f880ab7`
-(2026-10-27). Historical scans and baseline descriptions below describe the
-original source, not the current implementation. Measured evidence and
+2026-10-26. It now includes implementation/experiment status through `47e9766`
+and the post-O2/O3 profiling refresh (2026-10-27). Historical scans and baseline
+descriptions below describe the original source, not the current implementation. Measured evidence and
 limitations are recorded in [benchmark results][benchmark-results]; proposed
 benefits remain hypotheses unless explicitly labeled as measurements or storage
 calculations.
@@ -20,7 +20,7 @@ calculations.
 | Option | Current disposition | Remaining work |
 |---|---|---|
 | G0 | Implemented correctness/ownership gates | Extend gates for each new algorithm or lifetime change |
-| O1 | Local legalization/span cleanup and invariant hull hashing implemented | Profile current core; selectively test branch/load/bounds-check or rare hull-repair changes |
+| O1 | Local legalization/span cleanup and invariant hull hashing implemented; post-O2/O3 profiling refreshed | Selected next: measure legalization branches and selectively test load/check/branch layout; initial disassembly already strength-reduces constant division |
 | O2 | Implemented contiguous metadata/vertices, ID/span API and searchable migration | No required representation migration remains |
 | O3 | Bounded span scratch and explicit squares implemented; linear linked compaction rejected | No required O3 work remains; a different simplifier needs new evidence |
 | O4 | Exact tiny-hull path implemented; O2 removes Voronoi's per-cell polygon graph | Standalone polygon boxing/edge storage and larger tiny-hull thresholds remain optional |
@@ -322,6 +322,17 @@ runtime work merely because their byte savings are easier to calculate.
 
 **Where:** [MapboxDelaunatorFactory][mapbox-factory], especially `Legalize`,
 `InCircle`, `HashKey`, and `CreateCore`.
+
+**Current follow-up:** the post-O2/O3 reports retain substantial core share in
+irregular/thin creation stacks, so deeper O1 is selected ahead of indexed O10.
+These managed-thread samples are not a CPU-phase decomposition and do not
+establish that legalization alone dominates. Initial non-tiered FullOpts
+disassembly already strength-reduces constant division and inlines `InCircle`;
+the normal-tiered capture did not produce standalone Tier1 legalization code.
+Next measure branch frequencies outside timed runs, then test one bounded
+load/check/layout hypothesis with the verification below. See
+[benchmark results][benchmark-results] for capture limitations and secondary
+edge-publication/preprocessing targets.
 
 **How to implement:**
 
@@ -962,20 +973,25 @@ compact edge publication, bounded clipping scratch, exact tiny hulls, shared
 topology walks, direct Delaunay arrays, and contiguous Voronoi storage.
 The narrow O9 pooling candidate was measured and removed.
 
-Next, as agreed after O2:
+Sequence agreed after O2, with current outcomes:
 
-1. **O3 scalar arithmetic:** inspect optimized `Step` assembly before changing
-   square powers to multiplication. If the JIT already produces equivalent
-   code, record that result rather than claiming a speedup.
-2. **O3 simplification:** independently prototype linear compaction with exact
-   cyclic/seam reference tests. Preserve full output, bounds, flags and explicit
-   failure; compare complete diagrams, not only a synthetic long cell.
-3. **Refresh profiling:** reprofile the current pipeline after O2/O3. Previous
-   profiles included per-cell object graphs that no longer exist. Separate
-   managed-thread-time samples, CPU claims, allocations and retained/peak bytes.
-4. **Choose the next substantial experiment from evidence:** deeper O1 core
-   work if it remains dominant, or O10 indexed Delaunay output after establishing
-   create-and-consume baselines. Do not select solely by easiest B/op reduction.
+1. **O3 scalar arithmetic - complete:** `043eb56` replaces six demonstrated
+   power calls with exact scalar squares and shrinks Tier1 code. Longer matched
+   end-to-end comparisons overlap for all workloads; no general speedup or
+   allocation saving is claimed.
+2. **O3 simplification - complete/rejected:** `47e9766` records two exact
+   linked-compaction variants. Both slow the 400-site full consumer by 6.3%/8.0%,
+   save no managed allocation and add 560 stack bytes. All prototype production
+   code and candidate-only tests are removed; the original scan remains.
+3. **Refresh profiling - complete:** current four-fixture managed-thread and
+   allocation traces plus separate untraced allocation loops are recorded.
+   The core remains prominent on irregular/thin inputs; edge initialization
+   and heavily sanitized preprocessing remain distinct secondary targets.
+4. **Deeper O1 - selected next, initial disassembly started:** measure
+   legalization branch frequencies and choose one load/check/layout hypothesis.
+   Do not assume source `% 3` emits division in optimized code. Indexed O10
+   remains a later representation alternative requiring Delaunay
+   create-and-consume baselines, not a conclusion from Voronoi allocations.
 5. **Demand/evidence-driven options:** O6 selective outputs, standalone O4,
    optional O7 refinements, O11 sorting/deduplication and O12 coordinate/SIMD work.
    Do not repeat rejected O9 pooling without a materially different hypothesis.
