@@ -1,5 +1,33 @@
 # Benchmarks
 
+## O2 consumer baseline (2026-10-27)
+
+Before changing the cell representation, added `VoronoiConsumptionBenchmarks`
+with seeded jittered grids (400 and 4,096 sites), full metadata/vertex/ordered
+neighbour checksums, inclusive site containment, and searchable-index construction.
+Setup checks containment, equal create/retained checksums and whole-area search
+completeness. Vertex reads use indexed access, not an allocating interface
+enumerator. These benchmarks supplement, rather than replace, create-only and
+materialized/visitor search measurements.
+
+Serial Release BenchmarkDotNet runs on the same .NET 10/runtime/hardware used
+below: two launches, four warmups, twelve iterations, requested 300 ms iteration
+time. No tracing, tests or other agent-started builds overlapped execution.
+
+| Consumer | 400 sites mean +/- error | 4,096 sites mean +/- error | Allocated bytes (400 / 4,096) |
+|---|---:|---:|---:|
+| Create and consume all output | 419.862 +/- 8.858 us | 5,340.024 +/- 169.706 us | 271,352 / 2,824,378 |
+| Retained metadata, vertices and neighbours | 10.135 +/- 0.374 us | 140.776 +/- 7.534 us | 0 / 0 |
+| Contains every site | 8.816 +/- 0.248 us | 128.126 +/- 11.916 us | 0 / 0 |
+| Build searchable index | 37.993 +/- 1.223 us | 503.394 +/- 29.938 us | 83,176 / 593,184 |
+
+Error is the 99.9% confidence-interval half-width. Some retained-consumer samples
+were multimodal; repeat comparisons before making performance claims.
+The first exploratory consumer run used interface enumeration and is superseded
+by these indexed results. Raw logs are retained in session files
+`d3-flat-baseline` and `d3-flat-before` (the latter also contains the independent
+factory/profile/search baseline). No production representation has changed here.
+
 ## O9 scoped traversal/circumcentre pooling: rejected (2026-10-26)
 
 Reference: `5f95ad4`, in an isolated worktree rooted at that commit for every
