@@ -7,11 +7,36 @@ reduce allocation volume, retained memory, and peak working memory. All D3
 classes and their dependencies are in scope. Public and internal API
 compatibility is not a constraint.
 
-This is an implementation plan, not a report of measured improvements. It is
-based on source revision `4c73cae`, inspected on 2026-10-26, and the checked-in
-[benchmark results][benchmark-results]. No new benchmarks or tests were run to
-produce this document. Benefits below are hypotheses unless explicitly labeled
-as existing measurements or storage calculations.
+The original plan was based on source revision `4c73cae`, inspected on
+2026-10-26. It now includes implementation/experiment status through `f880ab7`
+(2026-10-27). Historical scans and baseline descriptions below describe the
+original source, not the current implementation. Measured evidence and
+limitations are recorded in [benchmark results][benchmark-results]; proposed
+benefits remain hypotheses unless explicitly labeled as measurements or storage
+calculations.
+
+## Current status and remaining experiments
+
+| Option | Current disposition | Remaining work |
+|---|---|---|
+| G0 | Implemented correctness/ownership gates | Extend gates for each new algorithm or lifetime change |
+| O1 | Local legalization/span cleanup and invariant hull hashing implemented | Profile current core; selectively test branch/load/bounds-check or rare hull-repair changes |
+| O2 | Implemented contiguous metadata/vertices, ID/span API and searchable migration | No required representation migration remains |
+| O3 | Bounded span scratch implemented | Test scalar square arithmetic and linear-time cyclic simplification separately |
+| O4 | Exact tiny-hull path implemented; O2 removes Voronoi's per-cell polygon graph | Standalone polygon boxing/edge storage and larger tiny-hull thresholds remain optional |
+| O5 | Implemented shared cell/adjacency walk and non-owning traversal view | No required topology-walk migration remains |
+| O6 | Compact pre-sized directed-edge publication implemented | Optional cells-only/output-capability API, driven by actual consumer needs |
+| O7 | Fused validation/snapshot/conversion and accepted-site coordinate sizing implemented | Optional public span input and measured preprocessing refinements |
+| O8 | Implemented on-demand hull rays | Hull-only caching only if a future profile justifies it |
+| O9 | Narrow traversal/circumcentre pooling experiment rejected for repeated grid slowdown | Only materially different, evidence-backed temporary-workspace designs |
+| O10 | Direct exact-sized Delaunay arrays implemented | Indexed triangle output and deliberate capacity trimming/retention comparisons |
+| O11 | Not attempted | Duplicate-detection and radial-sort alternatives, conditional on profiling |
+| O12 | Not attempted | Direct point/SoA coordinate layout and selective SIMD, conditional on profiling |
+| O13 | Deferred research | Parallel cell construction after single-thread opportunities are exhausted |
+| O14 | Deferred research | Neighbour-half-plane clipping with unchanged numeric/geometry gates |
+
+This is not a requirement to implement every option. Rejected experiments are
+valid outcomes; lower B/op alone does not justify a runtime regression.
 
 Use these rules when selecting an implementation:
 
@@ -35,7 +60,7 @@ Use these rules when selecting an implementation:
 | [MapboxDelaunatorFactory][mapbox-factory] | Seed selection, radial sort, advancing hull, edge legalization | O1, O7, O9, O11, O12 |
 | [MapboxDelaunator][mapbox-result] | Owns triangle, halfedge, and hull storage; exposes logical prefixes | O9, O10 |
 | [D3DelaunayFactory][delaunay-factory] | Public Delaunay construction and Voronoi traversal-index construction | O5, O7, O9, O10 |
-| [D3Delaunay][delaunay-topology] | Owns incoming-edge and hull-position arrays | O5, O8, O9 |
+| [D3Delaunay][delaunay-topology] | Non-owning ref-struct view of incoming-edge and hull-position spans | O5, O8, O9 |
 | [D3VoronoiFactory][voronoi-factory] | Circumcenters, clipping, quantization, cells, neighbours, global edges | O2-O9, O13, O14 |
 | [D3 registration extensions][registration] | Registers singleton factories | O9, O13; preserve stateless singleton operation |
 | [DiagramSites][sites] and [coordinate conversion][coordinate-conversion] | Validation, sanitization, snapshot, double-coordinate conversion | O7, O11, O12 |
@@ -128,7 +153,7 @@ performance regression.
 
 ### Compound allocations and storage model
 
-The Voronoi creation chain currently includes, for every cell:
+At the original planning revision, the Voronoi creation chain included, for every cell:
 
 - A `Cell` object and a `Polygon` object.
 - An owned polygon point array and an eagerly generated polygon edge array.
@@ -473,8 +498,9 @@ matches exact canonical output for 7,290 exhaustive small-grid triples/quads
 and 3,000 seeded full-domain inputs. Direct generated-triangle/quad benchmarks
 improve with unchanged allocation; see [benchmark results][benchmark-results]
 for settings, end-to-end results, and limitations. The threshold remains four.
-Removing the cached interface box, changing edge storage, and larger thresholds
-remain unimplemented options.
+Removing the cached interface box and changing edge storage remain options for
+standalone polygons only: O2 already bypasses their allocation in Voronoi.
+Larger tiny-hull thresholds remain an unimplemented kernel experiment.
 
 **Where:** [Polygon][polygon], its generated-hull path, and the quantization
 loop in [D3VoronoiFactory][voronoi-factory].
@@ -559,6 +585,12 @@ complete creation; reject fusion if additional writes cost more than the walk.
 
 ### O6 - avoid unnecessary outputs and cheapen directed-edge publication
 
+**Implemented publication subset:** directed bounded-coordinate keys are packed,
+the set is sized from actual final side counts, and publication preserves
+first-seen directed-edge order. O2 generates these sides from vertex slices,
+without per-cell edge arrays. Optional output capabilities are not implemented;
+do not repeat the packed-key experiment as though it were still outstanding.
+
 **Where:** [IVoronoi][voronoi-api], [Voronoi][voronoi-result],
 [D3VoronoiFactory][voronoi-factory], and [Edge][edge].
 
@@ -598,6 +630,13 @@ clearly labeled as less work.
 
 ### O7 - make preprocessing an owned, span-based pipeline
 
+**Implemented core pipeline:** factories snapshot/validate and prepare double
+coordinates in one pass without sanitization. Sanitization preserves accepted
+first occurrences and allocates coordinates for surviving sites only. Internal
+storage is owned and final publication is read-only. Public span overloads and
+further sanitization/retention refinements are optional measured extensions,
+not missing parts of the original snapshot/conversion fusion.
+
 **Where:** [DiagramSites][sites], [coordinate conversion][coordinate-conversion],
 and both public D3 factory entry points.
 
@@ -630,6 +669,10 @@ duplicates, first-occurrence order, mutation after return, and failures followed
 by reuse. Benchmark preprocessing separately and end to end at all three sizes.
 
 ### O8 - calculate hull rays on demand instead of allocating `4n` doubles
+
+**Implemented:** clipping derives incoming/outgoing rays from adjacent hull
+sites on demand; the dense `4n` double vector array is gone. The hull-only cache
+below is a conditional alternative, not a required remaining change.
 
 **Where:** `CalculateVectors` and `Clip` in
 [D3VoronoiFactory][voronoi-factory], using existing hull-position metadata.
@@ -892,21 +935,35 @@ equivalent-work win; otherwise retain the existing algorithm.
 
 ### Recommended delivery sequence
 
-1. **Baseline/gates:** G0, existing test status, numeric oracle, and phase/
-   allocation profiles. Track pre-existing failures separately.
-2. **Small independent experiments:** O1's invariant hash-key work, O3 scalar
-   cleanup, O4 unboxed access, O7 internal ownership/spans, and O8 hull rays.
-   Use separate measurements so one gain does not hide another regression.
-3. **Cell pipeline:** O3 bounded writers, O4 normalized-polygon fast path, and
-   O5 traversal sharing. Keep the geometric reference intact during migration.
-4. **Primary structural change:** O2 indexed Voronoi storage and O6 output
-   capabilities. This is the recommended direction if allocation profiles
-   confirm the per-cell graph is a substantial cost. Revisit O4 storage work
-   because O2 removes much of it.
-5. **Lifetime/output tuning:** O9 scoped temporary mesh/workspace and O10's
-   chosen Delaunay representation.
-6. **Only with remaining evidence:** O11/O12 kernel experiments. O13 and O14
-   belong in separate experimental changes, not the initial rewrite.
+Completed: G0 gates, fused preprocessing, on-demand rays, CSR adjacency,
+compact edge publication, bounded clipping scratch, exact tiny hulls, shared
+topology walks, direct Delaunay arrays, and contiguous Voronoi storage.
+The narrow O9 pooling candidate was measured and removed.
+
+Next, as agreed after O2:
+
+1. **O3 scalar arithmetic:** inspect optimized `Step` assembly before changing
+   square powers to multiplication. If the JIT already produces equivalent
+   code, record that result rather than claiming a speedup.
+2. **O3 simplification:** independently prototype linear compaction with exact
+   cyclic/seam reference tests. Preserve full output, bounds, flags and explicit
+   failure; compare complete diagrams, not only a synthetic long cell.
+3. **Refresh profiling:** reprofile the current pipeline after O2/O3. Previous
+   profiles included per-cell object graphs that no longer exist. Separate
+   managed-thread-time samples, CPU claims, allocations and retained/peak bytes.
+4. **Choose the next substantial experiment from evidence:** deeper O1 core
+   work if it remains dominant, or O10 indexed Delaunay output after establishing
+   create-and-consume baselines. Do not select solely by easiest B/op reduction.
+5. **Demand/evidence-driven options:** O6 selective outputs, standalone O4,
+   optional O7 refinements, O11 sorting/deduplication and O12 coordinate/SIMD work.
+   Do not repeat rejected O9 pooling without a materially different hypothesis.
+6. **Deferred research:** O13 parallel cells and O14 half-plane clipping remain
+   separate high-risk experiments, not automatic follow-on implementation.
+
+Commit every accepted update separately, and record rejected/no-op experiments
+with their evidence. Preserve the existing correctness, ownership and measurement
+gates throughout; all timings run serially without overlapping agent-started
+builds, tests, traces or other benchmarks.
 
 Dependencies are not a demand to implement every option. Stop or change
 priority when fresh profiles show that a target is no longer material.

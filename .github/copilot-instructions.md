@@ -27,3 +27,4 @@ When writing, reviewing, or modifying code, you must continuously analyze and ac
 ## Style Preferences
 * Prefer one class per file.
 * Tests should be named in the Method_Condition_Expectation pattern.
+* Do not use expression-bodied syntax unless it offers improved performance or memory utilization.
