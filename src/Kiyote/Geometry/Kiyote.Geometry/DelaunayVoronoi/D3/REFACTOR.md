@@ -22,7 +22,7 @@ calculations.
 | G0 | Implemented correctness/ownership gates | Extend gates for each new algorithm or lifetime change |
 | O1 | Local legalization/span cleanup and invariant hull hashing implemented | Profile current core; selectively test branch/load/bounds-check or rare hull-repair changes |
 | O2 | Implemented contiguous metadata/vertices, ID/span API and searchable migration | No required representation migration remains |
-| O3 | Bounded span scratch implemented | Test scalar square arithmetic and linear-time cyclic simplification separately |
+| O3 | Bounded span scratch and explicit squared-distance multiplication implemented | Test linear-time cyclic simplification independently |
 | O4 | Exact tiny-hull path implemented; O2 removes Voronoi's per-cell polygon graph | Standalone polygon boxing/edge storage and larger tiny-hull thresholds remain optional |
 | O5 | Implemented shared cell/adjacency walk and non-owning traversal view | No required topology-walk migration remains |
 | O6 | Compact pre-sized directed-edge publication implemented | Optional cells-only/output-capability API, driven by actual consumer needs |
@@ -446,8 +446,18 @@ call). The clipping math and cyclic simplification order are unchanged.
 Eight frozen full-output fingerprints were verified on the old list clipper
 and the new storage, alongside geometry, capacity, ownership, concurrency, and
 zero-allocation buffer tests. See [benchmark results][benchmark-results] for
-runtime/allocation evidence. Linear-time simplification and `Step` arithmetic
-changes remain separate, unimplemented experiments.
+runtime/allocation evidence.
+
+**Implemented scalar step (2026-10-27):** optimized and tiered .NET 10 assembly
+still called `Math.Pow` at all six constant-square sites in `Step`. Explicit
+double deltas/multiplication remove those calls and shrink Tier 1 code from
+998 to 704 bytes, without FMA or changing sum order. Sites and corner/center
+queries are bounded integers, so squared distances fit exactly in double.
+Repeated complete-diagram measurements show no established general speedup;
+some short high-degree/hull runs improve but longer comparisons overlap.
+This simple arithmetic cleanup is retained without claiming a minimum runtime
+gain or an allocation reduction. Linear-time simplification remains a separate
+experiment.
 
 **Where:** [D3VoronoiFactory][voronoi-factory]: `Clip`, `ClipFinite`,
 `ClipInfinite`, `Edge`, `InsertPoint`, `Simplify`, and `Step`.

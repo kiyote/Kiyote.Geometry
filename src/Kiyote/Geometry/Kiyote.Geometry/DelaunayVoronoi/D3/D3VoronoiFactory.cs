@@ -537,12 +537,16 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		ReadOnlySpan<int> hull = delaunator.Hull;
 		ReadOnlySpan<int> hullIndex = delaunay.HullIndex;
 		int c = i;
-		double dc = Math.Pow( x - coords[i * 2], 2 ) + Math.Pow( y - coords[( i * 2 ) + 1], 2 );
+		double dx = x - coords[i * 2];
+		double dy = y - coords[( i * 2 ) + 1];
+		double dc = (dx * dx) + (dy * dy);
 		int e0 = inedges[i];
 		int e = e0;
 		do {
 			int t = triangles[e];
-			double dt = Math.Pow( x - coords[t * 2], 2 ) + Math.Pow( y - coords[( t * 2 ) + 1], 2 );
+			dx = x - coords[t * 2];
+			dy = y - coords[( t * 2 ) + 1];
+			double dt = (dx * dx) + (dy * dy);
 			if( dt < dc ) {
 				dc = dt;
 				c = t;
@@ -555,9 +559,9 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			if( e == -1 ) {
 				e = hull[( hullIndex[i] + 1 ) % hull.Length];
 				if( e != t ) {
-					if( ( Math.Pow( x - coords[e * 2], 2 )
-						+ Math.Pow( y - coords[( e * 2 ) + 1], 2 ) ) < dc
-					) {
+					dx = x - coords[e * 2];
+					dy = y - coords[( e * 2 ) + 1];
+					if( (dx * dx) + (dy * dy) < dc ) {
 						return e;
 					}
 				}

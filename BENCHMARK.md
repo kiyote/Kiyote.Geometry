@@ -1,5 +1,55 @@
 # Benchmarks
 
+## O3 explicit squared-distance arithmetic (2026-10-27)
+
+Reference `84fc3fa` (production code unchanged from `f880ab7`). Disassembly
+captured with `DOTNET_JitDisasm` in both fully optimized non-tiered and normal
+tiered profiler processes showed six calls to `System.Math.Pow` in `Step`.
+The normal Tier 1 method was 998 code bytes. Replacing just the three
+squared-distance expressions with local double deltas and multiplication
+produces six scalar multiplies, no power calls or fused multiply-add, and
+704 Tier 1 code bytes. No other clipping/simplification code changed.
+
+All current callers use owned bounded integer sites and integer clipping
+corners/center queries. Differences are at most 65,535 and squared-distance
+sums fit below 2^33, exactly representable in double. The `<` tie policy and
+addition order are unchanged. Frozen output hashes and all diagram geometry
+regressions passed.
+
+Serial twelve-case suites covered ten create-only workloads plus both
+create-and-consume sizes, in baseline/candidate/isolated-reference/candidate
+order. Settings matched the O2 comparisons: two launches, four warmups,
+twelve iterations, requested 300 ms. Short high-degree means were
+23.51 +/- 0.841 us for the isolated reference versus 21.29 +/- 0.436 and
+22.02 +/- 0.557 us for the candidates; mostly-hull was 96.60 +/- 2.130 versus
+89.94 +/- 2.657 and 89.90 +/- 2.272 us. Other timing comparisons were mixed,
+including an apparent large-grid regression in one pair. This prompted longer
+matched eight-case runs (eight warmups, twenty 400 ms iterations, two launches):
+
+| Workload | Reference mean +/- error (us) | Candidate mean +/- error (us) |
+|---|---:|---:|
+| Grid, 400 | 257.78 +/- 5.012 | 253.24 +/- 4.758 |
+| Jittered grid, 400 | 386.46 +/- 7.689 | 383.98 +/- 6.272 |
+| High degree, 41 | 22.68 +/- 0.352 | 22.05 +/- 0.402 |
+| Irregular, 4,096 | 4,194.78 +/- 64.576 | 4,156.09 +/- 86.605 |
+| Mostly hull, 128 | 93.23 +/- 1.876 | 92.87 +/- 2.072 |
+| Sanitized | 471.11 +/- 8.661 | 472.56 +/- 12.110 |
+| Thin, 512 | 453.85 +/- 5.541 | 450.16 +/- 9.253 |
+| Grid, 40,000 | 33,414.41 +/- 580.085 | 33,652.05 +/- 615.605 |
+
+Error is the 99.9% CI half-width; these longer intervals overlap for every
+workload. No runtime, allocation, or retained-memory improvement is claimed
+generally. Retain the simple replacement as a narrowly justified exception to
+the suggested >=3% speed acceptance threshold: it removes six demonstrated
+general-power calls, shrinks optimized code, preserves exact supported
+arithmetic, and has no established end-to-end regression in longer checks.
+Do not treat instruction removal as a measured application speedup.
+
+Raw logs: `d3-o3-before`, `d3-o3-squares`, `d3-o3-control`,
+`d3-o3-squares-repeat`, and `d3-o3-scalar-long-*` in session files; original and
+candidate optimized/tiered assembly is retained alongside them. No
+agent-started builds/tests/traces overlapped any timed suite.
+
 ## O2 contiguous Voronoi cells and ID-based consumers: accepted (2026-10-27)
 
 Reference: `e08d491`, rebuilt in an isolated worktree. The accepted change owns
