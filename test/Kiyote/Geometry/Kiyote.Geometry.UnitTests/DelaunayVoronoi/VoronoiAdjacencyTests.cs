@@ -18,13 +18,13 @@ public sealed class VoronoiAdjacencyTests {
 	[Test]
 	public void GetNeighbourIndices_RepeatedTraversal_DoesNotAllocate() {
 		IVoronoi diagram = CreateTriangle();
-		for( int i = 0; i < diagram.Cells.Count; i++ ) {
+		for( int i = 0; i < diagram.Cells.Length; i++ ) {
 			_ = diagram.GetNeighbourIndices( i );
 		}
 		long before = GC.GetAllocatedBytesForCurrentThread();
 		int sum = 0;
 		for( int pass = 0; pass < 100; pass++ ) {
-			for( int i = 0; i < diagram.Cells.Count; i++ ) {
+			for( int i = 0; i < diagram.Cells.Length; i++ ) {
 				sum += diagram.GetNeighbourIndices( i ).Length;
 			}
 		}

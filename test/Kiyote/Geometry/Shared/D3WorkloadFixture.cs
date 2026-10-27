@@ -53,12 +53,11 @@ internal sealed class D3WorkloadFixture {
 	}
 
 	internal void Validate( IVoronoi result ) {
-		if( result.Cells.Count != Sites.Length || result.Points.Count != Sites.Length || result.Edges.Count == 0 ) {
+		if( result.Cells.Length != Sites.Length || result.Points.Count != Sites.Length || result.Edges.Count == 0 ) {
 			throw new InvalidOperationException( "D3 workload did not produce complete output." );
 		}
 		for( int i = 0; i < Sites.Length; i++ ) {
-			Cell cell = result.Cells[i];
-			if( result.Points[i] != Sites[i] || cell.Center != Sites[i] || !cell.Polygon.Contains( Sites[i] ) ) {
+			if( result.Points[i] != Sites[i] || !result.Contains( i, Sites[i] ) ) {
 				throw new InvalidOperationException( $"D3 workload cell {i} does not preserve/contain its site." );
 			}
 		}

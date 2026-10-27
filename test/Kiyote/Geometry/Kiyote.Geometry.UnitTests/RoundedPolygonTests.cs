@@ -56,10 +56,35 @@ public sealed class RoundedPolygonTests {
 		Assert.That( () => Polygon.FromRoundedConvexVertices( points ), Throws.TypeOf<ArgumentOutOfRangeException>() );
 	}
 
+	[Test]
+	public void WriteRoundedConvexHull_InsufficientDestination_ThrowsBeforeWriting() {
+		Point[] points = [new( 0, 0 ), new( 10, 0 ), new( 0, 10 )];
+		Point[] destination = [new( 7, 7 ), new( 8, 8 )];
+		Point[] expected = destination.ToArray();
+		Assert.That( () => Polygon.WriteRoundedConvexHull( points, destination ), Throws.TypeOf<ArgumentOutOfRangeException>() );
+		Assert.That( destination, Is.EqualTo( expected ) );
+	}
+
+	[Test]
+	public void WriteRoundedConvexHull_AboveNormalizedLimit_ThrowsInsteadOfTruncating() {
+		Point[] points = new Point[Polygon.MaximumVertices + 1];
+		for( int i = 0; i < points.Length; i++ ) {
+			double angle = i * 2 * Math.PI / points.Length;
+			points[i] = new Point( (int)Math.Round( 15000 * Math.Cos( angle ) ), (int)Math.Round( 15000 * Math.Sin( angle ) ) );
+		}
+		Point[] destination = new Point[Polygon.MaximumVertices];
+		Assert.That( GiftWrap( points ), Has.Length.EqualTo( points.Length ) );
+		Assert.That( () => Polygon.WriteRoundedConvexHull( points, destination ), Throws.TypeOf<InvalidOperationException>() );
+	}
+
 	private static void AssertExactHull( Point[] points ) {
 		Point[] expected = GiftWrap( points );
+		Point[] candidates = points.ToArray();
 		Polygon actual = Polygon.FromRoundedConvexVertices( points );
 		Assert.That( actual.Points, Is.EqualTo( expected ) );
+		Span<Point> normalized = stackalloc Point[Polygon.MaximumVertices];
+		int count = Polygon.WriteRoundedConvexHull( candidates, normalized );
+		Assert.That( normalized[..count].ToArray(), Is.EqualTo( expected ) );
 	}
 
 	// Independent of the production sort-and-monotone-chain algorithm.

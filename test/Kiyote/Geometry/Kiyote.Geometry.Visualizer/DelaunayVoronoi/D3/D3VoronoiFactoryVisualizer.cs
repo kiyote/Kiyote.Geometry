@@ -157,8 +157,7 @@ public sealed class D3VoronoiFactoryVisualizer {
 		Render( buffer, voronoi );
 
 		foreach( int neighbourIndex in voronoi.GetNeighbourIndices( 0 ) ) {
-			Cell neighbour = voronoi.Cells[neighbourIndex];
-			_rasterizer.Rasterize( neighbour.Polygon, new BufferPixelWriter( buffer, 0xFF0000FFU ), false );
+			_rasterizer.Rasterize( voronoi.GetCellVertices( neighbourIndex ), new BufferPixelWriter( buffer, 0xFF0000FFU ), false );
 		}
 
 		IImageWriter writer = new PngWriter(_fileSystem);
@@ -181,10 +180,10 @@ public sealed class D3VoronoiFactoryVisualizer {
 
 		IBuffer<uint> buffer = new RaggedArrayBuffer<uint>( _size.Width, _size.Height, 0x000000FFU );
 
-		foreach (Cell cell in voronoi.Cells) {
+		for( int i = 0; i < voronoi.Cells.Length; i++ ) {
 			_rasterizer.Rasterize(
-				cell.Polygon,
-				new BufferPixelWriter( buffer, cell.IsOpen ? 0xFF0000FFU : 0xA9A9A9FFU ),
+				voronoi.GetCellVertices( i ),
+				new BufferPixelWriter( buffer, voronoi.Cells[i].IsOpen ? 0xFF0000FFU : 0xA9A9A9FFU ),
 				false
 			);
 		}
@@ -197,13 +196,13 @@ public sealed class D3VoronoiFactoryVisualizer {
 		IBuffer<uint> buffer,
 		IVoronoi voronoi
 	) {
-		foreach (Cell cell in voronoi.Cells) {
-			_rasterizer.Rasterize( cell.Polygon, new BufferPixelWriter( buffer, 0xA9A9A9FFU ), false );
+		for( int i = 0; i < voronoi.Cells.Length; i++ ) {
+			_rasterizer.Rasterize( voronoi.GetCellVertices( i ), new BufferPixelWriter( buffer, 0xA9A9A9FFU ), false );
 		}
 
 		// Render the coords
-		for( int i = 0; i < voronoi.Cells.Count; i++ ) {
-			buffer[voronoi.Cells[i].Center.X, voronoi.Cells[i].Center.Y] = 0xFF00FFFFU;
+		for( int i = 0; i < voronoi.Points.Count; i++ ) {
+			buffer[voronoi.Points[i].X, voronoi.Points[i].Y] = 0xFF00FFFFU;
 		}
 	}
 	

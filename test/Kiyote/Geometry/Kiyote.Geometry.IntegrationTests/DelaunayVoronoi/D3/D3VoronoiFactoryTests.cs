@@ -63,20 +63,20 @@ public sealed class D3VoronoiFactoryTests {
 		}
 		Rect bounds = new Rect( -500, -500, 1001, 1001 );
 		IVoronoi diagram = _voronoiFactory.Create( bounds, points );
-		Assert.That( diagram.Cells, Has.Count.EqualTo( points.Length ) );
+		Assert.That( diagram.Cells.Length, Is.EqualTo( points.Length ) );
 		for( int cellIndex = 0; cellIndex < points.Length; cellIndex++ ) {
-			Polygon polygon = diagram.Cells[cellIndex].Polygon;
-			Assert.That( polygon.Points.Count, Is.GreaterThanOrEqualTo( 3 ), $"Cell {cellIndex}" );
-			Assert.That( polygon.Contains( points[cellIndex] ), Is.True, $"Cell {cellIndex}" );
+			ReadOnlySpan<Point> vertices = diagram.GetCellVertices( cellIndex );
+			Assert.That( vertices.Length, Is.GreaterThanOrEqualTo( 3 ), $"Cell {cellIndex}" );
+			Assert.That( diagram.Contains( cellIndex, points[cellIndex] ), Is.True, $"Cell {cellIndex}" );
 			int winding = 0;
-			for( int i = 0; i < polygon.Points.Count; i++ ) {
-				Point a = polygon.Points[i], b = polygon.Points[( i + 1 ) % polygon.Points.Count];
+			for( int i = 0; i < vertices.Length; i++ ) {
+				Point a = vertices[i], b = vertices[( i + 1 ) % vertices.Length];
 				Assert.That( bounds.Contains( a ), Is.True, $"Cell {cellIndex}, vertex {i}" );
-				for( int j = 0; j < polygon.Points.Count; j++ ) {
-					if( j == i || j == ( i + 1 ) % polygon.Points.Count ) {
+				for( int j = 0; j < vertices.Length; j++ ) {
+					if( j == i || j == ( i + 1 ) % vertices.Length ) {
 						continue;
 					}
-					Point p = polygon.Points[j];
+					Point p = vertices[j];
 					long side = (( (long)b.X - a.X ) * ( p.Y - a.Y )) - (( (long)b.Y - a.Y ) * ( p.X - a.X ));
 					Assert.That( side, Is.Not.Zero, $"Cell {cellIndex}, edge {i}, vertex {j}" );
 					winding = winding == 0 ? Math.Sign( side ) : winding;

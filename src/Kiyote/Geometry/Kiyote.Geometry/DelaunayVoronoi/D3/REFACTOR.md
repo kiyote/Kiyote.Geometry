@@ -333,6 +333,33 @@ micro-optimization.
 
 ### O2 - replace the Voronoi object graph with an indexed result
 
+**Implemented (2026-10-27):** the diagram now owns an exact-length `Cell[]` of
+metadata and one exact-length final `Point[]` of canonical vertices, alongside
+the existing CSR adjacency. The center is the owned site at the same ID.
+`Cells` exposes a read-only span for ref-readonly access; `GetCellVertices` and
+`Contains` allocate nothing. `ExportPolygon` is the explicit, uncached standalone
+allocation path. Per-site cell/polygon objects, polygon arrays and interface
+boxes are no longer part of Voronoi construction or its retained result.
+
+The append-only vertex builder starts with the mesh adjacency count, grows if
+necessary, and makes one final trimming/ownership copy. Bounds still use all
+floored clipping candidates, not a newly tightened normalized hull. Tiny and
+general hull kernels and inclusive containment are shared with `Polygon`;
+standalone polygon publication keeps its own small scratch/direct ownership path.
+The factory adds 1,024 stack bytes for one normalized-cell destination, reused
+across cells; general hull scratch still peaks at 2,240 bytes for 140 candidates.
+Together with O3 scratch this is 8,704 explicitly allocated nested stack bytes,
+excluding frames, spills and runtime helpers.
+
+Searches now return IDs and visit `IQueryVisitor<int>`; index entries carry an
+ID and bounds snapshot. Tree visits read entries by reference, which removed a
+measured small-query regression from copying the larger index value. All
+visualizers, benchmarks, fixtures, and tests use the new API without object
+adapters. Frozen output hashes, high-degree/open limits, equal-bound identity,
+concurrent ownership/failure regressions, and zero-allocation span/containment/
+stack-backed query tests cover the migration. See [benchmark results][benchmark-results]
+for creation, consumer, index-allocation, and retained-memory tradeoffs.
+
 **Where:** [D3VoronoiFactory][voronoi-factory], [IVoronoi][voronoi-api],
 [Voronoi][voronoi-result], [Cell][cell], [Polygon][polygon], and
 [searchable Voronoi][searchable].

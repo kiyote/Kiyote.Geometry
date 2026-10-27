@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace Kiyote.Geometry.Trees;
 
 /// <summary>
@@ -78,7 +80,7 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 
 	private void QueryCore<TVisitor>( Rect queryArea, ref TVisitor visitor )
 		where TVisitor : struct, IQueryVisitor<T>, allows ref struct {
-		foreach( T item in _contents ) {
+		foreach( ref readonly T item in CollectionsMarshal.AsSpan( _contents ) ) {
 			if( queryArea.Overlaps<T>( item ) ) {
 				visitor.Visit( in item );
 			}
@@ -106,7 +108,7 @@ public class SimpleQuadTreeNode<T> where T : IRect {
 		for( int i = 0; i < _nodes.Count; i++ ) {
 			_nodes[i].FillContents( ref visitor );
 		}
-		foreach( T item in _contents ) {
+		foreach( ref readonly T item in CollectionsMarshal.AsSpan( _contents ) ) {
 			visitor.Visit( in item );
 		}
 	}

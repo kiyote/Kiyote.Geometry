@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Kiyote.Geometry;
@@ -164,13 +165,21 @@ public sealed class Polygon {
 	private bool ContainsUnchecked(
 		Point point
 	) {
-		if( IsEmpty ) {
+		return ContainsConvex( _points.AsSpan(), _winding, point );
+	}
+
+	internal static bool ContainsConvex(
+		ReadOnlySpan<Point> vertices, int winding, Point point
+	) {
+		if( vertices.IsEmpty ) {
 			return false;
 		}
-		foreach( Edge edge in Edges ) {
-			if( Orientation( edge.A, edge.B, point ) * _winding < 0 ) {
+		Point previous = vertices[^1];
+		foreach( Point current in vertices ) {
+			if( Orientation( previous, current, point ) * winding < 0 ) {
 				return false;
 			}
+			previous = current;
 		}
 		return true;
 	}
@@ -267,52 +276,89 @@ public sealed class Polygon {
 	internal static Polygon FromRoundedConvexVertices(
 		Span<Point> points
 	) {
+		ValidateRoundedCandidates( points );
+		return CreateRoundedHull( points );
+	}
+
+	internal static int WriteRoundedConvexHull(
+		Span<Point> points, Span<Point> normalized
+	) {
+		ValidateRoundedCandidates( points );
+		ArgumentOutOfRangeException.ThrowIfLessThan( normalized.Length, Math.Min( points.Length, MaximumVertices ), nameof( normalized ) );
+		if( points.Length < 3 ) {
+			return 0;
+		}
+		if( points.Length <= 4 && TryWriteTinyHull( points, normalized ) ) {
+			return points.Length;
+		}
+		Span<Point> hull = stackalloc Point[2 * points.Length];
+		int count = WriteSortedHull( points, hull );
+		hull[..count].CopyTo( normalized );
+		return count;
+	}
+
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
+	private static void ValidateRoundedCandidates( ReadOnlySpan<Point> points ) {
 		if( points.Length > 2 * MaximumVertices ) {
 			throw new ArgumentException( "Generated vertices exceed the bounded convex-hull scratch capacity.", nameof( points ) );
 		}
 		foreach( Point point in points ) {
 			GeometryLimits.Validate( point, nameof( points ) );
 		}
-		return CreateRoundedHull( points );
 	}
+
+	internal static Polygon FromNormalizedVertices( ReadOnlySpan<Point> points ) => new Polygon( Own( points ) );
 
 	private static Polygon CreateRoundedHull(
 		Span<Point> candidates
 	) {
-		int count = candidates.Length;
-		if( count < 3 ) {
+		if( candidates.Length < 3 ) {
 			return None;
 		}
-		if( count <= 4 ) {
-			int winding = Math.Sign( Orientation( candidates[0], candidates[1], candidates[2] ) );
-			// Four triangle signs cover all edge/other-vertex half-planes for a quad.
-			if( winding != 0 && (count == 3 || (
-				Orientation( candidates[0], candidates[1], candidates[3] ) * winding > 0
-				&& Orientation( candidates[0], candidates[2], candidates[3] ) * winding > 0
-				&& Orientation( candidates[1], candidates[2], candidates[3] ) * winding > 0
-			)) ) {
-				int start = 0;
-				for( int i = 1; i < count; i++ ) {
-					if( ComparePoints( candidates[i], candidates[start] ) < 0 ) {
-						start = i;
-					}
-				}
-				Span<Point> ordered = stackalloc Point[4];
-				int index = start;
-				for( int i = 0; i < count; i++ ) {
-					ordered[i] = candidates[index];
-					index += winding;
-					if( index == count ) {
-						index = 0;
-					} else if( index < 0 ) {
-						index = count - 1;
-					}
-				}
-				return new Polygon( Own( ordered[..count] ) );
+		if( candidates.Length <= 4 ) {
+			Span<Point> ordered = stackalloc Point[4];
+			if( TryWriteTinyHull( candidates, ordered ) ) {
+				return FromNormalizedVertices( ordered[..candidates.Length] );
 			}
 		}
+		Span<Point> hull = stackalloc Point[2 * candidates.Length];
+		int count = WriteSortedHull( candidates, hull );
+		return count == 0 ? None : FromNormalizedVertices( hull[..count] );
+	}
+
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
+	private static bool TryWriteTinyHull( ReadOnlySpan<Point> candidates, Span<Point> ordered ) {
+		int count = candidates.Length;
+		int winding = Math.Sign( Orientation( candidates[0], candidates[1], candidates[2] ) );
+		// Four triangle signs cover all edge/other-vertex half-planes for a quad.
+		if( winding == 0 || (count == 4 && (
+			Orientation( candidates[0], candidates[1], candidates[3] ) * winding <= 0
+			|| Orientation( candidates[0], candidates[2], candidates[3] ) * winding <= 0
+			|| Orientation( candidates[1], candidates[2], candidates[3] ) * winding <= 0
+		)) ) {
+			return false;
+		}
+		int start = 0;
+		for( int i = 1; i < count; i++ ) {
+			if( ComparePoints( candidates[i], candidates[start] ) < 0 ) {
+				start = i;
+			}
+		}
+		int index = start;
+		for( int i = 0; i < count; i++ ) {
+			ordered[i] = candidates[index];
+			index += winding;
+			if( index == count ) {
+				index = 0;
+			} else if( index < 0 ) {
+				index = count - 1;
+			}
+		}
+		return true;
+	}
+
+	private static int WriteSortedHull( Span<Point> candidates, Span<Point> hull ) {
 		candidates.Sort( ComparePoints );
-		Span<Point> hull = stackalloc Point[2 * count];
 		int hullCount = 0;
 		foreach( Point point in candidates ) {
 			while( hullCount >= 2 && Orientation( hull[hullCount - 2], hull[hullCount - 1], point ) <= 0 ) {
@@ -330,12 +376,12 @@ public sealed class Polygon {
 		}
 		hullCount--;
 		if( hullCount < 3 ) {
-			return None;
+			return 0;
 		}
 		if( hullCount > MaximumVertices ) {
 			throw new InvalidOperationException( $"The generated polygon exceeds {MaximumVertices} normalized vertices." );
 		}
-		return new Polygon( Own( hull[..hullCount] ) );
+		return hullCount;
 	}
 
 	/// <summary>Compares geometric boundaries independently of start, winding, and input redundancy.</summary>

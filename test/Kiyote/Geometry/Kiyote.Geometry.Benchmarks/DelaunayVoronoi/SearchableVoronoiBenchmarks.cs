@@ -22,7 +22,8 @@ public class SearchableVoronoiBenchmarks {
 		ISearchableVoronoiFactory searchableFactory = new QuadTreeSearchableVoronoiFactory( new SimpleQuadTreeFactory() );
 		_searchable = searchableFactory.Create( diagram, new Point( 200, 200 ) );
 		_query = new Rect( 0, 0, QuerySize, QuerySize );
-		Cell[] expected = diagram.Cells.Where( cell => cell.BoundingBox.Overlaps( _query ) ).ToArray();
+		int[] expected = Enumerable.Range( 0, diagram.Cells.Length )
+			.Where( i => diagram.Cells[i].BoundingBox.Overlaps( _query ) ).ToArray();
 		if( !_searchable.Search( _query ).ToHashSet().SetEquals( expected )
 			|| SearchVisitor() != expected.Length ) {
 			throw new InvalidOperationException( "Search differs from the bounding-box reference." );
@@ -30,7 +31,7 @@ public class SearchableVoronoiBenchmarks {
 	}
 
 	[Benchmark]
-	public IReadOnlyList<Cell> Search() => _searchable.Search( _query );
+	public IReadOnlyList<int> Search() => _searchable.Search( _query );
 
 	[Benchmark]
 	public int SearchVisitor() {
@@ -39,8 +40,8 @@ public class SearchableVoronoiBenchmarks {
 		return visitor.Count;
 	}
 
-	private struct CountingVisitor : IQueryVisitor<Cell> {
+	private struct CountingVisitor : IQueryVisitor<int> {
 		public int Count;
-		public void Visit( scoped in Cell item ) => Count++;
+		public void Visit( scoped in int item ) => Count++;
 	}
 }

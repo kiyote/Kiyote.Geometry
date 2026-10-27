@@ -63,22 +63,22 @@ public sealed class QueryVisitorTests {
 	public void Search_SpanVisitor_PreservesCellOrderWithoutAllocation() {
 		ISearchableVoronoi searchable = CreateSearchable();
 		Rect area = new Rect( 0, 0, 100, 100 );
-		IReadOnlyList<Cell> expected = searchable.Search( area );
-		Cell[] destination = new Cell[expected.Count];
+		IReadOnlyList<int> expected = searchable.Search( area );
+		Span<int> destination = stackalloc int[expected.Count];
 		for( int i = 0; i < 100; i++ ) {
-			BufferVisitor<Cell> warmup = new BufferVisitor<Cell>( destination );
+			BufferVisitor<int> warmup = new BufferVisitor<int>( destination );
 			searchable.Search( area, ref warmup );
 		}
 		long before = GC.GetAllocatedBytesForCurrentThread();
 		int count = 0;
 		for( int i = 0; i < 100; i++ ) {
-			BufferVisitor<Cell> visitor = new BufferVisitor<Cell>( destination );
+			BufferVisitor<int> visitor = new BufferVisitor<int>( destination );
 			searchable.Search( area, ref visitor );
 			count += visitor.Count;
 		}
 		long bytes = GC.GetAllocatedBytesForCurrentThread() - before;
 		Assert.That( count, Is.EqualTo( 100 * expected.Count ) );
-		Assert.That( destination, Is.EqualTo( expected ) );
+		Assert.That( destination.ToArray(), Is.EqualTo( expected ) );
 		Assert.That( bytes, Is.Zero );
 		Assert.That( searchable.Search( new Rect( 200, 200, 10, 10 ) ), Is.Empty );
 		Assert.That( searchable.Search( area ), Is.EqualTo( expected ) );
@@ -88,9 +88,9 @@ public sealed class QueryVisitorTests {
 	public void Search_RefStructVisitorThrows_PreservesPartialStateAndSubsequentQueries() {
 		ISearchableVoronoi searchable = CreateSearchable();
 		Rect area = new Rect( 0, 0, 100, 100 );
-		IReadOnlyList<Cell> expected = searchable.Search( area );
-		Cell[] destination = new Cell[1];
-		BufferVisitor<Cell> visitor = new BufferVisitor<Cell>( destination );
+		IReadOnlyList<int> expected = searchable.Search( area );
+		Span<int> destination = stackalloc int[1];
+		BufferVisitor<int> visitor = new BufferVisitor<int>( destination );
 		bool threw = false;
 		try {
 			searchable.Search( area, ref visitor );
@@ -99,7 +99,7 @@ public sealed class QueryVisitorTests {
 		}
 		Assert.That( threw, Is.True );
 		Assert.That( visitor.Count, Is.EqualTo( 1 ) );
-		Assert.That( destination[0], Is.SameAs( expected[0] ) );
+		Assert.That( destination[0], Is.EqualTo( expected[0] ) );
 		Assert.That( searchable.Search( area ), Is.EqualTo( expected ) );
 	}
 

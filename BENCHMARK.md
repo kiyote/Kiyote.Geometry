@@ -1,5 +1,154 @@
 # Benchmarks
 
+## O2 contiguous Voronoi cells and ID-based consumers: accepted (2026-10-27)
+
+Reference: `e08d491`, rebuilt in an isolated worktree. The accepted change owns
+one metadata array and one exact-length final vertex array, removes per-cell
+object graphs, and exposes ID/span reads, inclusive containment and explicit
+polygon export. Search results/visitors return IDs. All repository consumers,
+including the visualizers, use the new representation without object adapters.
+Global directed edges and ordered CSR adjacency remain eager.
+
+All suites ran serially on the .NET 10/runtime/hardware below, without
+agent-started builds, tests or traces overlapping timed execution. The broad
+comparison used two launches, four warmups, twelve iterations and requested
+300 ms iteration time. After initial baselines, execution order was candidate,
+isolated reference, candidate, shared-kernel checks/corrections, final candidate.
+Tables below compare the isolated reference (`d3-flat-control`) with the final
+accepted-code run (`d3-flat-accepted`); earlier runs are corroborating evidence,
+not independent randomized trials. Error is the 99.9% CI half-width.
+
+### Creation and complete consumers
+
+| Workload | Reference mean +/- error (us) | Accepted mean +/- error (us) | Allocated bytes, reference / accepted |
+|---|---:|---:|---:|
+| Factory, 400 sites | 268.609 +/- 5.582 | 251.724 +/- 7.739 | 234,352 / 164,320 |
+| Factory, 10,000 sites | 8,333.821 +/- 177.651 | 8,015.176 +/- 315.258 | 5,787,977 / 4,062,334 |
+| Factory, 40,000 sites | 50,727.196 +/- 1,913.609 | 36,447.091 +/- 2,042.742 | 23,423,322 / 16,529,556 |
+| Workload grid, 400 | 268.690 +/- 6.561 | 266.230 +/- 7.377 | 234,352 / 164,320 |
+| Workload jittered grid, 400 | 393.300 +/- 6.313 | 391.682 +/- 8.299 | 271,352 / 191,224 |
+| Workload high degree, 41 | 25.004 +/- 0.701 | 23.445 +/- 0.639 | 26,208 / 20,448 |
+| Irregular, 4,096 | 4,912.120 +/- 119.546 | 4,348.065 +/- 113.581 | 2,836,453 / 2,008,642 |
+| Mostly hull, 128 | 104.974 +/- 2.914 | 93.725 +/- 1.838 | 76,072 / 59,072 |
+| Sanitized, 40,000 inputs / 400 sites | 542.281 +/- 15.507 | 464.778 +/- 12.662 | 570,459 / 500,428 |
+| Thin, 512 | 504.626 +/- 11.664 | 458.566 +/- 6.523 | 350,960 / 249,952 |
+| Create and consume, 400 | 404.783 +/- 7.123 | 390.856 +/- 10.759 | 271,352 / 191,224 |
+| Create and consume, 4,096 | 4,722.196 +/- 84.219 | 4,262.626 +/- 135.392 | 2,824,350 / 2,001,701 |
+| Retained metadata/vertices/neighbours, 400 | 9.837 +/- 0.456 | 5.023 +/- 0.116 | 0 / 0 |
+| Retained metadata/vertices/neighbours, 4,096 | 128.577 +/- 3.433 | 67.067 +/- 1.783 | 0 / 0 |
+| Contains every site, 400 | 8.442 +/- 0.261 | 5.347 +/- 0.116 | 0 / 0 |
+| Contains every site, 4,096 | 124.458 +/- 3.115 | 65.080 +/- 1.590 | 0 / 0 |
+
+The 40,000-site factory observed mean is 28.2% lower, with 29.4% fewer allocated
+bytes. Earlier flat runs were 35.04/34.70 ms against the isolated 50.73 ms
+reference, so the large-grid improvement is reproducible. Irregular creation,
+full 4,096-site consumption, retained traversal and containment also improve
+across repeated comparisons. This is not a general speedup claim for every
+small fixture: grid, jittered and 10,000-site timing intervals can overlap.
+The 400-site create-and-consume samples varied; a longer matched pair (eight
+warmups, twenty 400 ms iterations, two launches) was 420.754 +/- 9.809 versus
+390.836 +/- 6.796 us. Prefer the consistent allocation reduction to a blanket
+small-diagram CPU claim. Small B/op variations on large runs include runtime
+allocation effects; they are not changes to logical output sizes.
+
+### Search and shared dependencies
+
+| Consumer | Reference mean +/- error | Accepted mean +/- error | Allocated bytes, reference / accepted |
+|---|---:|---:|---:|
+| Build index, 400 | 34.689 +/- 0.729 us | 34.914 +/- 1.499 us | 83,176 / 100,176 |
+| Build index, 4,096 | 506.442 +/- 16.788 us | 476.053 +/- 12.337 us | 593,184 / 801,544 |
+| Materialized search, query 20 | 274.0 +/- 5.31 ns | 208.9 +/- 5.80 ns | 88 / 72 |
+| Visitor search, query 20 | 202.4 +/- 3.81 ns | 160.3 +/- 4.22 ns | 0 / 0 |
+| Materialized search, query 200 | 7,205.7 +/- 217.58 ns | 3,712.5 +/- 135.56 ns | 8,384 / 4,304 |
+| Visitor search, query 200 | 2,577.5 +/- 42.16 ns | 2,480.4 +/- 49.08 ns | 0 / 0 |
+
+An index entry grows from an 8-byte cell reference to a 20-byte ID/bounds value.
+Index-only allocation increases by 20.4%/35.1% for the two construction fixtures;
+do not hide this cost behind lower diagram B/op. Combined retained diagram and
+index memory nevertheless falls substantially (below). No general index-build
+speedup is claimed.
+
+The first flat prototype copied entries in quadtree enumeration and regressed
+the small-query visitor to 221.0 +/- 3.51 ns. By-reference entry visits removed
+that regression (repeat means 172.8/178.6/160.3 ns); visitor exception state,
+query order and multiplicity tests remain intact. Generic rectangle-tree checks
+also improved: materialized query 1,840.24 +/- 137.351 to 1,306.75 +/- 44.162 ns,
+visitor 1,419.02 +/- 22.037 to 859.31 +/- 10.221 ns, unchanged B/op.
+
+Extracting shared hull writers initially regressed standalone polygon publication.
+Shrinking its destination alone did not resolve this. The accepted code shares
+tiny/general hull kernels but preserves small constant scratch and direct owned
+publication in the standalone path; inline hints apply only to shared validation
+and tiny-hull helpers. Longer matched standalone checks:
+
+| Generated polygon operation | Reference mean +/- error (ns) | Accepted mean +/- error (ns) | Bytes, unchanged |
+|---|---:|---:|---:|
+| Strict triangle | 62.85 +/- 2.135 | 58.50 +/- 1.553 | 192 |
+| Strict quadrilateral | 70.83 +/- 1.850 | 72.50 +/- 1.772 | 216 |
+| Concave quadrilateral fallback | 113.62 +/- 2.353 | 106.15 +/- 3.236 | 192 |
+| Rounded intersection | 420.23 +/- 7.620 | 402.24 +/- 9.204 | 264 |
+
+The quadrilateral intervals overlap; no improvement is claimed there.
+Shared polygon containment was 23.57 +/- 0.355 versus 22.55 +/- 0.378 ns,
+allocating nothing. No new production dependency or per-query polygon cache exists.
+
+### Retained memory, first calls, and growth
+
+Separate fresh-process diagnostics warmed creation twenty times, then measured
+the full-GC managed-heap delta while retaining 32 results. Inputs/factories and
+the result-reference array already existed before the baseline collection.
+Three processes per fixture/revision were used; values below are approximate
+median retained bytes per result, not B/op, peak live memory, native memory or
+process working set. A hash-verified final-assembly pass reproduced these sizes.
+An intermediate probe copied a stale reference DLL; its candidate samples were
+discarded and rerun after explicit assembly hash verification.
+
+| Retained result | Reference bytes | Accepted bytes |
+|---|---:|---:|
+| Jittered, 400 | 183,072 | 83,960 |
+| Jittered, 4,096 | 1,893,576 | 870,720 |
+| Grid, 40,000 | 15,513,896 | 6,713,868 |
+| Thin, 512 | 230,328 | 105,040 |
+| Mostly hull, 128 | 51,488 | 22,264 |
+| Sanitized, 400 accepted | 154,856 | 66,832 |
+| Jittered, 400, including index | 263,488 | 176,696 |
+| Jittered, 4,096, including index | 2,443,736 | 1,550,240 |
+
+Standalone retained bytes decrease about 54-57%; combined indexed results
+decrease about 33-37%. Source-level retained-object accounting removes five
+objects per site (cell, polygon, point array, edge array, cached interface box)
+and one net diagram-level object, or `5n + 1`; this is not a heap-dump object census.
+Metadata is 28 bytes per cell; vertices are eight bytes each, with no retained
+per-cell edges. The index's extra bounds storage explains the smaller combined
+reduction.
+
+First-call managed allocation also fell: jittered 400 from 287,056-287,232 to
+206,880-207,056 B; jittered 4,096 from 2,991,264 to 2,164,544 B; grid 40,000
+from 24,995,768 to 18,102,968 B. These include first-use initialization and
+pool misses, not cold CPU measurements.
+
+The vertex builder reserves the mesh adjacency count, grows normally if clipped
+output needs more, and makes one exact-length ownership copy. The 128-site
+all-hull fixture emits 577 vertices against an initial capacity of 506; it
+explicitly tests growth without truncation. Its builder grows to 1,012, so the
+temporary vertex-array payload is 4,048 + 8,096 + 4,616 B including the final
+copy; only the last array is retained. There is no second clipping pass.
+Peak live memory was not directly profiled; neither B/op nor retained-heap
+measurements should be presented as a measured peak reduction.
+
+Validation: warning-free Release solution build, 486 unit tests and 180
+integration tests. All eight frozen full-output fingerprints remain unchanged.
+Both standalone and span hull paths match the independent exact oracle;
+destination/normalized limits, contiguous ranges, growth, input mutation,
+concurrent reuse/failure stability, explicit export, inclusive containment,
+equal-bound IDs, and zero-allocation span/stack-backed visitor reads are covered.
+The warm 400-site allocation budget is now 180 KiB (was 230 KiB).
+
+Raw suites remain in session files `d3-flat-control`, `d3-flat-accepted`,
+`d3-flat-shared-control`, `d3-flat-shared-candidate`, `d3-flat-polygon-shared`,
+and the corrected/final memory logs. Rejected intermediate measurements are
+retained for diagnosis, not used as accepted-code results.
+
 ## O2 consumer baseline (2026-10-27)
 
 Before changing the cell representation, added `VoronoiConsumptionBenchmarks`

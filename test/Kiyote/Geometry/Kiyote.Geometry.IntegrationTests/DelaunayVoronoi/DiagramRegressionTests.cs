@@ -23,7 +23,7 @@ public sealed class DiagramRegressionTests {
 		AssertTraversalCount( sites, degree );
 		IVoronoi diagram = _voronoi.Create( Bounds, sites );
 		ValidateDiagram( diagram, sites );
-		Assert.That( diagram.Cells[0].Polygon.Points, Has.Count.EqualTo( degree ) );
+		Assert.That( diagram.GetCellVertices( 0 ).Length, Is.EqualTo( degree ) );
 		Assert.That( diagram.GetNeighbourIndices( 0 ).Length, Is.EqualTo( degree ) );
 		Assert.That( diagram.Cells[0].IsOpen, Is.False );
 	}
@@ -33,7 +33,7 @@ public sealed class DiagramRegressionTests {
 		Point[] sites = [new Point( 0, 0 ), new Point( 9, 2 ), new Point( 2, 9 )];
 		IVoronoi diagram = _voronoi.Create( new Rect( -20, -20, 41, 41 ), sites );
 		Point[] expected = [new Point( -20, -20 ), new Point( 9, -20 ), new Point( 3, 3 ), new Point( -20, 9 )];
-		Assert.That( diagram.Cells[0].Polygon.Points, Is.EquivalentTo( expected ) );
+		Assert.That( diagram.GetCellVertices( 0 ).ToArray(), Is.EquivalentTo( expected ) );
 	}
 
 	[TestCase( false )]
@@ -43,7 +43,7 @@ public sealed class DiagramRegressionTests {
 		if( voronoi ) {
 			IVoronoi diagram = _voronoi.Create( new Rect( -32768, -32768, 65536, 65536 ), sites );
 			for( int i = 0; i < sites.Length; i++ ) {
-				Assert.That( diagram.Cells[i].Polygon.Contains( sites[i] ), Is.True );
+				Assert.That( diagram.Contains( i, sites[i] ), Is.True );
 			}
 		} else {
 			IDelaunayFactory factory = new D3DelaunayFactory();
@@ -81,7 +81,7 @@ public sealed class DiagramRegressionTests {
 			() => _voronoi.Create( Bounds, sites ),
 			Throws.TypeOf<InvalidOperationException>().With.Message.Contains( IVoronoiFactory.MaximumCellVertices.ToString( CultureInfo.InvariantCulture ) )
 		);
-		Assert.That( _voronoi.Create( Bounds, TriangleSites ).Cells, Has.Count.EqualTo( TriangleSites.Length ) );
+		Assert.That( _voronoi.Create( Bounds, TriangleSites ).Cells.Length, Is.EqualTo( TriangleSites.Length ) );
 	}
 
 	[Test]
@@ -91,7 +91,7 @@ public sealed class DiagramRegressionTests {
 		IVoronoi diagram = _voronoi.Create( Bounds, sites );
 		ValidateDiagram( diagram, sites );
 		Assert.That( diagram.Cells[0].IsOpen, Is.True );
-		Assert.That( diagram.Cells[0].Polygon.Points.Count, Is.GreaterThan( IVoronoiFactory.MaximumCellVertices ) );
+		Assert.That( diagram.GetCellVertices( 0 ).Length, Is.GreaterThan( IVoronoiFactory.MaximumCellVertices ) );
 	}
 
 	[TestCaseSource( nameof( InvalidSites ) )]
@@ -164,7 +164,9 @@ public sealed class DiagramRegressionTests {
 	[Test]
 	public void Create_ResultCollections_DoNotExposeMutableStorage() {
 		IVoronoi voronoi = _voronoi.Create( Bounds, TriangleSites );
-		AssertReadOnly( voronoi.Cells );
+		Cell[] metadata = voronoi.Cells.ToArray();
+		metadata[0] = default;
+		Assert.That( voronoi.Cells[0].VertexCount, Is.GreaterThanOrEqualTo( 3 ) );
 		AssertReadOnly( voronoi.Edges );
 		int[] neighbours = voronoi.GetNeighbourIndices( 0 ).ToArray();
 		_ = _voronoi.Create( Bounds, TriangleSites );
@@ -227,22 +229,22 @@ public sealed class DiagramRegressionTests {
 	}
 
 	private static void ValidateDiagram( IVoronoi diagram, Point[] sites ) {
-		Assert.That( diagram.Cells, Has.Count.EqualTo( sites.Length ) );
+		Assert.That( diagram.Cells.Length, Is.EqualTo( sites.Length ) );
 		for( int i = 0; i < sites.Length; i++ ) {
-			Cell cell = diagram.Cells[i];
-			Assert.That( cell.Center, Is.EqualTo( sites[i] ) );
-			Assert.That( cell.Polygon.Contains( sites[i] ), Is.True, $"Cell {i}" );
-			Assert.That( cell.Polygon.Points.Count, Is.InRange( 3, Polygon.MaximumVertices ) );
-			foreach( Point point in cell.Polygon.Points ) {
+			Point center = diagram.Points[i];
+			Assert.That( center, Is.EqualTo( sites[i] ) );
+			Assert.That( diagram.Contains( i, sites[i] ), Is.True, $"Cell {i}" );
+			Assert.That( diagram.GetCellVertices( i ).Length, Is.InRange( 3, Polygon.MaximumVertices ) );
+			foreach( Point point in diagram.GetCellVertices( i ) ) {
 				Assert.That( Bounds.Contains( point ), Is.True );
 				foreach( Point other in sites ) {
-					long dx = (long)other.X - cell.Center.X, dy = (long)other.Y - cell.Center.Y;
+					long dx = (long)other.X - center.X, dy = (long)other.Y - center.Y;
 					long offset = ((long)other.X * other.X) + ((long)other.Y * other.Y)
-						- ((long)cell.Center.X * cell.Center.X) - ((long)cell.Center.Y * cell.Center.Y);
+						- ((long)center.X * center.X) - ((long)center.Y * center.Y);
 					long excess = (2 * ( (dx * point.X) + (dy * point.Y) )) - offset;
 					long floorMargin = 2 * ( Math.Max( 0, -dx ) + Math.Max( 0, -dy ) );
 					Assert.That( excess, Is.LessThanOrEqualTo( floorMargin ),
-						$"Site {cell.Center}, neighbour candidate {other}, output vertex {point}" );
+						$"Site {center}, neighbour candidate {other}, output vertex {point}" );
 				}
 			}
 			ReadOnlySpan<int> neighbours = diagram.GetNeighbourIndices( i );

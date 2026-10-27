@@ -29,9 +29,9 @@ public sealed class SearchableVoronoiRegressionTests {
 				random.Next( 0, 20 ), random.Next( 0, 20 ) ) );
 		}
 		foreach( Rect query in queries ) {
-			Cell[] expected = diagram.Cells.Where( cell => !query.IsEmpty
-				&& cell.BoundingBox.X1 <= query.X2 && cell.BoundingBox.X2 >= query.X1
-				&& cell.BoundingBox.Y1 <= query.Y2 && cell.BoundingBox.Y2 >= query.Y1 ).ToArray();
+			int[] expected = Enumerable.Range( 0, diagram.Cells.Length ).Where( i => !query.IsEmpty
+				&& diagram.Cells[i].BoundingBox.X1 <= query.X2 && diagram.Cells[i].BoundingBox.X2 >= query.X1
+				&& diagram.Cells[i].BoundingBox.Y1 <= query.Y2 && diagram.Cells[i].BoundingBox.Y2 >= query.Y1 ).ToArray();
 			string context = $"Query ({query.X1},{query.Y1}), {query.Width}x{query.Height}";
 			Assert.That( searchable.Search( query ), Is.EquivalentTo( expected ), context );
 			Assert.That( searchable.Search( query.X1, query.Y1, query.Width, query.Height ), Is.EquivalentTo( expected ), context );

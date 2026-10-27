@@ -17,6 +17,8 @@ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 */
 
+using System.Runtime.InteropServices;
+
 namespace Kiyote.Geometry.DelaunayVoronoi.D3;
 
 internal sealed class D3VoronoiFactory : IVoronoiFactory {
@@ -61,10 +63,11 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 		Span<double> projectedPointBuffer = stackalloc double[MaximumProjectedVertices * 2];
 		Span<double> clippedPointBuffer = stackalloc double[MaximumClippedVertices * 2];
 		Span<Point> quantizedPointBuffer = stackalloc Point[MaximumClippedVertices];
+		Span<Point> normalizedPointBuffer = stackalloc Point[Polygon.MaximumVertices];
 
-		List<Cell> cells = new List<Cell>( sites.Length );
+		Cell[] cells = new Cell[sites.Length];
+		List<Point> vertices = new List<Point>( (int)neighbourCapacity );
 		VoronoiCellBuffer cellCoords = new VoronoiCellBuffer( clippedPointBuffer );
-		long edgeCapacity = 0;
 		for( int i = 0; i < sites.Length; i++ ) {
 			neighbourOffsets[i] = neighbourCount;
 			neighbourCount += CollectCell(
@@ -110,18 +113,24 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 				}
 				quantizedPointBuffer[j] = new Point( x, y );
 			}
-			Polygon polygon = Polygon.FromRoundedConvexVertices( quantizedPointBuffer[..( cellCoords.Count / 2 )] );
-			if( polygon.IsEmpty ) {
+			int vertexCount = Polygon.WriteRoundedConvexHull(
+				quantizedPointBuffer[..( cellCoords.Count / 2 )], normalizedPointBuffer
+			);
+			if( vertexCount == 0 ) {
 				throw new InvalidOperationException( "Quantized Voronoi cell does not enclose positive area." );
 			}
-			Cell cell = new Cell(
-				sites[i],
-				polygon,
+			if( vertexCount > Array.MaxLength - vertices.Count ) {
+				throw new ArgumentOutOfRangeException( nameof( points ), "Cell sides exceed representable vertex array capacities." );
+			}
+			cells[i] = new Cell(
+				vertices.Count,
+				vertexCount,
 				isOpen,
 				new Rect( minX, minY, maxX - minX + 1, maxY - minY + 1 )
 			);
-			cells.Add( cell );
-			edgeCapacity += polygon.Edges.Length;
+			for( int j = 0; j < vertexCount; j++ ) {
+				vertices.Add( normalizedPointBuffer[j] );
+			}
 		}
 
 		neighbourOffsets[sites.Length] = neighbourCount;
@@ -129,13 +138,12 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			throw new InvalidOperationException( "Triangulation adjacency does not match the mesh edge count." );
 		}
 
-		if( edgeCapacity > Array.MaxLength ) {
-			throw new ArgumentOutOfRangeException( nameof( points ), "Cell sides exceed representable edge array capacities." );
-		}
-		HashSet<DirectedEdgeKey> edgeKeys = new HashSet<DirectedEdgeKey>( (int)edgeCapacity );
-		foreach( Cell cell in cells ) {
-			foreach( Edge edge in cell.Polygon.Edges ) {
-				edgeKeys.Add( new DirectedEdgeKey( edge ) );
+		HashSet<DirectedEdgeKey> edgeKeys = new HashSet<DirectedEdgeKey>( vertices.Count );
+		ReadOnlySpan<Point> vertexSpan = CollectionsMarshal.AsSpan( vertices );
+		foreach( ref readonly Cell cell in cells.AsSpan() ) {
+			ReadOnlySpan<Point> polygon = vertexSpan.Slice( cell.VertexOffset, cell.VertexCount );
+			for( int j = 0; j < polygon.Length; j++ ) {
+				edgeKeys.Add( new DirectedEdgeKey( new Edge( polygon[j], polygon[(j + 1) % polygon.Length] ) ) );
 			}
 		}
 		Edge[] edges = new Edge[edgeKeys.Count];
@@ -144,7 +152,7 @@ internal sealed class D3VoronoiFactory : IVoronoiFactory {
 			edges[edgeIndex++] = key.ToEdge();
 		}
 
-		return new Voronoi( Array.AsReadOnly( sites ), cells.AsReadOnly(),
+		return new Voronoi( Array.AsReadOnly( sites ), cells, vertices.ToArray(),
 			neighbourOffsets, neighbourIndices, Array.AsReadOnly( edges ) );
 	}
 

@@ -86,14 +86,14 @@ public sealed class AllocationRegressionTests {
 	[Test]
 	public void Search_EqualBounds_PreservesDistinctCellsAndMultiplicity() {
 		Rect bounds = new Rect( 0, 0, 3, 3 );
-		Cell a = new Cell( new Point( 0, 0 ),
-			new Polygon( [new Point( 0, 0 ), new Point( 2, 0 ), new Point( 0, 2 )] ), false, bounds );
-		Cell b = new Cell( new Point( 2, 2 ),
-			new Polygon( [new Point( 2, 2 ), new Point( 0, 2 ), new Point( 2, 0 )] ), false, bounds );
-		IVoronoi diagram = new Voronoi( [a.Center, b.Center], [a, b], [0, 0, 0], [], [] );
+		Cell a = new Cell( 0, 3, false, bounds );
+		Cell b = new Cell( 3, 3, false, bounds );
+		IVoronoi diagram = new Voronoi( [new Point( 0, 0 ), new Point( 2, 2 )], [a, b],
+			[new Point( 0, 0 ), new Point( 2, 0 ), new Point( 0, 2 ),
+			new Point( 0, 2 ), new Point( 2, 0 ), new Point( 2, 2 )], [0, 0, 0], [], [] );
 		ISearchableVoronoiFactory factory = new QuadTreeSearchableVoronoiFactory( new SimpleQuadTreeFactory() );
 		ISearchableVoronoi searchable = factory.Create( diagram, new Point( 3, 3 ) );
-		Assert.That( searchable.Search( bounds ), Is.EquivalentTo( new[] { a, b } ) );
+		Assert.That( searchable.Search( bounds ), Is.EquivalentTo( Enumerable.Range( 0, 2 ) ) );
 	}
 
 	private readonly struct Counter( int[] calls ) : IPixelOperation {

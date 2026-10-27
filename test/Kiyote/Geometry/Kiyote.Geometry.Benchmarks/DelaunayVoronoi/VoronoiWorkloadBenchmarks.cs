@@ -51,12 +51,11 @@ public class VoronoiWorkloadBenchmarks {
 	}
 
 	private void Validate( IVoronoi result ) {
-		if( result.Cells.Count != _points.Length ) {
+		if( result.Cells.Length != _points.Length ) {
 			throw new InvalidOperationException( "Voronoi benchmark did not produce one cell per site." );
 		}
 		for( int i = 0; i < _points.Length; i++ ) {
-			Cell cell = result.Cells[i];
-			if( cell.Center != _points[i] || !cell.Polygon.Contains( _points[i] ) ) {
+			if( result.Points[i] != _points[i] || !result.Contains( i, _points[i] ) ) {
 				throw new InvalidOperationException( $"Voronoi fixture {Workload}, cell {i} does not contain its site." );
 			}
 		}

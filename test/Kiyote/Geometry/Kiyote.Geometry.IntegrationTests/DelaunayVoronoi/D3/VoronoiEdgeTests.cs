@@ -18,9 +18,10 @@ public sealed class VoronoiEdgeTests {
 		IVoronoiFactory factory = new D3VoronoiFactory();
 		IVoronoi diagram = factory.Create( new Rect( sites[0], sites[3] ), sites );
 		HashSet<Edge> expected = [];
-		foreach( Cell cell in diagram.Cells ) {
-			foreach( Edge edge in cell.Polygon.Edges ) {
-				expected.Add( edge );
+		for( int i = 0; i < diagram.Cells.Length; i++ ) {
+			ReadOnlySpan<Point> vertices = diagram.GetCellVertices( i );
+			for( int j = 0; j < vertices.Length; j++ ) {
+				expected.Add( new Edge( vertices[j], vertices[(j + 1) % vertices.Length] ) );
 			}
 		}
 		Assert.That( diagram.Edges, Is.EqualTo( expected.ToArray() ) );

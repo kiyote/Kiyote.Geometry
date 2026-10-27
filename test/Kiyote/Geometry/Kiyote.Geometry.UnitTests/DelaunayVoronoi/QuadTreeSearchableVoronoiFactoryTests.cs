@@ -26,23 +26,10 @@ public sealed class QuadTreeSearchableVoronoiFactoryTests {
 
 	[Test]
 	public void Create_ValidVoronoi_QuadTreeCreated() {
-		IReadOnlyList<Cell> cells = [
-			new Cell(
-				new Point( 10, 10 ),
-				new Polygon([
-					new Point( 0, 0),
-					new Point( 20, 0 ),
-					new Point( 20, 20 ),
-					new Point( 0, 20)
-				]),
-				false,
-				new Rect(0, 0, 20, 20 )
-			)
-		];
-		Mock<IVoronoi> voronoi = new Mock<IVoronoi>( MockBehavior.Strict );
-		voronoi
-			.Setup( v => v.Cells )
-			.Returns( cells );
+		Cell[] cells = [new Cell( 0, 4, false, new Rect( 0, 0, 20, 20 ) )];
+		IVoronoi voronoi = new Voronoi( [new Point( 10, 10 )], cells,
+			[new Point( 0, 0 ), new Point( 19, 0 ), new Point( 19, 19 ), new Point( 0, 19 )],
+			[0, 0], [], [] );
 		int sizeWidth = 20;
 		int sizeHeight = 21;
 		Mock<ISize> size = new Mock<ISize>( MockBehavior.Strict );
@@ -62,15 +49,15 @@ public sealed class QuadTreeSearchableVoronoiFactoryTests {
 			.Returns( quadTree );
 
 		ISearchableVoronoi searchableVoronoi = _searchableFactory.Create(
-			voronoi.Object,
+			voronoi,
 			size.Object
 		);
 
 		Assert.That( searchableVoronoi, Is.Not.Null );
 		IReadOnlyList<IndexedCell> indexed = quadTree.Query( new Rect( 0, 0, sizeWidth, sizeHeight ) );
 		Assert.That( indexed, Has.Count.EqualTo( 1 ) );
-		Assert.That( indexed[0].Cell, Is.SameAs( cells[0] ) );
-		voronoi.VerifyAll();
+		Assert.That( indexed[0].CellIndex, Is.Zero );
+		Assert.That( indexed[0].BoundingBox, Is.EqualTo( cells[0].BoundingBox ) );
 		size.VerifyAll();
 	}
 }

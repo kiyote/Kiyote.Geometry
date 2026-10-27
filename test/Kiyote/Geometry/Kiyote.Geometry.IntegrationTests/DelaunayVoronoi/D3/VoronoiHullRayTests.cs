@@ -23,10 +23,10 @@ public sealed class VoronoiHullRayTests {
 				new Point( left + 5, top + 5 ), new Point( left, top + 5 )
 			] );
 			Cell cell = diagram.Cells[i];
-			Assert.That( cell.Polygon.IsEquivalentTo( expected ), Is.True );
+			Assert.That( diagram.ExportPolygon( i ).IsEquivalentTo( expected ), Is.True );
 			Assert.That( cell.IsOpen, Is.True );
 			Assert.That( cell.BoundingBox, Is.EqualTo( new Rect( left, top, 6, 6 ) ) );
-			Assert.That( cell.Center, Is.EqualTo( sites[i] ) );
+			Assert.That( diagram.Points[i], Is.EqualTo( sites[i] ) );
 		}
 	}
 }

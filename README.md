@@ -127,6 +127,23 @@ Coordinate-pair insertion shifts the tail once; scratch never escapes into
 published results. The 64/66/140 traversal/projected/clipped vertex capacities
 remain distinct, with explicit overflow failures.
 
+Voronoi cell identity is its site index. `Cells` is a `ReadOnlySpan<Cell>` of
+value metadata (vertex count, bounds, and open flag), not a collection of cell
+objects. Use `Cells.Length` and `ref readonly Cell` access/iteration to avoid
+copying metadata. The center of cell `i` is `diagram.Points[i]`.
+`GetCellVertices(i)` returns a read-only slice of one contiguous owned vertex
+array, with the same canonical start and positive winding as generated polygons.
+`Contains(i, point)` performs inclusive containment without allocating.
+`ExportPolygon(i)` explicitly allocates an independently owned standalone polygon
+and its edges; ordinary getters never construct or cache polygon objects.
+
+Cell generation appends normalized hulls to one growable per-build vertex
+buffer, initially sized from the mesh adjacency count, then copies once into an
+exact-length final array. It does not clip cells twice or retain builder capacity.
+Polygon construction and the span writer share the same exact tiny/general hull
+kernels. Per-cell polygon, point-array, edge-array, and boxed-interface objects
+are absent from the result. Global edges and adjacency remain eager.
+
 Voronoi adjacency is stored in two contiguous owned integer arrays rather than
 a cell-keyed dictionary and per-cell collections. `GetNeighbourIndices(i)`
 returns an allocation-free `ReadOnlySpan<int>` of indices into `Cells`, in
@@ -188,6 +205,11 @@ The searchable factory's size defines an origin-anchored index rectangle; it mus
 contain every cell's bounding box. Undersized or incorrectly positioned indexes
 now throw rather than silently omitting cells.
 Distinct cells with identical bounding boxes remain distinct search results.
+Searchable Voronoi returns cell IDs (`IReadOnlyList<int>`), and its visitors
+implement `IQueryVisitor<int>`. Resolve metadata, sites, vertices, or neighbours
+through the containing diagram, without materializing a polygon. Its index stores
+an ID and an immutable bounds snapshot per entry, not a per-cell object.
+Quadtree visitors read entries by reference without copying large value entries.
 
 ### Rasterization
 

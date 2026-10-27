@@ -41,8 +41,8 @@ public class VoronoiConsumptionBenchmarks {
 	[Benchmark]
 	public int ContainsSites() {
 		int contained = 0;
-		for( int i = 0; i < _diagram.Cells.Count; i++ ) {
-			if( _diagram.Cells[i].Polygon.Contains( _sites[i] ) ) {
+		for( int i = 0; i < _diagram.Cells.Length; i++ ) {
+			if( _diagram.Contains( i, _sites[i] ) ) {
 				contained++;
 			}
 		}
@@ -54,11 +54,13 @@ public class VoronoiConsumptionBenchmarks {
 
 	private static long Consume( IVoronoi diagram ) {
 		long checksum = 0;
-		for( int i = 0; i < diagram.Cells.Count; i++ ) {
-			Cell cell = diagram.Cells[i];
-			checksum += cell.Center.X + cell.Center.Y + cell.BoundingBox.Width + cell.BoundingBox.Height;
-			IReadOnlyList<Point> vertices = cell.Polygon.Points;
-			for( int j = 0; j < vertices.Count; j++ ) {
+		ReadOnlySpan<Cell> cells = diagram.Cells;
+		for( int i = 0; i < cells.Length; i++ ) {
+			ref readonly Cell cell = ref cells[i];
+			Point center = diagram.Points[i];
+			checksum += center.X + center.Y + cell.BoundingBox.Width + cell.BoundingBox.Height;
+			ReadOnlySpan<Point> vertices = diagram.GetCellVertices( i );
+			for( int j = 0; j < vertices.Length; j++ ) {
 				Point point = vertices[j];
 				checksum += point.X + point.Y;
 			}

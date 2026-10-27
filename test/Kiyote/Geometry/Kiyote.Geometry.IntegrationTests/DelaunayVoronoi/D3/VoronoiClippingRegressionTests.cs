@@ -23,17 +23,18 @@ public sealed class VoronoiClippingRegressionTests {
 		IVoronoi diagram = factory.Create( bounds, sites );
 		using MemoryStream stream = new MemoryStream();
 		using BinaryWriter writer = new BinaryWriter( stream );
-		writer.Write( diagram.Cells.Count );
-		for( int i = 0; i < diagram.Cells.Count; i++ ) {
-			Cell cell = diagram.Cells[i];
-			WritePoint( writer, cell.Center );
+		writer.Write( diagram.Cells.Length );
+		for( int i = 0; i < diagram.Cells.Length; i++ ) {
+			ref readonly Cell cell = ref diagram.Cells[i];
+			WritePoint( writer, diagram.Points[i] );
 			writer.Write( cell.IsOpen );
 			writer.Write( cell.BoundingBox.X1 );
 			writer.Write( cell.BoundingBox.Y1 );
 			writer.Write( cell.BoundingBox.X2 );
 			writer.Write( cell.BoundingBox.Y2 );
-			writer.Write( cell.Polygon.Points.Count );
-			foreach( Point point in cell.Polygon.Points ) {
+			ReadOnlySpan<Point> vertices = diagram.GetCellVertices( i );
+			writer.Write( vertices.Length );
+			foreach( Point point in vertices ) {
 				WritePoint( writer, point );
 			}
 			ReadOnlySpan<int> neighbours = diagram.GetNeighbourIndices( i );

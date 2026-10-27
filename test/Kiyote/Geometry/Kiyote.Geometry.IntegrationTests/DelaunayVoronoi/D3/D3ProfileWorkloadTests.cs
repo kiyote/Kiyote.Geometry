@@ -16,10 +16,12 @@ public sealed class D3ProfileWorkloadTests {
 		D3WorkloadFixture fixture = D3WorkloadFixture.Create( workload );
 		IVoronoiFactory factory = new D3VoronoiFactory();
 		IVoronoi result = factory.Create( fixture.Bounds, fixture.Input, fixture.Sanitize );
-		Assert.That( result.Cells.Count, Is.EqualTo( count ) );
+		Assert.That( result.Cells.Length, Is.EqualTo( count ) );
 		fixture.Validate( result );
+		int vertexCount = 0;
 		for( int i = 0; i < count; i++ ) {
-			foreach( Point point in result.Cells[i].Polygon.Points ) {
+			vertexCount += result.GetCellVertices( i ).Length;
+			foreach( Point point in result.GetCellVertices( i ) ) {
 				Assert.That( fixture.Bounds.Contains( point ), Is.True );
 			}
 			foreach( int neighbour in result.GetNeighbourIndices( i ) ) {
@@ -29,6 +31,8 @@ public sealed class D3ProfileWorkloadTests {
 		if( workload == "MostlyHull" ) {
 			MapboxDelaunator mesh = MapboxDelaunatorFactory.Create( fixture.Sites.ToCoords(), true );
 			Assert.That( mesh.Hull.Length, Is.EqualTo( count ) );
+			Assert.That( vertexCount, Is.GreaterThan( mesh.Triangles.Length + mesh.Hull.Length ),
+				"The all-hull fixture must exercise vertex-builder growth beyond its adjacency-sized initial capacity." );
 		}
 	}
 }

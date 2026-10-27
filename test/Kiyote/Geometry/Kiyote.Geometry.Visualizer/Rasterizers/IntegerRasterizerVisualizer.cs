@@ -107,21 +107,22 @@ public sealed class IntegerRasterizerVisualizer {
 		IVoronoiFactory voronoiFactory = new D3VoronoiFactory();
 		IVoronoi voronoi = voronoiFactory.Create( new Rect( 0, 0, _size ), points );
 
-		foreach( Cell cell in voronoi.Cells ) {
+		for( int i = 0; i < voronoi.Cells.Length; i++ ) {
 			byte value = (byte)random.Next( 255 );
 			uint color = (uint)( ( value << 24 ) | ( value << 16 ) | ( value << 8 ) | 0xFF );
-			_rasterizer.Rasterize( cell.Polygon, new BufferPixelWriter( buffer, color ) );
+			_rasterizer.Rasterize( voronoi.GetCellVertices( i ), new BufferPixelWriter( buffer, color ) );
 		}
 
 		foreach( Edge edge in voronoi.Edges ) {
 			_rasterizer.Rasterize( edge.A, edge.B, new BufferPixelWriter( buffer, 0x8B0000FFU ) );
 		}
 
-		foreach( Cell cell in voronoi.Cells ) {
-			foreach( Point p in cell.Polygon.Points ) {
+		for( int i = 0; i < voronoi.Cells.Length; i++ ) {
+			foreach( Point p in voronoi.GetCellVertices( i ) ) {
 				buffer[p.X, p.Y] = 0xFF00FFFFU;
 			}
-			buffer[cell.Center.X, cell.Center.Y] = 0xFFD700FFU;
+			Point center = voronoi.Points[i];
+			buffer[center.X, center.Y] = 0xFFD700FFU;
 		}
 
 		IImageWriter writer = new PngWriter( _fileSystem );

@@ -36,11 +36,14 @@ public sealed class QuadTreeSearchableVoronoiTests {
 	public void Ctor_ValidParameter_PropertiesSet() {
 		IVoronoi voronoi = _searchableVoronoi;
 
-		Assert.That( voronoi.Points, Is.SameAs( _searchableVoronoi.Points ) );
-		Assert.That( voronoi.Cells, Is.SameAs( _searchableVoronoi.Cells ) );
-		Assert.That( voronoi.Edges, Is.SameAs( _searchableVoronoi.Edges ) );
-		for( int i = 0; i < _voronoi.Cells.Count; i++ ) {
+		Assert.That( voronoi.Points, Is.SameAs( _voronoi.Points ) );
+		Assert.That( voronoi.Cells.SequenceEqual( _voronoi.Cells ), Is.True );
+		Assert.That( voronoi.Edges, Is.SameAs( _voronoi.Edges ) );
+		for( int i = 0; i < _voronoi.Cells.Length; i++ ) {
 			Assert.That( _searchableVoronoi.GetNeighbourIndices( i ).SequenceEqual( _voronoi.GetNeighbourIndices( i ) ), Is.True );
+			Assert.That( _searchableVoronoi.GetCellVertices( i ).SequenceEqual( _voronoi.GetCellVertices( i ) ), Is.True );
+			Assert.That( _searchableVoronoi.Contains( i, _voronoi.Points[i] ), Is.True );
+			Assert.That( _searchableVoronoi.ExportPolygon( i ).Points, Is.EqualTo( _voronoi.GetCellVertices( i ).ToArray() ) );
 		}
 	}
 
@@ -56,11 +59,11 @@ public sealed class QuadTreeSearchableVoronoiTests {
 		int cx,
 		int cy
 	) {
-		IReadOnlyList<Cell> results = _searchableVoronoi.Search( x, y, w, h );
+		IReadOnlyList<int> results = _searchableVoronoi.Search( x, y, w, h );
 		Assert.That( results.Count, Is.EqualTo( 1 ) );
-		Cell cell = results[0];
-		Assert.That( cell.Center.X, Is.EqualTo( cx ) );
-		Assert.That( cell.Center.Y, Is.EqualTo( cy ) );
+		Point center = _searchableVoronoi.Points[results[0]];
+		Assert.That( center.X, Is.EqualTo( cx ) );
+		Assert.That( center.Y, Is.EqualTo( cy ) );
 	}
 
 	[TestCase( 1, 1, 48, 98, 25, 25, 25, 75 )]
@@ -77,13 +80,13 @@ public sealed class QuadTreeSearchableVoronoiTests {
 		int cx2,
 		int cy2
 	) {
-		IReadOnlyList<Cell> results = _searchableVoronoi.Search( x, y, w, h );
+		IReadOnlyList<int> results = _searchableVoronoi.Search( x, y, w, h );
 		Assert.That( results.Count, Is.EqualTo( 2 ) );
-		Cell cell = results[0];
-		Assert.That( cell.Center.X, Is.EqualTo( cx1 ) );
-		Assert.That( cell.Center.Y, Is.EqualTo( cy1 ) );
-		cell = results[1];
-		Assert.That( cell.Center.X, Is.EqualTo( cx2 ) );
-		Assert.That( cell.Center.Y, Is.EqualTo( cy2 ) );
+		Point center = _searchableVoronoi.Points[results[0]];
+		Assert.That( center.X, Is.EqualTo( cx1 ) );
+		Assert.That( center.Y, Is.EqualTo( cy1 ) );
+		center = _searchableVoronoi.Points[results[1]];
+		Assert.That( center.X, Is.EqualTo( cx2 ) );
+		Assert.That( center.Y, Is.EqualTo( cy2 ) );
 	}
 }
