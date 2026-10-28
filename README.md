@@ -286,6 +286,14 @@ operations. The uncompiled assembly's seam-pair scan is deliberately retained:
 the measured replacement slowed common small edits. The plan records this
 tradeoff rather than promising constant time for the entire mutation pipeline.
 
+## D3 refactor results
+
+The D3 performance and memory refactor is complete. The
+[completed refactor record](src/Kiyote/Geometry/Kiyote.Geometry/DelaunayVoronoi/D3/REFACTOR.md)
+summarizes the retained design and accepted/rejected experiments.
+[Benchmark results](BENCHMARK.md) record workload-specific measurements and
+their limitations; no further experiments are scheduled by that plan.
+
 ## Getting Started
 
 The code in Kiyote.Geometry.Visualizer provides a starting point for utilizing each of the operations available.

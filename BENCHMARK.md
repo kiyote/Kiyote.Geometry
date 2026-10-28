@@ -1,5 +1,21 @@
 # Benchmarks
 
+## D3 refactor completion (2026-10-28)
+
+The D3 performance/memory refactor is complete through `c2e7752`. No further
+experiments are scheduled. The [completed refactor record](src/Kiyote/Geometry/Kiyote.Geometry/DelaunayVoronoi/D3/REFACTOR.md)
+summarizes the retained architecture, accepted/rejected outcomes and alternatives
+closed without implementation.
+
+The dated sections below are the historical evidence, not an active work queue.
+O2's flat representation delivered the largest accepted runtime/retained-memory
+gains; the scoped pooling, linear simplifier and later navigation variants were
+removed after failing the performance gate. Explicit scalar squares remain
+without a general speedup claim. Do not combine independent comparisons into a
+cumulative improvement or compare runtime versions as though they were matched.
+Final code validation: warning/error-free Release solution build, 486 unit tests
+and 185 integration tests passed; existing fingerprint expectations unchanged.
+
 ## O1 legalization navigation: measured and rejected (2026-10-28)
 
 Reference `ad343a0`, with identical expanded benchmark harnesses in the primary
@@ -112,11 +128,11 @@ retained for subsequent experiments. Final restored-code validation passed a
 warning/error-free Release solution build, 486 unit tests and 185 integration
 tests; no old fingerprint expectation changed.
 
-This closes the repeated-remainder navigation hypothesis, not O1 as a whole.
-Further core work needs a distinct measured load/check or hot/cold-path
-hypothesis, preserving the same gates. Hull-repair traversal is concentrated on
-the all-hull fixture, so a reverse map is not justified for general workloads
-by these counts. Do not retain arithmetic rewrites merely for smaller assembly.
+This closes the repeated-remainder navigation hypothesis without proving that
+all core opportunities are exhausted. No further core experiment is scheduled.
+Hull-repair traversal is concentrated on the all-hull fixture, so a reverse map
+is not justified for general workloads by these counts. Smaller assembly alone
+did not justify retaining the arithmetic rewrites.
 
 Raw suites: `d3-o1-navigation-control`, `d3-o1-navigation-candidate`,
 `d3-o1-navigation-refined`, `d3-o1-navigation-control-repeat`; branch records:
@@ -184,13 +200,11 @@ thin fixture reports only hash entries and integers despite other known
 allocations. The owned snapshot is still sized from input count on sanitized
 input, whereas coordinates are already sized from accepted sites.
 
-**Decision:** proceed with a bounded deeper O1 core experiment before indexed
-O10 output. Start by measuring legalization/no-flip/flip/boundary-repair
-frequencies separately from timed runs, then inspect generated loads, checks,
-spills and branch layout for one targeted hypothesis. Preserve exact ordering,
-predicates and stack ownership; require core plus both public-factory and full
-consumer measurements before accepting a change. The aggregate profile does
-not prove that `Legalize` alone is the dominant core phase.
+**Historical decision:** a bounded deeper O1 core experiment was selected before
+indexed O10 output. Branch frequencies and generated code were examined outside
+timed runs, followed by core, public-factory and full-consumer comparisons. The
+completed navigation experiment and rejection are recorded above. The aggregate
+profile does not prove that `Legalize` alone is the dominant core phase.
 
 The initial disassembly investigation has started. A separate non-tiered
 FullOpts capture of `Legalize` contains 1,493 code bytes, no `idiv`, and no
@@ -201,12 +215,11 @@ syntax. The normal-tiered capture produced only instrumented Tier0 listings
 are not evidence about the steady-state optimized caller. No additional core
 rewrite is accepted at this checkpoint.
 
-Indexed O10 remains a separate representation experiment needing Delaunay
-create-and-consume baselines; a Voronoi trace cannot demonstrate that its
-consumer indirection pays off. Keep edge-table sizing/output publication and
-sanitized preprocessing as secondary profile-backed targets. Do not resurrect
-rejected O9 pooling or linear simplification merely to lower allocation or
-asymptotic complexity.
+Indexed O10, additional edge-table/publication changes and sanitized
+preprocessing refinements were not pursued further in this effort. A Voronoi
+trace cannot demonstrate that indexed Delaunay consumer indirection pays off.
+Rejected O9 pooling and linear simplification remain removed; lower allocation
+or asymptotic complexity did not establish an acceptable runtime tradeoff.
 
 Raw captures/reports are `d3-post-flat-*` in session files; initial assembly is
 `d3-o1-legalize-tiered.asm` and `d3-o1-legalize-optimized.asm`.
@@ -558,11 +571,10 @@ zero warnings/errors, all 477 unit tests and 180 integration tests passing.
 Reports are retained as `d3-scoped-workspace`, `d3-workspace-control`, and
 `d3-workspace-repeat`. The temporary reference worktree is removed after use.
 
-**Next architectural candidate:** O2 flat cell/vertex storage remains worth
-an independently measured prototype because polygon/edge storage is prominent
-in the profiles. Establish create-and-consume/search baselines first. Do not
-automatically ship that larger API/storage rewrite, or try progressively wider
-pooling, merely because the smaller workspace experiment failed.
+**Subsequent outcome:** O2 flat cell/vertex storage was independently measured
+with create-and-consume/search baselines and accepted; its results are recorded
+above. Wider pooling was not adopted merely because this workspace experiment
+failed.
 
 ## Post-O5/O10 workload profiling (2026-10-26)
 
@@ -609,9 +621,10 @@ creation, and O5 already provides a caller-owned-span boundary. Exact potential
 warm-pool savings are `8n + 16t + 72` bytes per call on x64, where `t` is logical
 triangle count. This avoids a public-result rewrite and does not pretend to
 solve the dominant retained polygon/edge storage or the sanitizer snapshot.
-The broader O2 flattening remains a larger follow-up; coordinate/mesh pooling
-also remains separate. Pool bucket capacity, cold rents and concurrent cache
-retention must be accounted for before accepting O9.
+The broader O2 flattening was subsequently implemented and measured separately.
+Broader coordinate/mesh pooling was not pursued. Pool bucket capacity, cold
+rents and concurrent cache retention remain important limitations of pooling
+proposals, not savings established by this rejected experiment.
 
 Reproduction:
 
