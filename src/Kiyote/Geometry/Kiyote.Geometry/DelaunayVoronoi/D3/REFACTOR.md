@@ -8,9 +8,10 @@ classes and their dependencies are in scope. Public and internal API
 compatibility is not a constraint.
 
 The original plan was based on source revision `4c73cae`, inspected on
-2026-10-26. It now includes implementation/experiment status through `47e9766`
-and the post-O2/O3 profiling refresh (2026-10-27). Historical scans and baseline
-descriptions below describe the original source, not the current implementation. Measured evidence and
+2026-10-26. It now includes implementation/experiment status through `ad343a0`
+and the deeper O1 navigation experiment (2026-10-28). Historical scans and
+baseline descriptions below describe the original source, not the current
+implementation. Measured evidence and
 limitations are recorded in [benchmark results][benchmark-results]; proposed
 benefits remain hypotheses unless explicitly labeled as measurements or storage
 calculations.
@@ -20,7 +21,7 @@ calculations.
 | Option | Current disposition | Remaining work |
 |---|---|---|
 | G0 | Implemented correctness/ownership gates | Extend gates for each new algorithm or lifetime change |
-| O1 | Local legalization/span cleanup and invariant hull hashing implemented; post-O2/O3 profiling refreshed | Selected next: measure legalization branches and selectively test load/check/branch layout; initial disassembly already strength-reduces constant division |
+| O1 | Local legalization/span cleanup and invariant hull hashing implemented; branch diagnostics complete; two repeated-remainder navigation variants measured/rejected | Distinct load/check or hot/cold-path hypothesis with equivalent-work evidence; do not repeat rejected navigation arithmetic |
 | O2 | Implemented contiguous metadata/vertices, ID/span API and searchable migration | No required representation migration remains |
 | O3 | Bounded span scratch and explicit squares implemented; linear linked compaction rejected | No required O3 work remains; a different simplifier needs new evidence |
 | O4 | Exact tiny-hull path implemented; O2 removes Voronoi's per-cell polygon graph | Standalone polygon boxing/edge storage and larger tiny-hull thresholds remain optional |
@@ -323,16 +324,23 @@ runtime work merely because their byte savings are easier to calculate.
 **Where:** [MapboxDelaunatorFactory][mapbox-factory], especially `Legalize`,
 `InCircle`, `HashKey`, and `CreateCore`.
 
-**Current follow-up:** the post-O2/O3 reports retain substantial core share in
-irregular/thin creation stacks, so deeper O1 is selected ahead of indexed O10.
-These managed-thread samples are not a CPU-phase decomposition and do not
-establish that legalization alone dominates. Initial non-tiered FullOpts
-disassembly already strength-reduces constant division and inlines `InCircle`;
-the normal-tiered capture did not produce standalone Tier1 legalization code.
-Next measure branch frequencies outside timed runs, then test one bounded
-load/check/layout hypothesis with the verification below. See
-[benchmark results][benchmark-results] for capture limitations and secondary
-edge-publication/preprocessing targets.
+**Current follow-up:** deeper O1 was selected ahead of indexed O10 after the
+post-O2/O3 reports. Untimed branch diagnostics now show no-flip iterations
+dominate irregular/thin/sanitized fixtures, while hull repair is concentrated
+on the all-hull fixture. Two cached-remainder/conditional-navigation variants
+preserved all exact output but failed the broad runtime gate across four
+serial 22-case suites. Both were removed; the original kernel is retained.
+Five reference mesh-ordering regressions and core/public-Delaunay benchmark
+methods were added for future work.
+
+Non-tiered FullOpts already strength-reduces constant division and inlines
+`InCircle`. Reducing six remainder multiply sequences to two introduced
+branches and did not establish a broad speedup. Further O1 work needs a
+distinct load/check or hot/cold-path hypothesis; smaller assembly is not an
+acceptance gate. The managed-thread samples and branch counts are not a
+CPU-phase decomposition and do not prove that legalization alone dominates.
+See [benchmark results][benchmark-results] for the full outcome, runtime
+version, drift limitations and secondary edge-publication/preprocessing targets.
 
 **How to implement:**
 
@@ -987,11 +995,14 @@ Sequence agreed after O2, with current outcomes:
    allocation traces plus separate untraced allocation loops are recorded.
    The core remains prominent on irregular/thin inputs; edge initialization
    and heavily sanitized preprocessing remain distinct secondary targets.
-4. **Deeper O1 - selected next, initial disassembly started:** measure
-   legalization branch frequencies and choose one load/check/layout hypothesis.
-   Do not assume source `% 3` emits division in optimized code. Indexed O10
-   remains a later representation alternative requiring Delaunay
-   create-and-consume baselines, not a conclusion from Voronoi allocations.
+4. **Deeper O1 - branch diagnostics and navigation experiment complete/rejected:**
+   two cached-remainder navigation variants reduce instruction sequences but
+   introduce branches and fail the equivalent-work gate. All production
+   changes are removed; new exact mesh-ordering tests and broader benchmarks
+   remain. Further O1 requires a distinct load/check or hot/cold-path
+   hypothesis. Indexed O10 remains a representation alternative requiring
+   Delaunay create-and-consume baselines, not a conclusion from Voronoi
+   allocations or a demand to keep speculative kernel rewrites.
 5. **Demand/evidence-driven options:** O6 selective outputs, standalone O4,
    optional O7 refinements, O11 sorting/deduplication and O12 coordinate/SIMD work.
    Do not repeat rejected O9 pooling without a materially different hypothesis.
@@ -1010,6 +1021,9 @@ priority when fresh profiles show that a target is no longer material.
 
 - [MapboxDelaunatorFactoryTests][core-tests]: orientation, hull/triangle order,
   degeneracy, seed selection, and core topology.
+- [DelaunatorOrderingRegressionTests](../../../../../../test/Kiyote/Geometry/Kiyote.Geometry.IntegrationTests/DelaunayVoronoi/D3/DelaunatorOrderingRegressionTests.cs):
+  reference ordered triangles, halfedges and hulls for four profile fixtures
+  and 128 seeded full-domain meshes; captured before the O1 navigation edits.
 - [TriangulationStorageTests][storage-tests]: dirty oversized pooled scratch,
   output ownership, logical lengths, concurrent calls, and exception cleanup.
 - [DiagramRegressionTests][diagram-tests]: input validation, snapshots,

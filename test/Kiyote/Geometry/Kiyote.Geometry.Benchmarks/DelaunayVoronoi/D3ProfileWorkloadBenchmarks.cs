@@ -6,7 +6,9 @@ namespace Kiyote.Geometry.DelaunayVoronoi.Benchmarks;
 [MemoryDiagnoser( false )]
 public class D3ProfileWorkloadBenchmarks {
 	private readonly IVoronoiFactory _factory = new D3VoronoiFactory();
+	private readonly IDelaunayFactory _delaunayFactory = new D3DelaunayFactory();
 	private D3WorkloadFixture _fixture = null!;
+	private double[] _coordinates = null!;
 
 	[Params( "Irregular", "Thin", "MostlyHull", "Sanitized" )]
 	public string Workload { get; set; } = null!;
@@ -14,11 +16,22 @@ public class D3ProfileWorkloadBenchmarks {
 	[GlobalSetup]
 	public void Setup() {
 		_fixture = D3WorkloadFixture.Create( Workload );
+		_coordinates = _fixture.Sites.ToCoords();
 		_fixture.Validate( Create() );
 	}
 
 	[Benchmark]
 	public IVoronoi Create() {
 		return _factory.Create( _fixture.Bounds, _fixture.Input, _fixture.Sanitize );
+	}
+
+	[Benchmark]
+	public object CreateCore() {
+		return MapboxDelaunatorFactory.Create( _coordinates, true );
+	}
+
+	[Benchmark]
+	public IDelaunay CreateDelaunay() {
+		return _delaunayFactory.Create( _fixture.Input, _fixture.Sanitize );
 	}
 }

@@ -1,5 +1,128 @@
 # Benchmarks
 
+## O1 legalization navigation: measured and rejected (2026-10-28)
+
+Reference `ad343a0`, with identical expanded benchmark harnesses in the primary
+and isolated reference worktrees. This experiment targets repeated triangle
+navigation arithmetic, not the floating-point predicates or topology algorithm.
+The host/runtime is now .NET 10.0.14 (SDK 11.0.100-rc.2.26504.105,
+BenchmarkDotNet 0.15.8, i7-9700K); compare the matched runs below rather than
+attributing differences from earlier .NET 10.0.13 results to this experiment.
+
+### Untimed branch diagnostics
+
+Temporary counters in the isolated reference counted each deterministic mesh
+creation, including the profiler's validation/warmup creations. The repeated
+rows were identical. Counter instrumentation was removed and the production
+source verified identical to the reference before benchmarking; instrumented
+elapsed times are not performance evidence.
+
+| Fixture | Legalize calls | Loop iterations | No flip | Flip | Boundary | Hull repairs / visited hull entries | Maximum pending edges |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Irregular, 4,096 | 8,167 | 34,889 | 21,528 | 13,361 | 0 | 0 / 0 | 6 |
+| Thin, 512 | 1,002 | 2,266 | 1,628 | 632 | 6 | 2 / 3 | 3 |
+| Mostly hull, 128 | 125 | 645 | 264 | 260 | 121 | 60 / 1,234 | 5 |
+| Sanitized accepted sites, 400 | 721 | 1,611 | 1,166 | 445 | 0 | 0 / 0 | 3 |
+
+No stack growth occurred on these four fixtures; this does not remove the need
+for the existing growable stack or its tests. No-flip iterations dominate the
+irregular/thin/sanitized cases, while the all-hull case has substantial boundary
+and repair activity. These are execution counts, not measured per-phase times.
+
+### Candidates and correctness
+
+The original navigation uses separate remainders for a halfedge's triangle
+base, previous vertex and next vertex. Candidate 1 computes one remainder per
+halfedge and uses the conditional previous/next idiom already used by the
+Voronoi walk and adjacency builder. Candidate 2 selects a constant three-entry
+wrap adjustment instead of selecting the resulting index. Both leave
+coordinate loads, `InCircle`, link updates, pending-edge order and failures
+unchanged. Neither introduces a helper, mutable shared state or managed storage.
+
+Fresh non-tiered FullOpts disassembly on the same runtime shows 1,493 bytes for
+the reference, 1,419 for candidate 1 and 1,473 for candidate 2. Strength-reduced
+remainder multiply sequences fall from six to two, but both candidates introduce
+conditional branches rather than eliminating all wrap-selection branches.
+The stack-frame reservation stays at 248 bytes. This is diagnostic codegen
+evidence, not a claim about normal tiered end-to-end speed.
+
+Before any kernel edit, five SHA256 fingerprints were captured from the
+reference: ordered triangles, reciprocal halfedges and hulls for the four
+profile fixtures, plus a corpus of 128 seeded full-domain meshes of 3-1,016
+sites (61,972 sites total). Those expectations are retained unchanged in
+[DelaunatorOrderingRegressionTests](test/Kiyote/Geometry/Kiyote.Geometry.IntegrationTests/DelaunayVoronoi/D3/DelaunatorOrderingRegressionTests.cs).
+Both candidates passed these, the existing
+eight full Voronoi fingerprints and exact mesh/diagram gates. The first
+candidate also passed eight focused storage/stack tests.
+
+The benchmark fixture now measures core creation and public Delaunay creation
+alongside the existing Voronoi creation. Core input is the accepted-site
+coordinate array with duplicate rejection enabled; public factories receive
+the original input and sanitization flag. In particular, sanitized core
+creation processes 400 sites, whereas public creation processes 40,000 inputs.
+These are different scopes and must not be subtracted as a phase measurement.
+
+### Equivalent-work measurements
+
+Four serial suites ran in reference / candidate 1 / candidate 2 / reference
+order. Each covered 22 cases, with two launches, four warmups, twelve measured
+iterations and requested 300 ms iteration time. No agent-started builds, tests,
+traces or other benchmarks overlapped the timed suites. Values are mean +/-
+99.9% CI half-width, in microseconds:
+
+| Workload | Reference 1 | Candidate 1 | Candidate 2 | Reference 2 |
+|---|---:|---:|---:|---:|
+| Delaunay grid, 400 | 70.60 +/- 1.081 | 69.16 +/- 1.971 | 77.83 +/- 2.598 | 67.38 +/- 2.019 |
+| Voronoi grid, 400 | 257.73 +/- 1.316 | 256.20 +/- 6.436 | 249.80 +/- 7.137 | 249.68 +/- 6.500 |
+| Delaunay grid, 40,000 | 17,165.44 +/- 214.145 | 16,046.70 +/- 241.608 | 16,427.18 +/- 344.957 | 16,341.93 +/- 366.409 |
+| Voronoi grid, 40,000 | 37,364.26 +/- 596.133 | 39,927.01 +/- 1,763.476 | 34,704.02 +/- 950.104 | 36,889.16 +/- 1,086.428 |
+| Voronoi create/consume, 400 | 416.96 +/- 5.780 | 424.88 +/- 11.066 | 406.53 +/- 9.262 | 392.34 +/- 7.772 |
+| Voronoi create/consume, 4,096 | 4,694.39 +/- 110.619 | 4,731.07 +/- 116.452 | 4,484.80 +/- 114.899 | 4,438.30 +/- 138.183 |
+| Irregular Voronoi, 4,096 | 4,239.01 +/- 84.795 | 4,788.59 +/- 120.500 | 4,775.34 +/- 116.512 | 4,508.55 +/- 200.980 |
+| Irregular core, 4,096 | 1,609.27 +/- 41.476 | 1,673.61 +/- 42.228 | 1,740.40 +/- 25.567 | 1,477.46 +/- 14.393 |
+| Irregular Delaunay, 4,096 | 1,677.96 +/- 48.038 | 1,724.96 +/- 31.065 | 1,807.16 +/- 28.594 | 1,580.19 +/- 42.979 |
+| Mostly-hull Voronoi, 128 | 99.59 +/- 2.063 | 98.48 +/- 2.397 | 101.21 +/- 2.431 | 93.05 +/- 1.675 |
+| Mostly-hull core, 128 | 22.70 +/- 0.452 | 21.82 +/- 0.374 | 20.70 +/- 0.522 | 22.12 +/- 0.935 |
+| Mostly-hull Delaunay, 128 | 23.76 +/- 0.638 | 23.47 +/- 0.347 | 22.96 +/- 1.085 | 24.43 +/- 0.682 |
+| Sanitized Voronoi | 495.16 +/- 10.897 | 505.02 +/- 20.015 | 486.83 +/- 19.766 | 504.41 +/- 14.418 |
+| Sanitized core | 69.87 +/- 2.675 | 70.78 +/- 1.693 | 69.66 +/- 2.550 | 67.69 +/- 2.372 |
+| Sanitized Delaunay | 565.26 +/- 59.171 | 566.71 +/- 13.139 | 548.04 +/- 59.647 | 498.72 +/- 44.537 |
+| Thin Voronoi, 512 | 481.87 +/- 14.884 | 498.08 +/- 14.666 | 488.93 +/- 18.670 | 478.68 +/- 11.322 |
+| Thin core, 512 | 119.28 +/- 2.454 | 124.30 +/- 2.234 | 130.59 +/- 3.546 | 118.68 +/- 5.851 |
+| Thin Delaunay, 512 | 129.58 +/- 1.409 | 133.21 +/- 3.685 | 137.65 +/- 3.534 | 130.40 +/- 5.179 |
+| Unchecked grid core, 400 | 59.21 +/- 1.165 | 57.47 +/- 1.158 | 59.45 +/- 2.719 | 59.00 +/- 2.085 |
+| Unchecked grid core, 40,000 | 13,625.22 +/- 361.868 | 13,578.37 +/- 314.840 | 13,919.09 +/- 287.420 | 13,310.95 +/- 221.779 |
+| Checked grid core, 400 | 67.39 +/- 4.947 | 63.08 +/- 2.248 | 62.85 +/- 1.686 | 63.32 +/- 1.728 |
+| Checked grid core, 40,000 | 13,669.07 +/- 321.693 | 13,594.94 +/- 369.448 | 14,333.92 +/- 269.311 | 13,415.28 +/- 259.687 |
+
+**Decision: reject both variants.** Reference runs themselves drift, so do not
+assign a universal percentage to either variant. Candidate 2's irregular core
+and Delaunay intervals are slower than both references with disjoint intervals;
+its small-grid Delaunay also regresses. Some grid/all-hull cases improve, but
+there is no reliable broad full-consumer win to offset those losses. Candidate
+1 likewise does not establish a broad benefit. No logical managed allocation
+is saved: e.g. irregular core stays 192.15 KB, thin core 24.09 KB and the
+400-site full consumer 186.74 KB. Small large-workload B/op variation reflects
+runtime/pool behavior, not changed output ownership or storage.
+
+All candidate production changes were removed, with the original kernel
+verified identical to `ad343a0`. No diagnostic counters or new navigation APIs
+remain. The five ordering regressions and broader benchmark methods are
+retained for subsequent experiments. Final restored-code validation passed a
+warning/error-free Release solution build, 486 unit tests and 185 integration
+tests; no old fingerprint expectation changed.
+
+This closes the repeated-remainder navigation hypothesis, not O1 as a whole.
+Further core work needs a distinct measured load/check or hot/cold-path
+hypothesis, preserving the same gates. Hull-repair traversal is concentrated on
+the all-hull fixture, so a reverse map is not justified for general workloads
+by these counts. Do not retain arithmetic rewrites merely for smaller assembly.
+
+Raw suites: `d3-o1-navigation-control`, `d3-o1-navigation-candidate`,
+`d3-o1-navigation-refined`, `d3-o1-navigation-control-repeat`; branch records:
+`d3-o1-branches-*`; clean FullOpts listings: `d3-o1-reference-clean-optimized.asm`,
+`d3-o1-navigation-optimized.asm`, `d3-o1-navigation-refined-optimized.asm`.
+
 ## Post-O2/O3 profiling and next experiment (2026-10-27)
 
 Retained production baseline `47e9766`: flat Voronoi storage plus explicit
